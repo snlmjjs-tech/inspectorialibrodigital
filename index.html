@@ -378,6 +378,21 @@
     color:#A8462F;
   }
   .proj-del:hover{text-decoration:underline;}
+  .proj-check{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    user-select:none;
+  }
+  .proj-check input{
+    width:14px;height:14px;
+    accent-color:var(--ok);
+    cursor:pointer;
+  }
+  .proj-check.is-done{color:var(--ok);font-weight:600;}
   .empty-state{
     text-align:center;
     padding:50px 20px;
@@ -2450,6 +2465,10 @@ function renderProjects(){
         <div class="proj-title">${p.nombre}</div>
         <div class="proj-side">
           <span class="status-pill" style="background:var(--${p.estado==='curso'?'warn':p.estado==='completado'?'ok':'pending'})">${estadoLabel(p.estado)}</span>
+          <label class="proj-check ${p.estado==='completado' ? 'is-done' : ''}">
+            <input type="checkbox" class="proj-done-check" data-id="${p.id}" ${p.estado==='completado' ? 'checked' : ''}>
+            Completado
+          </label>
           <button class="proj-del" data-id="${p.id}">Eliminar</button>
         </div>
         <div class="proj-meta">
@@ -2464,6 +2483,9 @@ function renderProjects(){
 
   listEl.querySelectorAll('.proj-del').forEach(btn=>{
     btn.addEventListener('click', ()=>deleteProject(btn.dataset.id));
+  });
+  listEl.querySelectorAll('.proj-done-check').forEach(chk=>{
+    chk.addEventListener('change', ()=>toggleProjectDone(chk.dataset.id, chk.checked));
   });
 
   // stats
@@ -2529,6 +2551,21 @@ async function deleteProject(id){
   await saveProjects();
   renderProjects();
   showToast('Proyecto eliminado');
+}
+
+async function toggleProjectDone(id, done){
+  const p = projects.find(p=>p.id === id);
+  if(!p) return;
+  if(done){
+    p.estadoAnterior = p.estado;
+    p.estado = 'completado';
+  } else {
+    p.estado = p.estadoAnterior || 'curso';
+    delete p.estadoAnterior;
+  }
+  await saveProjects();
+  renderProjects();
+  showToast(done ? 'Proyecto marcado como completado' : 'Proyecto vuelto a marcar como pendiente');
 }
 
 /* ================= TAREAS ================= */
