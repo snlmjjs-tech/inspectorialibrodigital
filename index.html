@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Libre+Caslon+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --navy-deep:#0B1240;
@@ -1922,35 +1924,43 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ---------------- BASE DE DATOS ---------------- */
+/* ---------------- BASE DE DATOS (Firebase Firestore) ---------------- */
 /*
- * Persistencia compartida para todo el colegio. Cuando esta página se
- * abre dentro de un Artifact de Claude publicado con capabilities:{db:{}},
- * los datos se guardan en la base de datos propia de ESTE artefacto —
- * separada de cualquier otro proyecto (por ejemplo, "Internet
- * Inspectoría" usa la suya propia). Si se abre fuera de ese contexto
- * (por ejemplo, el archivo local o una copia sin publicar), se usa
- * localStorage del navegador como respaldo para que la app siga
- * funcionando, aunque sin compartir datos entre dispositivos.
+ * Persistencia compartida para todo el colegio, propia de este proyecto
+ * (el Libro Digital), separada de cualquier otro proyecto (por ejemplo
+ * "Internet Incosaf" usa su propio proyecto de Firebase). Cada
+ * funcionario que entra a esta misma página, desde cualquier
+ * computador, lee y escribe la MISMA base de datos en la nube.
  */
-const dbReady = (async () => {
-  try{
-    if(typeof window.claude === 'undefined' || !window.claude.use) return null;
-    return await window.claude.use('db');
-  }catch(err){
-    console.error('No se pudo inicializar la base de datos del artefacto.', err);
-    return null;
+const firebaseConfig = {
+  apiKey: "AIzaSyAVIbizU3MJyk-99qFMXtGyoNHP6NAGEp0",
+  authDomain: "inspectoria-libro-digital.firebaseapp.com",
+  projectId: "inspectoria-libro-digital",
+  storageBucket: "inspectoria-libro-digital.firebasestorage.app",
+  messagingSenderId: "240318386352",
+  appId: "1:240318386352:web:5dc1d222124d7955c26b75"
+};
+let firestoreDb = null;
+try{
+  if(typeof firebase !== 'undefined'){
+    firebase.initializeApp(firebaseConfig);
+    firestoreDb = firebase.firestore();
   }
-})();
-function storageDocPath(key){
-  return 'store/' + String(key).toLowerCase().replace(/[^a-z0-9_.~:@+-]+/g, '-');
+}catch(err){
+  console.error('No se pudo inicializar Firebase.', err);
+}
+function storageDocId(key){
+  return String(key).toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
 }
 window.storage = {
   async get(key){
-    const db = await dbReady;
-    if(db){
-      const snap = await db.doc(storageDocPath(key)).get();
-      return { value: snap.exists ? (snap.data().value ?? null) : null };
+    if(firestoreDb){
+      try{
+        const snap = await firestoreDb.collection('store').doc(storageDocId(key)).get();
+        return { value: snap.exists ? (snap.data().value ?? null) : null };
+      }catch(err){
+        console.error('Error leyendo de Firestore, se usa respaldo local.', err);
+      }
     }
     try{
       return { value: window.localStorage.getItem(key) };
@@ -1959,10 +1969,16 @@ window.storage = {
     }
   },
   async set(key, value){
-    const db = await dbReady;
-    if(db){
-      await db.doc(storageDocPath(key)).set({ value, updatedAt: new Date().toISOString() });
-      return;
+    if(firestoreDb){
+      try{
+        await firestoreDb.collection('store').doc(storageDocId(key)).set({
+          value, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return;
+      }catch(err){
+        console.error('Error guardando en Firestore, se usa respaldo local.', err);
+        showToast('No se pudo guardar en la base de datos compartida. Se guardó solo en este computador.');
+      }
     }
     try{
       window.localStorage.setItem(key, value);
