@@ -264,8 +264,10 @@
   .staff-card-actions{
     margin-left:auto;
     display:flex;
-    gap:12px;
-    flex-shrink:0;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    gap:8px 12px;
+    max-width:150px;
   }
   .staff-card-actions button{
     all:unset;cursor:pointer;
@@ -2364,6 +2366,7 @@ function renderStaff(){
         </div>
         <div class="staff-card-actions">
           <button data-edit-staff="${s.slug}">Editar</button>
+          <button data-reset-staff="${s.slug}">Restablecer contraseña</button>
           <button data-del-staff="${s.slug}" class="danger">Eliminar</button>
         </div>`;
       grid.appendChild(card);
@@ -2380,8 +2383,20 @@ function renderStaff(){
   container.querySelectorAll('[data-del-staff]').forEach(btn=>{
     btn.addEventListener('click', ()=>deleteStaffMember(btn.dataset.delStaff));
   });
+  container.querySelectorAll('[data-reset-staff]').forEach(btn=>{
+    btn.addEventListener('click', ()=>resetStaffPassword(btn.dataset.resetStaff));
+  });
 
   refreshStaffDependentSelects();
+}
+
+async function resetStaffPassword(slug){
+  const s = STAFF.find(x=>x.slug===slug);
+  if(!s) return;
+  if(!confirm(`¿Restablecer la contraseña de "${s.nombre}"?\n\nQuedará sin clave personal ni pregunta de recuperación configuradas, y podrá volver a entrar con la contraseña inicial "${DEFAULT_PASSWORD}". Luego puede definir su propia clave desde «Mi cuenta».`)) return;
+  delete AUTH[slug];
+  await saveAuth();
+  showToast(`Contraseña de ${s.nombre} restablecida a "${DEFAULT_PASSWORD}"`);
 }
 
 /* ----- Agregar / editar funcionario ----- */
