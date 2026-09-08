@@ -1411,7 +1411,8 @@
       </div>
       <div style="display:flex;align-items:center;gap:16px;">
         <div class="date" id="staff-count"></div>
-        <button class="btn-primary" id="btn-new-staff">
+        <button class="btn-ghost" id="btn-gestion-panel">🔒 Panel de gestión</button>
+        <button class="btn-primary" id="btn-new-staff" style="display:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
           Agregar funcionario
         </button>
@@ -2112,6 +2113,18 @@ let currentTaskFilter = "todas";
 let currentUser = null; // { nombre, cargo, slug }
 let recoverSlug = null;
 
+/* ---------------- PANEL DE GESTIÓN (Funcionarios) ---------------- */
+// Hash SHA-256 del código de gestión. No se guarda en texto plano.
+const GESTION_CODE_HASH = "9e6296be2bb963df7daa2b230a2a1f34b1bcd655c10fa6c1f6c05782fee95791";
+let gestionUnlocked = false;
+function updateGestionUI(){
+  const btn = document.getElementById('btn-gestion-panel');
+  const addBtn = document.getElementById('btn-new-staff');
+  if(!btn || !addBtn) return;
+  btn.textContent = gestionUnlocked ? '🔓 Panel de gestión (activo)' : '🔒 Panel de gestión';
+  addBtn.style.display = gestionUnlocked ? 'inline-flex' : 'none';
+}
+
 /* ---------------- UTIL ---------------- */
 function initials(name){
   const parts = name.trim().split(/\s+/);
@@ -2277,6 +2290,8 @@ function applyRoleVisibility(){
 
 document.getElementById('btn-logout').addEventListener('click', ()=>{
   currentUser = null;
+  gestionUnlocked = false;
+  updateGestionUI();
   document.getElementById('app-shell').classList.remove('active');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-form').reset();
@@ -2423,12 +2438,13 @@ function renderStaff(){
           <div class="staff-name">${s.nombre}</div>
           <div class="staff-role">${s.cargo}</div>
         </div>
+        ${gestionUnlocked ? `
         <div class="staff-card-actions">
           <button data-edit-staff="${s.slug}">Editar</button>
           <button data-pin-staff="${s.slug}">Asignar PIN</button>
           <button data-reset-staff="${s.slug}">Restablecer contraseña</button>
           <button data-del-staff="${s.slug}" class="danger">Eliminar</button>
-        </div>`;
+        </div>` : ''}`;
       grid.appendChild(card);
     });
     block.appendChild(grid);
@@ -2502,6 +2518,26 @@ function openStaffModal(slug){
   staffOverlay.classList.add('active');
 }
 document.getElementById('btn-new-staff').addEventListener('click', ()=>openStaffModal(null));
+
+document.getElementById('btn-gestion-panel').addEventListener('click', async ()=>{
+  if(gestionUnlocked){
+    gestionUnlocked = false;
+    updateGestionUI();
+    renderStaff();
+    showToast('Panel de gestión bloqueado');
+    return;
+  }
+  const code = prompt('Código del panel de gestión:');
+  if(code === null) return;
+  if((await sha256(code)) !== GESTION_CODE_HASH){
+    alert('Código incorrecto.');
+    return;
+  }
+  gestionUnlocked = true;
+  updateGestionUI();
+  renderStaff();
+  showToast('Panel de gestión desbloqueado');
+});
 document.getElementById('modal-staff-close').addEventListener('click', ()=>staffOverlay.classList.remove('active'));
 document.getElementById('staff-modal-cancel').addEventListener('click', ()=>staffOverlay.classList.remove('active'));
 staffOverlay.addEventListener('click', (e)=>{ if(e.target===staffOverlay) staffOverlay.classList.remove('active'); });
