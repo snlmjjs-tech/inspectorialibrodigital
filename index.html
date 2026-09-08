@@ -529,6 +529,26 @@
     display:none;
   }
   .login-error.show{display:block;}
+  .pin-boxes{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+  }
+  .pin-box{
+    width:100% !important;
+    max-width:52px;
+    height:56px;
+    text-align:center;
+    font-size:22px !important;
+    font-family:'Inter',sans-serif;
+    letter-spacing:0;
+    padding:0 !important;
+  }
+  .pin-box:focus{
+    outline:none;
+    border-color:var(--navy-deep) !important;
+    box-shadow:0 0 0 2px rgba(26,42,74,.12);
+  }
   .login-note{
     margin-top:18px;
     font-size:11.5px;
@@ -975,13 +995,18 @@
         <select id="login-user" required></select>
       </div>
       <div class="field">
-        <label for="login-pass">Contraseña</label>
-        <input type="password" id="login-pass" required placeholder="Contraseña inicial: INCOSAF">
+        <label for="login-pin-0">Ingresa tus 4 dígitos</label>
+        <div class="pin-boxes" id="login-pin-boxes">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-0" autocomplete="off">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-1" autocomplete="off">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-2" autocomplete="off">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-3" autocomplete="off">
+        </div>
       </div>
       <button type="submit" class="btn-primary full-btn">Ingresar</button>
     </form>
     <button class="link-btn" id="go-recover">¿Olvidaste tu contraseña?</button>
-    <div class="login-note">La primera vez que ingreses usa la contraseña inicial <strong>INCOSAF</strong>. Luego podrás cambiarla desde tu cuenta.</div>
+    <div class="login-note">Ingresa tu PIN de 4 dígitos. Si aún no te han asignado uno, usa <strong>0000</strong> y luego cámbialo desde tu cuenta.</div>
   </div>
 
   <!-- Paso: recuperar - elegir usuario -->
@@ -999,9 +1024,9 @@
   <!-- Paso: sin pregunta configurada -->
   <div class="login-card" id="card-recover-none" style="display:none;">
     <button class="step-back" id="back-to-login-2">&larr; Volver a iniciar sesión</button>
-    <h1>Contraseña inicial vigente</h1>
+    <h1>Sin pregunta de recuperación</h1>
     <div class="login-sub">Este funcionario aún no ha configurado una pregunta de recuperación.</div>
-    <div class="recover-answer-box">Puedes ingresar con la contraseña inicial <strong>INCOSAF</strong>. Una vez dentro, configura tu propia contraseña y pregunta de recuperación desde «Mi cuenta».</div>
+    <div class="recover-answer-box">Si nunca has cambiado tu PIN, intenta ingresar con <strong>0000</strong>. Si ya tienes un PIN propio y lo olvidaste, pide a alguien con acceso a «Funcionarios» que te lo restablezca con el botón «Asignar PIN» o «Restablecer contraseña».</div>
   </div>
 
   <!-- Paso: responder pregunta -->
@@ -1018,15 +1043,15 @@
 
   <!-- Paso: nueva contraseña -->
   <div class="login-card" id="card-recover-reset" style="display:none;">
-    <h1>Crea una nueva contraseña</h1>
+    <h1>Crea un nuevo PIN</h1>
     <div class="login-error" id="reset-error"></div>
     <div class="field">
-      <label for="reset-pass1">Nueva contraseña</label>
-      <input type="password" id="reset-pass1" placeholder="Mínimo 4 caracteres">
+      <label for="reset-pass1">Nuevo PIN</label>
+      <input type="password" id="reset-pass1" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 dígitos">
     </div>
     <div class="field">
-      <label for="reset-pass2">Confirmar contraseña</label>
-      <input type="password" id="reset-pass2">
+      <label for="reset-pass2">Confirmar PIN</label>
+      <input type="password" id="reset-pass2" inputmode="numeric" pattern="[0-9]*" maxlength="4">
     </div>
     <button class="btn-primary full-btn" id="reset-save">Guardar y volver a iniciar sesión</button>
   </div>
@@ -1548,17 +1573,17 @@
       <div class="login-error" id="pass-error"></div>
       <form id="pass-form">
         <div class="field">
-          <label for="p-actual">Contraseña actual</label>
-          <input type="password" id="p-actual" required placeholder="Usa INCOSAF si nunca la has cambiado">
+          <label for="p-actual">PIN actual</label>
+          <input type="password" id="p-actual" required inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Usa 0000 si nunca lo has cambiado">
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="p-nueva">Nueva contraseña</label>
-            <input type="password" id="p-nueva" required placeholder="Mínimo 4 caracteres">
+            <label for="p-nueva">Nuevo PIN</label>
+            <input type="password" id="p-nueva" required inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 dígitos">
           </div>
           <div class="field">
-            <label for="p-confirma">Confirmar</label>
-            <input type="password" id="p-confirma" required>
+            <label for="p-confirma">Confirmar PIN</label>
+            <input type="password" id="p-confirma" required inputmode="numeric" pattern="[0-9]*" maxlength="4">
           </div>
         </div>
         <div class="field">
@@ -2077,7 +2102,7 @@ function refreshStaffDependentSelects(){
 const PROJ_KEY = "proyectos-inspectoria";
 const TASK_KEY = "tareas-inspectoria";
 const AUTH_KEY = "auth-inspectoria";
-const DEFAULT_PASSWORD = "INCOSAF";
+const DEFAULT_PASSWORD = "0000";
 
 let projects = [];
 let tasks = [];
@@ -2166,13 +2191,45 @@ function clearLoginError(){
   document.getElementById('login-error').classList.remove('show');
 }
 
+/* ----- Cuadritos de PIN (login) ----- */
+const PIN_LENGTH = 4;
+function pinBoxes(){
+  return Array.from({length: PIN_LENGTH}, (_,i)=>document.getElementById('login-pin-'+i));
+}
+function getPinValue(){
+  return pinBoxes().map(b=>b.value).join('');
+}
+function clearPinBoxes(){
+  pinBoxes().forEach(b=>b.value = '');
+}
+pinBoxes().forEach((box, i)=>{
+  box.addEventListener('input', ()=>{
+    box.value = box.value.replace(/[^0-9]/g, '').slice(0,1);
+    if(box.value && i < PIN_LENGTH-1) pinBoxes()[i+1].focus();
+  });
+  box.addEventListener('keydown', (e)=>{
+    if(e.key === 'Backspace' && !box.value && i > 0) pinBoxes()[i-1].focus();
+  });
+  box.addEventListener('paste', (e)=>{
+    e.preventDefault();
+    const digits = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g,'').slice(0, PIN_LENGTH);
+    pinBoxes().forEach((b,idx)=> b.value = digits[idx] || '');
+    (pinBoxes()[Math.min(digits.length, PIN_LENGTH-1)] || box).focus();
+  });
+});
+
 document.getElementById('login-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   clearLoginError();
   const slug = document.getElementById('login-user').value;
-  const pass = document.getElementById('login-pass').value;
+  const pass = getPinValue();
   const staff = STAFF.find(s=>s.slug===slug);
   const rec = AUTH[slug];
+
+  if(pass.length < PIN_LENGTH){
+    loginError('Ingresa los 4 dígitos de tu PIN.');
+    return;
+  }
 
   let ok = false;
   if(rec && rec.passwordHash){
@@ -2182,7 +2239,9 @@ document.getElementById('login-form').addEventListener('submit', async (e)=>{
   }
 
   if(!ok){
-    loginError('Contraseña incorrecta. Verifica e intenta nuevamente.');
+    clearPinBoxes();
+    pinBoxes()[0].focus();
+    loginError('PIN incorrecto. Verifica e intenta nuevamente.');
     return;
   }
   currentUser = { nombre: staff.nombre, cargo: staff.cargo, slug: staff.slug };
@@ -2194,7 +2253,7 @@ function enterApp(){
   document.getElementById('app-shell').classList.add('active');
   document.getElementById('account-who').textContent = currentUser.nombre;
   document.getElementById('account-role').textContent = currentUser.cargo;
-  document.getElementById('login-pass').value = '';
+  clearPinBoxes();
   document.getElementById('welcome-text-p').textContent =
     'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando. Aquí el equipo lleva las tareas y proyectos de la unidad, consultando su estado o incorporando lo que ya está en marcha.';
   applyRoleVisibility();
@@ -2265,20 +2324,20 @@ document.getElementById('reset-save').addEventListener('click', async ()=>{
   const p1 = document.getElementById('reset-pass1').value;
   const p2 = document.getElementById('reset-pass2').value;
   const errEl = document.getElementById('reset-error');
-  if(p1.length < 4){
-    errEl.textContent = 'La contraseña debe tener al menos 4 caracteres.';
+  if(!/^\d{4}$/.test(p1)){
+    errEl.textContent = 'El PIN debe ser exactamente 4 dígitos numéricos.';
     errEl.classList.add('show');
     return;
   }
   if(p1 !== p2){
-    errEl.textContent = 'Las contraseñas no coinciden.';
+    errEl.textContent = 'Los PIN no coinciden.';
     errEl.classList.add('show');
     return;
   }
   AUTH[recoverSlug].passwordHash = await sha256(p1);
   AUTH[recoverSlug].updated = Date.now();
   await saveAuth();
-  showToast('Contraseña actualizada. Ya puedes iniciar sesión.');
+  showToast('PIN actualizado. Ya puedes iniciar sesión.');
   showLoginCard('card-login');
 });
 
@@ -2308,17 +2367,17 @@ document.getElementById('pass-form').addEventListener('submit', async (e)=>{
     : actual === DEFAULT_PASSWORD;
 
   if(!actualOk){
-    errEl.textContent = 'La contraseña actual no es correcta.';
+    errEl.textContent = 'El PIN actual no es correcto.';
     errEl.classList.add('show');
     return;
   }
-  if(nueva.length < 4){
-    errEl.textContent = 'La nueva contraseña debe tener al menos 4 caracteres.';
+  if(!/^\d{4}$/.test(nueva)){
+    errEl.textContent = 'El nuevo PIN debe ser exactamente 4 dígitos numéricos.';
     errEl.classList.add('show');
     return;
   }
   if(nueva !== confirma){
-    errEl.textContent = 'La confirmación no coincide con la nueva contraseña.';
+    errEl.textContent = 'La confirmación no coincide con el nuevo PIN.';
     errEl.classList.add('show');
     return;
   }
@@ -2336,7 +2395,7 @@ document.getElementById('pass-form').addEventListener('submit', async (e)=>{
   };
   await saveAuth();
   passOverlay.classList.remove('active');
-  showToast('Contraseña actualizada correctamente');
+  showToast('PIN actualizado correctamente');
 });
 
 /* ---------------- FECHA HOY ---------------- */
@@ -2397,10 +2456,10 @@ function renderStaff(){
 async function resetStaffPassword(slug){
   const s = STAFF.find(x=>x.slug===slug);
   if(!s) return;
-  if(!confirm(`¿Restablecer la contraseña de "${s.nombre}"?\n\nQuedará sin clave personal ni pregunta de recuperación configuradas, y podrá volver a entrar con la contraseña inicial "${DEFAULT_PASSWORD}". Luego puede definir su propia clave desde «Mi cuenta».`)) return;
+  if(!confirm(`¿Restablecer el PIN de "${s.nombre}"?\n\nQuedará sin PIN personal ni pregunta de recuperación configurados, y podrá volver a entrar con el PIN inicial "${DEFAULT_PASSWORD}". Luego puede definir su propio PIN desde «Mi cuenta».`)) return;
   delete AUTH[slug];
   await saveAuth();
-  showToast(`Contraseña de ${s.nombre} restablecida a "${DEFAULT_PASSWORD}"`);
+  showToast(`PIN de ${s.nombre} restablecido a "${DEFAULT_PASSWORD}"`);
 }
 
 async function assignStaffPin(slug){
