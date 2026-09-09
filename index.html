@@ -2069,9 +2069,11 @@ async function loadStaffRoster(){
 async function saveStaffRoster(){
   try{
     await window.storage.set('staff-roster', JSON.stringify(STAFF), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar la nómina de funcionarios. Intenta nuevamente.');
+    return false;
   }
 }
 function uniqueStaffSlug(nombre){
@@ -2184,9 +2186,11 @@ async function loadAuth(){
 async function saveAuth(){
   try{
     await window.storage.set(AUTH_KEY, JSON.stringify(AUTH), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar el cambio de contraseña. Intenta nuevamente.');
+    return false;
   }
 }
 
@@ -2348,9 +2352,11 @@ document.getElementById('reset-save').addEventListener('click', async ()=>{
     errEl.classList.add('show');
     return;
   }
+  await loadAuth();
+  AUTH[recoverSlug] = AUTH[recoverSlug] || {};
   AUTH[recoverSlug].passwordHash = await sha256(p1);
   AUTH[recoverSlug].updated = Date.now();
-  await saveAuth();
+  if(!(await saveAuth())) return;
   showToast('PIN actualizado. Ya puedes iniciar sesión.');
   showLoginCard('card-login');
 });
@@ -2401,13 +2407,18 @@ document.getElementById('pass-form').addEventListener('submit', async (e)=>{
     return;
   }
 
+  await loadAuth();
   AUTH[currentUser.slug] = {
     passwordHash: await sha256(nueva),
     question: pregunta,
     answerHash: await sha256(normalizeAnswer(respuesta)),
     updated: Date.now()
   };
-  await saveAuth();
+  if(!(await saveAuth())){
+    errEl.textContent = 'No se pudo guardar el PIN. Revisa tu conexión e inténtalo de nuevo.';
+    errEl.classList.add('show');
+    return;
+  }
   passOverlay.classList.remove('active');
   showToast('PIN actualizado correctamente');
 });
@@ -2472,8 +2483,9 @@ async function resetStaffPassword(slug){
   const s = STAFF.find(x=>x.slug===slug);
   if(!s) return;
   if(!confirm(`¿Restablecer el PIN de "${s.nombre}"?\n\nQuedará sin PIN personal ni pregunta de recuperación configurados, y podrá volver a entrar con el PIN inicial "${DEFAULT_PASSWORD}". Luego puede definir su propio PIN desde «Mi cuenta».`)) return;
+  await loadAuth();
   delete AUTH[slug];
-  await saveAuth();
+  if(!(await saveAuth())) return;
   showToast(`PIN de ${s.nombre} restablecido a "${DEFAULT_PASSWORD}"`);
 }
 
@@ -2486,13 +2498,14 @@ async function assignStaffPin(slug){
     alert('El PIN debe ser exactamente 4 dígitos numéricos (por ejemplo: 4821).');
     return;
   }
+  await loadAuth();
   AUTH[slug] = {
     passwordHash: await sha256(pin),
     question: AUTH[slug]?.question || '',
     answerHash: AUTH[slug]?.answerHash || '',
     updated: Date.now()
   };
-  await saveAuth();
+  if(!(await saveAuth())) return;
   showToast(`PIN asignado a ${s.nombre}`);
 }
 
@@ -2547,15 +2560,20 @@ document.getElementById('staff-form').addEventListener('submit', async (e)=>{
   const cargo = document.getElementById('st-cargo').value.trim();
   if(!nombre || !cargo) return;
 
+  let addedSlug = null;
   if(staffEditTarget){
     const s = STAFF.find(x=>x.slug===staffEditTarget);
     if(s){ s.nombre = nombre; s.cargo = cargo; }
   } else {
-    STAFF.push({ slug: uniqueStaffSlug(nombre), nombre, cargo });
+    addedSlug = uniqueStaffSlug(nombre);
+    STAFF.push({ slug: addedSlug, nombre, cargo });
   }
   STAFF.sort((a,b)=> CARGO_ORDER.indexOf(a.cargo)-CARGO_ORDER.indexOf(b.cargo) || a.nombre.localeCompare(b.nombre,'es'));
 
-  await saveStaffRoster();
+  if(!(await saveStaffRoster())){
+    if(addedSlug) STAFF = STAFF.filter(x=>x.slug!==addedSlug);
+    return;
+  }
   renderStaff();
   staffOverlay.classList.remove('active');
   showToast(staffEditTarget ? 'Funcionario actualizado' : 'Funcionario agregado');
@@ -2565,8 +2583,12 @@ async function deleteStaffMember(slug){
   const s = STAFF.find(x=>x.slug===slug);
   if(!s) return;
   if(!confirm(`¿Eliminar a "${s.nombre}" de la nómina de funcionarios?\n\nSu acceso a la plataforma quedará deshabilitado. Las tareas y proyectos ya registrados a su nombre no se eliminan.`)) return;
+  const backup = STAFF;
   STAFF = STAFF.filter(x=>x.slug!==slug);
-  await saveStaffRoster();
+  if(!(await saveStaffRoster())){
+    STAFF = backup;
+    return;
+  }
   renderStaff();
   showToast('Funcionario eliminado de la nómina');
 }
@@ -2672,15 +2694,22 @@ document.getElementById('project-form').addEventListener('submit', async (e)=>{
     creado: Date.now()
   };
   projects.push(proj);
-  await saveProjects();
+  if(!(await saveProjects())){
+    projects = projects.filter(p=>p.id !== proj.id);
+    return;
+  }
   renderProjects();
   closeModal();
   showToast('Proyecto guardado');
 });
 
 async function deleteProject(id){
+  const backup = projects;
   projects = projects.filter(p=>p.id !== id);
-  await saveProjects();
+  if(!(await saveProjects())){
+    projects = backup;
+    return;
+  }
   renderProjects();
   showToast('Proyecto eliminado');
 }
@@ -2688,6 +2717,8 @@ async function deleteProject(id){
 async function toggleProjectDone(id, done){
   const p = projects.find(p=>p.id === id);
   if(!p) return;
+  const prevEstado = p.estado;
+  const prevAnterior = p.estadoAnterior;
   if(done){
     p.estadoAnterior = p.estado;
     p.estado = 'completado';
@@ -2695,7 +2726,12 @@ async function toggleProjectDone(id, done){
     p.estado = p.estadoAnterior || 'curso';
     delete p.estadoAnterior;
   }
-  await saveProjects();
+  if(!(await saveProjects())){
+    p.estado = prevEstado;
+    p.estadoAnterior = prevAnterior;
+    renderProjects();
+    return;
+  }
   renderProjects();
   showToast(done ? 'Proyecto marcado como completado' : 'Proyecto vuelto a marcar como pendiente');
 }
@@ -2810,7 +2846,10 @@ document.getElementById('task-form').addEventListener('submit', async (e)=>{
     creado: Date.now()
   };
   tasks.push(t);
-  await saveTasks();
+  if(!(await saveTasks())){
+    tasks = tasks.filter(x=>x.id !== t.id);
+    return;
+  }
   renderTasks();
   closeTaskModal();
   showToast('Tarea guardada');
@@ -2819,13 +2858,22 @@ document.getElementById('task-form').addEventListener('submit', async (e)=>{
 async function toggleTask(id){
   const t = tasks.find(x=>x.id===id);
   if(!t) return;
+  const prevEstado = t.estado;
   t.estado = t.estado === 'hecha' ? 'pendiente' : 'hecha';
-  await saveTasks();
+  if(!(await saveTasks())){
+    t.estado = prevEstado;
+    renderTasks();
+    return;
+  }
   renderTasks();
 }
 async function deleteTask(id){
+  const backup = tasks;
   tasks = tasks.filter(t=>t.id!==id);
-  await saveTasks();
+  if(!(await saveTasks())){
+    tasks = backup;
+    return;
+  }
   renderTasks();
   showToast('Tarea eliminada');
 }
@@ -2833,11 +2881,12 @@ async function deleteTask(id){
 /* ---------------- STORAGE ---------------- */
 async function saveProjects(){
   try{
-    const result = await window.storage.set(PROJ_KEY, JSON.stringify(projects), true);
-    if(!result){ showToast('No se pudo guardar. Intenta nuevamente.'); }
+    await window.storage.set(PROJ_KEY, JSON.stringify(projects), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
-    showToast('No se pudo guardar. Intenta nuevamente.');
+    showToast('No se pudo guardar el proyecto. Intenta nuevamente.');
+    return false;
   }
 }
 async function loadProjects(){
@@ -2850,11 +2899,12 @@ async function loadProjects(){
 }
 async function saveTasks(){
   try{
-    const result = await window.storage.set(TASK_KEY, JSON.stringify(tasks), true);
-    if(!result){ showToast('No se pudo guardar. Intenta nuevamente.'); }
+    await window.storage.set(TASK_KEY, JSON.stringify(tasks), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
-    showToast('No se pudo guardar. Intenta nuevamente.');
+    showToast('No se pudo guardar la tarea. Intenta nuevamente.');
+    return false;
   }
 }
 async function loadTasks(){
@@ -2993,8 +3043,12 @@ document.getElementById('matricula-file-input').addEventListener('change', async
       showToast('No se encontraron hojas de curso reconocibles (ej. 1°A, 2°C...) en ese archivo.');
       return;
     }
+    const backup = matriculaData;
     matriculaData = parsed;
-    await saveMatricula();
+    if(!(await saveMatricula())){
+      matriculaData = backup;
+      return;
+    }
     renderMatricula();
     refreshStudentDependentViews();
     showToast(`Base de datos ${currentYear} cargada: ${parsed.roster.length} alumnos.`);
@@ -3193,23 +3247,35 @@ async function deleteStudent(id){
   const s = (matriculaData.roster||[]).find(x=>x.id===id);
   if(!s) return;
   if(!confirm(`¿Eliminar definitivamente a "${s.nombre}" (${s.curso})?\n\nEsta acción no se puede deshacer.`)) return;
+  const backup = matriculaData.roster;
   matriculaData.roster = matriculaData.roster.filter(x=>x.id!==id);
-  await saveMatricula();
+  if(!(await saveMatricula())){
+    matriculaData.roster = backup;
+    return;
+  }
   renderMatricula();
   refreshStudentDependentViews();
   showToast('Alumno eliminado de la nómina');
 }
 async function deleteAlta(id){
   if(!confirm('¿Eliminar este registro de alta?')) return;
+  const backup = matriculaData.altas;
   matriculaData.altas = (matriculaData.altas||[]).filter(x=>x.id!==id);
-  await saveMatricula();
+  if(!(await saveMatricula())){
+    matriculaData.altas = backup;
+    return;
+  }
   renderMatricula();
   showToast('Registro de alta eliminado');
 }
 async function deleteBajaRecord(id){
   if(!confirm('¿Eliminar este registro de baja?')) return;
+  const backup = matriculaData.bajas;
   matriculaData.bajas = (matriculaData.bajas||[]).filter(x=>x.id!==id);
-  await saveMatricula();
+  if(!(await saveMatricula())){
+    matriculaData.bajas = backup;
+    return;
+  }
   renderMatricula();
   showToast('Registro de baja eliminado');
 }
@@ -3248,17 +3314,23 @@ document.getElementById('alta-form').addEventListener('submit', async (e)=>{
   matriculaData.roster = matriculaData.roster || [];
   matriculaData.altas = matriculaData.altas || [];
 
+  const newStudentId = 's_'+stamp;
+  const newAltaId = 'al_'+stamp;
   matriculaData.roster.push({
-    id: 's_'+stamp, curso, n_orden:'', n_matricula, fecha_ingreso, fecha_retiro:'',
+    id: newStudentId, curso, n_orden:'', n_matricula, fecha_ingreso, fecha_retiro:'',
     nombre, run, edad, comuna
   });
   matriculaData.altas.push({
-    id: 'al_'+stamp, n: String(matriculaData.altas.length+1), curso, n_matricula,
+    id: newAltaId, n: String(matriculaData.altas.length+1), curso, n_matricula,
     fecha_ingreso, nombre, run, edad, comuna, obs
   });
   matriculaData.roster.sort((a,b)=> cursoIndex(a.curso)-cursoIndex(b.curso) || a.nombre.localeCompare(b.nombre,'es'));
 
-  await saveMatricula();
+  if(!(await saveMatricula())){
+    matriculaData.roster = matriculaData.roster.filter(x=>x.id !== newStudentId);
+    matriculaData.altas = matriculaData.altas.filter(x=>x.id !== newAltaId);
+    return;
+  }
   renderMatricula();
   refreshStudentDependentViews();
   altaOverlay.classList.remove('active');
@@ -3289,6 +3361,7 @@ document.getElementById('baja-form').addEventListener('submit', async (e)=>{
   const motivo = document.getElementById('b-motivo').value.trim();
   const seguimiento = document.getElementById('b-seguimiento').value.trim();
 
+  const prevFechaRetiro = s.fecha_retiro;
   s.fecha_retiro = fecha_retiro;
   matriculaData.bajas = matriculaData.bajas || [];
   const bajaRecord = {
@@ -3298,7 +3371,11 @@ document.getElementById('baja-form').addEventListener('submit', async (e)=>{
   };
   matriculaData.bajas.push(bajaRecord);
 
-  await saveMatricula();
+  if(!(await saveMatricula())){
+    s.fecha_retiro = prevFechaRetiro;
+    matriculaData.bajas = matriculaData.bajas.filter(x=>x.id !== bajaRecord.id);
+    return;
+  }
   bajaCounter += 1;
   await saveBajaCounter();
 
@@ -3361,9 +3438,11 @@ function renderResumen(){
 async function saveMatricula(){
   try{
     await window.storage.set('matricula-'+currentYear, JSON.stringify(matriculaData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
-    showToast('No se pudo guardar la base de datos. Intenta nuevamente.');
+    showToast('No se pudo guardar en la base de datos compartida. Intenta nuevamente.');
+    return false;
   }
 }
 async function loadMatricula(){
@@ -3425,9 +3504,11 @@ async function loadAsistencia(){
 async function saveAsistencia(){
   try{
     await window.storage.set('asistencia-'+currentYear, JSON.stringify(asistenciaData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar la asistencia. Intenta nuevamente.');
+    return false;
   }
 }
 
@@ -3496,11 +3577,27 @@ function renderAsisTomar(){
   });
 
   guardarWrap.innerHTML = `<button class="btn-primary" id="asis-guardar-btn">Guardar asistencia (${students.length} alumnos)</button>`;
-  document.getElementById('asis-guardar-btn').addEventListener('click', async ()=>{
+  document.getElementById('asis-guardar-btn').addEventListener('click', async (ev)=>{
+    const btn = ev.currentTarget;
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    await loadAsistencia();
     asistenciaData.records = asistenciaData.records || {};
-    asistenciaData.records[recKey(fecha,curso)] = { ...asisTomarState };
-    await saveAsistencia();
-    showToast('Asistencia guardada');
+    const key = recKey(fecha,curso);
+    const prevValue = asistenciaData.records[key];
+    asistenciaData.records[key] = { ...asisTomarState };
+    const ok = await saveAsistencia();
+
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+    if(!ok){
+      if(prevValue === undefined) delete asistenciaData.records[key];
+      else asistenciaData.records[key] = prevValue;
+      return;
+    }
+    showToast('Asistencia guardada correctamente ✓');
     renderAsisHistorial();
     renderAsisResumenAlumno();
   });
@@ -3554,8 +3651,12 @@ function renderAsisHistorial(){
   tbody.querySelectorAll('[data-del-rec]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de asistencia?')) return;
+      const backupRec = asistenciaData.records[btn.dataset.delRec];
       delete asistenciaData.records[btn.dataset.delRec];
-      await saveAsistencia();
+      if(!(await saveAsistencia())){
+        asistenciaData.records[btn.dataset.delRec] = backupRec;
+        return;
+      }
       renderAsisHistorial();
       renderAsisResumenAlumno();
       showToast('Registro eliminado');
@@ -3636,8 +3737,11 @@ async function loadAtencionCounter(){
 async function saveAtencionCounter(){
   try{
     await window.storage.set('atencion-counter-'+currentYear, JSON.stringify(atencionCounter), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
+    showToast('No se pudo guardar el número de folio. Intenta nuevamente.');
+    return false;
   }
 }
 function nextFolioAtencion(){
@@ -3954,9 +4058,11 @@ async function loadSuspensiones(){
 async function saveSuspensiones(){
   try{
     await window.storage.set('suspensiones-'+currentYear, JSON.stringify(suspensionesData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar la suspensión. Intenta nuevamente.');
+    return false;
   }
 }
 
@@ -4113,8 +4219,12 @@ function renderSuspensionTable(){
   wrap.querySelectorAll('[data-del-susp]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de suspensión?')) return;
+      const backup = suspensionesData;
       suspensionesData = suspensionesData.filter(x=>x.id!==btn.dataset.delSusp);
-      await saveSuspensiones();
+      if(!(await saveSuspensiones())){
+        suspensionesData = backup;
+        return;
+      }
       renderSuspensionTable();
       renderFichaAlertas();
       renderHoja();
@@ -4154,7 +4264,10 @@ document.getElementById('suspension-form').addEventListener('submit', async (e)=
     creado: Date.now()
   };
   suspensionesData.push(susp);
-  await saveSuspensiones();
+  if(!(await saveSuspensiones())){
+    suspensionesData = suspensionesData.filter(x=>x.id !== susp.id);
+    return;
+  }
 
   try{
     const doc = buildCartaCitacionPDF(susp, s);
@@ -4283,8 +4396,12 @@ function renderFichaTimeline(){
   container.querySelectorAll('[data-del-entry]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar esta anotación?')) return;
+      const backup = libroData;
       libroData = libroData.filter(x=>x.id!==btn.dataset.delEntry);
-      await saveLibro();
+      if(!(await saveLibro())){
+        libroData = backup;
+        return;
+      }
       renderFichaTimeline();
       renderFichaAlertas();
       renderLibro();
@@ -4390,9 +4507,11 @@ async function loadGestiones(){
 async function saveGestiones(){
   try{
     await window.storage.set('gestiones-'+currentYear, JSON.stringify(gestionesData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar la gestión. Intenta nuevamente.');
+    return false;
   }
 }
 function lastGestionTs(studentId, tipo){
@@ -4400,8 +4519,12 @@ function lastGestionTs(studentId, tipo){
   return list.length ? Math.max(...list.map(g=>g.creado||0)) : 0;
 }
 async function markGestion(studentId, tipo){
-  gestionesData.push({ id:'ge_'+Date.now(), studentId, tipo, fecha: new Date().toISOString().slice(0,10), autor: currentUser ? currentUser.nombre : '—', creado: Date.now() });
-  await saveGestiones();
+  const entry = { id:'ge_'+Date.now(), studentId, tipo, fecha: new Date().toISOString().slice(0,10), autor: currentUser ? currentUser.nombre : '—', creado: Date.now() };
+  gestionesData.push(entry);
+  if(!(await saveGestiones())){
+    gestionesData = gestionesData.filter(x=>x.id !== entry.id);
+    return;
+  }
   renderHoja();
   showToast('Caso marcado como gestionado');
 }
@@ -4538,9 +4661,11 @@ async function loadAtrasos(){
 async function saveAtrasos(){
   try{
     await window.storage.set('atrasos-'+currentYear, JSON.stringify(atrasosData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar el atraso. Intenta nuevamente.');
+    return false;
   }
 }
 
@@ -4574,7 +4699,7 @@ document.getElementById('atraso-form').addEventListener('submit', async (e)=>{
   const studentId = document.getElementById('at-alumno').value;
   const s = findStudent(studentId);
   if(!s){ showToast('Selecciona un alumno válido.'); return; }
-  atrasosData.push({
+  const entry = {
     id: 'at_' + Date.now(),
     studentId,
     curso: s.curso,
@@ -4586,8 +4711,12 @@ document.getElementById('atraso-form').addEventListener('submit', async (e)=>{
     observacion: document.getElementById('at-obs').value.trim(),
     autor: currentUser ? currentUser.nombre : '—',
     creado: Date.now()
-  });
-  await saveAtrasos();
+  };
+  atrasosData.push(entry);
+  if(!(await saveAtrasos())){
+    atrasosData = atrasosData.filter(x=>x.id !== entry.id);
+    return;
+  }
   atrasoOverlay.classList.remove('active');
   renderAtrasos();
   showToast('Atraso registrado');
@@ -4630,8 +4759,12 @@ function renderAtrasosHistorial(){
   tbody.querySelectorAll('[data-del-atraso]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de atraso?')) return;
+      const backup = atrasosData;
       atrasosData = atrasosData.filter(x=>x.id!==btn.dataset.delAtraso);
-      await saveAtrasos();
+      if(!(await saveAtrasos())){
+        atrasosData = backup;
+        return;
+      }
       renderAtrasos();
       showToast('Atraso eliminado');
     });
@@ -4684,9 +4817,11 @@ async function loadFichas(){
 async function saveFichas(){
   try{
     await window.storage.set('fichas-'+currentYear, JSON.stringify(fichasData), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar el registro de la ficha. Intenta nuevamente.');
+    return false;
   }
 }
 function nextFolio(){
@@ -4706,8 +4841,11 @@ async function loadBajaCounter(){
 async function saveBajaCounter(){
   try{
     await window.storage.set('baja-counter-'+currentYear, JSON.stringify(bajaCounter), true);
+    return true;
   }catch(err){
     console.error('Storage error:', err);
+    showToast('No se pudo guardar el número de folio de baja. Intenta nuevamente.');
+    return false;
   }
 }
 function nextFolioBaja(){
@@ -4997,16 +5135,21 @@ document.getElementById('fichamat-form').addEventListener('submit', async (e)=>{
     matriculaData.roster = matriculaData.roster || [];
     matriculaData.altas = matriculaData.altas || [];
     const newId = 's_' + stamp;
+    const newAltaId = 'al_' + stamp;
     matriculaData.roster.push({
       id: newId, curso, n_orden:'', n_matricula:'', fecha_ingreso: fecha_matricula, fecha_retiro:'',
       nombre, run, edad:'', comuna:''
     });
     matriculaData.altas.push({
-      id: 'al_' + stamp, n: String(matriculaData.altas.length+1), curso, n_matricula:'',
+      id: newAltaId, n: String(matriculaData.altas.length+1), curso, n_matricula:'',
       fecha_ingreso: fecha_matricula, nombre, run, edad:'', comuna:'', obs: 'Ingresado mediante Ficha de matrícula'
     });
     matriculaData.roster.sort((a,b)=> cursoIndex(a.curso)-cursoIndex(b.curso) || a.nombre.localeCompare(b.nombre,'es'));
-    await saveMatricula();
+    if(!(await saveMatricula())){
+      matriculaData.roster = matriculaData.roster.filter(x=>x.id !== newId);
+      matriculaData.altas = matriculaData.altas.filter(x=>x.id !== newAltaId);
+      return;
+    }
     cargadoId = newId;
   }
 
@@ -5030,7 +5173,11 @@ document.getElementById('fichamat-form').addEventListener('submit', async (e)=>{
 
   fichasData.list.push(record);
   fichasData.counter += 1;
-  await saveFichas();
+  if(!(await saveFichas())){
+    fichasData.list = fichasData.list.filter(x=>x.id !== record.id);
+    fichasData.counter -= 1;
+    return;
+  }
 
   try{
     const doc = buildFichaPDF(record);
@@ -5085,8 +5232,12 @@ function renderFichas(){
   tbody.querySelectorAll('[data-del-ficha]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de ficha? El folio no se reutilizará.')) return;
+      const backup = fichasData.list;
       fichasData.list = fichasData.list.filter(x=>x.id!==btn.dataset.delFicha);
-      await saveFichas();
+      if(!(await saveFichas())){
+        fichasData.list = backup;
+        return;
+      }
       renderFichas();
       showToast('Ficha eliminada del registro');
     });
