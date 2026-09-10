@@ -1975,11 +1975,6 @@
         <div class="rt-card" id="retiroInspCard">
           <h2 class="rt-section-title" style="font-size:15px;">Panel de Inspectoría General</h2>
           <div class="rt-note">Permite corregir cualquier dato de un retiro ya registrado, o eliminarlo. Solo Claudio Valenzuela o Luis Cádiz Fuenzalida, con su clave personal, pueden usar este panel.</div>
-          <div class="rt-note" style="margin-top:10px;">Los retiros registrados antes del cambio de base de datos quedaron guardados en Incosaf y no aparecen aquí todavía. Selecciona el inspector y escribe tu clave personal arriba, luego usa este botón (una sola vez) para traerlos.
-            <div class="rt-form-actions" style="margin-top:10px;">
-              <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="inspMigrarBtn">Migrar historial desde Incosaf</button>
-            </div>
-          </div>
           <div class="rt-grid-2">
             <div class="rt-field">
               <label for="inspInspector">Inspector</label>
@@ -6039,7 +6034,7 @@ init();
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
     getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, setDoc,
-    onSnapshot, query, orderBy, serverTimestamp, runTransaction, getDocs
+    onSnapshot, query, orderBy, serverTimestamp, runTransaction
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   const { jsPDF } = window.jspdf;
 
@@ -6055,9 +6050,6 @@ init();
   };
   const app = initializeApp(firebaseConfig, 'retiro-auth');
   const auth = getAuth(app);
-  // Solo para leer, una vez, el historial anterior guardado en Incosaf
-  // y traerlo a la base nueva (ver inspMigrarBtn más abajo).
-  const oldIncosafDb = getFirestore(app);
 
   // Los DATOS (retiros, contadores, auditoría, etc.) ahora se guardan en la
   // base de datos propia del Libro digital, separada de la de Incosaf, para
@@ -6663,42 +6655,6 @@ init();
       console.error(err);
       showToast('No se pudo eliminar el retiro.');
     }
-  });
-
-  // Trae, una sola vez, todo lo que ya estaba guardado en Incosaf hacia la
-  // base de datos nueva (Libro digital). No borra nada del lado de Incosaf;
-  // usa el mismo id de documento en ambos lados, así que se puede volver a
-  // presionar sin duplicar nada si algo se corta a la mitad.
-  const RT_MIGRAR_COLECCIONES = ['retiros','contadores','auditoria','retiroAsistencia','retiroConfig','retiroInspLog','asistenciaRosterEventos'];
-  document.getElementById('inspMigrarBtn').addEventListener('click', async ()=>{
-    const inspector = document.getElementById('inspInspector').value;
-    const claveInput = document.getElementById('inspClave');
-    if(claveInput.value !== retiroInspAccessKeys[inspector]){
-      showToast('Clave de acceso incorrecta.');
-      claveInput.value = '';
-      return;
-    }
-    if(!window.confirm('¿Traer todo el historial anterior desde Incosaf? Puede tardar unos segundos.')) return;
-    const btn = document.getElementById('inspMigrarBtn');
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Migrando...';
-    let total = 0;
-    try{
-      for(const nombre of RT_MIGRAR_COLECCIONES){
-        const snap = await getDocs(collection(oldIncosafDb, nombre));
-        for(const docSnap of snap.docs){
-          await setDoc(doc(db, nombre, docSnap.id), docSnap.data());
-          total++;
-        }
-      }
-      showToast(`✓ Migración completa: ${total} registro(s) traídos desde Incosaf.`);
-    }catch(err){
-      console.error(err);
-      showToast('No se pudo migrar el historial: ' + (err && (err.code || err.message) ? (err.code || err.message) : 'error desconocido'));
-    }
-    btn.disabled = false;
-    btn.textContent = original;
   });
 
   document.getElementById('inspCambiarClaveBtn').addEventListener('click', async ()=>{
