@@ -2863,7 +2863,8 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2600);
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=>t.classList.remove('show'), 6000);
 }
 
 /* ---------------- NAV ---------------- */
@@ -6997,7 +6998,7 @@ init();
       showToast('✓ Retiro registrado. Folio N° '+String(folio).padStart(5,'0'));
     }catch(err){
       console.error(err);
-      showToast('No se pudo registrar el retiro. Intente nuevamente.');
+      showToast('No se pudo registrar el retiro: ' + (err && (err.code || err.message) ? (err.code || err.message) : 'error desconocido'));
     }
   });
 
