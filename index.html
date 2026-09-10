@@ -937,6 +937,351 @@
     color:#fff;
     margin-left:8px;
   }
+
+/* ===================================================================
+   RETIRO DE ESTUDIANTES — módulo compartido con la intranet
+   (todo el CSS queda anidado bajo #view-retiro para no tocar el resto
+   del sitio; usa sus propias variables --rt-* en vez de las del sitio) */
+#view-retiro{
+  --rt-navy-deep:#07072e;
+  --rt-navy:#0e0e5c;
+  --rt-navy-light:#1a1a7a;
+  --rt-gold:#f2c118;
+  --rt-gold-deep:#c99a06;
+  --rt-gold-pale:#fbe6a3;
+  --rt-paper:#f6f5f0;
+  --rt-ink:#1c1c2e;
+  --rt-ink-soft:#54546b;
+  --rt-line:#dcdbe6;
+  --rt-danger:#b8322f;
+  --rt-danger-bg:#fbe9e8;
+  --rt-ok:#1f7a4d;
+  --rt-ok-bg:#e7f5ee;
+  --rt-radius:10px;
+  --rt-font-display:'Rockwell','Georgia',serif;
+  --rt-font-body:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  --rt-font-mono:'Consolas','Menlo',monospace;
+  font-family:var(--rt-font-body);
+  color:var(--rt-ink);
+}
+#view-retiro h2.rt-section-title{
+  font-family:var(--rt-font-display);
+  font-size:19px;
+  color:var(--rt-navy-deep);
+  margin:0 0 4px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#view-retiro h2.rt-section-title .rt-tag{
+  font-family:var(--rt-font-mono);
+  font-size:11px;
+  background:var(--rt-navy);
+  color:var(--rt-gold);
+  padding:3px 8px;
+  border-radius:4px;
+  letter-spacing:.06em;
+}
+#view-retiro .rt-year-select{
+  font-family:var(--rt-font-mono);
+  font-size:12.5px;
+  font-weight:700;
+  background:#fff;
+  color:var(--rt-navy-deep);
+  border:1.5px solid var(--rt-line);
+  padding:5px 10px;
+  border-radius:6px;
+  letter-spacing:.03em;
+  cursor:pointer;
+}
+#view-retiro p.rt-section-desc{
+  color:var(--rt-ink-soft);
+  font-size:13.5px;
+  margin:0 0 20px;
+}
+#view-retiro .rt-card{
+  background:#fff;
+  border:1px solid var(--rt-line);
+  border-radius:var(--rt-radius);
+  padding:22px;
+  box-shadow:0 1px 3px rgba(14,14,92,.06);
+}
+#view-retiro .rt-card + .rt-card{margin-top:18px;}
+#view-retiro form#retiroForm{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px 20px;
+}
+#view-retiro .rt-field{display:flex;flex-direction:column;gap:6px;}
+#view-retiro .rt-field.rt-full{grid-column:1/-1;}
+#view-retiro .rt-field label{
+  font-size:12px;
+  font-weight:700;
+  color:var(--rt-navy);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+#view-retiro input[type=text],
+#view-retiro input[type=date],
+#view-retiro input[type=time],
+#view-retiro input[type=number],
+#view-retiro input[type=password],
+#view-retiro input[type=file],
+#view-retiro select,
+#view-retiro textarea{
+  border:1.5px solid var(--rt-line);
+  border-radius:7px;
+  padding:10px 12px;
+  font-size:14px;
+  font-family:var(--rt-font-body);
+  color:var(--rt-ink);
+  background:#fdfdfc;
+  transition:border-color .15s, box-shadow .15s;
+  width:100%;
+}
+#view-retiro input:focus,
+#view-retiro select:focus,
+#view-retiro textarea:focus{
+  outline:none;
+  border-color:var(--rt-navy-light);
+  box-shadow:0 0 0 3px rgba(26,26,122,.12);
+}
+#view-retiro textarea{resize:vertical;min-height:70px;}
+#view-retiro .rt-form-actions{
+  grid-column:1/-1;
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:6px;
+  padding-top:16px;
+  border-top:1px solid var(--rt-line);
+}
+#view-retiro .rt-form-actions.rt-between{justify-content:space-between;}
+#view-retiro button.rt-btn{
+  appearance:none;
+  border:none;
+  border-radius:7px;
+  padding:10px 20px;
+  font-family:var(--rt-font-body);
+  font-weight:700;
+  font-size:13.5px;
+  cursor:pointer;
+  transition:transform .1s, box-shadow .15s, background .15s;
+}
+#view-retiro button.rt-btn:active{transform:translateY(1px);}
+#view-retiro .rt-btn-primary{
+  background:linear-gradient(135deg,var(--rt-navy-light),var(--rt-navy));
+  color:#fff;
+  box-shadow:0 2px 6px rgba(14,14,92,.25);
+}
+#view-retiro .rt-btn-primary:hover{box-shadow:0 3px 10px rgba(14,14,92,.35);}
+#view-retiro .rt-btn-ghost{
+  background:transparent;
+  border:1.5px solid var(--rt-line);
+  color:var(--rt-ink-soft);
+}
+#view-retiro .rt-btn-ghost:hover{border-color:var(--rt-navy);color:var(--rt-navy);}
+#view-retiro .rt-btn-gold{
+  background:linear-gradient(135deg,var(--rt-gold),var(--rt-gold-deep));
+  color:var(--rt-navy-deep);
+  box-shadow:0 2px 6px rgba(201,154,6,.35);
+}
+#view-retiro .rt-btn-danger{background:var(--rt-danger-bg);color:var(--rt-danger);border:1.5px solid #f0c6c4;}
+#view-retiro .rt-btn-danger:hover{background:#f6d5d3;}
+#view-retiro .rt-btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+#view-retiro .rt-note{
+  background:var(--rt-gold-pale);
+  border:1px solid var(--rt-gold-deep);
+  border-radius:8px;
+  padding:12px 14px;
+  font-size:12.5px;
+  color:var(--rt-ink);
+  line-height:1.5;
+}
+#view-retiro .rt-subtabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+#view-retiro .rt-subtab-btn{
+  appearance:none;
+  border:1px solid var(--rt-line);
+  background:#fff;
+  color:var(--rt-ink-soft);
+  font-family:var(--rt-font-body);
+  font-size:12.5px;
+  font-weight:700;
+  padding:8px 16px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:background .15s, color .15s, border-color .15s;
+}
+#view-retiro .rt-subtab-btn:hover{border-color:var(--rt-gold-deep);color:var(--rt-navy);}
+#view-retiro .rt-subtab-btn.active{
+  background:var(--rt-navy);
+  border-color:var(--rt-navy);
+  color:var(--rt-gold);
+}
+#view-retiro .rt-grid-2{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px 20px;
+  margin-bottom:16px;
+}
+@media (max-width:640px){ #view-retiro .rt-grid-2{grid-template-columns:1fr;} }
+#view-retiro .rt-alumno-hist-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:14px;
+  font-weight:700;
+  color:var(--rt-navy);
+}
+#view-retiro .rt-alumno-hist-total{
+  font-family:var(--rt-font-mono);
+  font-size:12px;
+  background:var(--rt-navy);
+  color:var(--rt-gold);
+  padding:3px 10px;
+  border-radius:999px;
+}
+#view-retiro .rt-month-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+}
+@media (max-width:640px){ #view-retiro .rt-month-grid{grid-template-columns:repeat(3,1fr);} }
+#view-retiro .rt-month-box{
+  text-align:center;
+  border:1px solid var(--rt-line);
+  border-radius:8px;
+  padding:8px 4px;
+  background:#fbfaf4;
+}
+#view-retiro .rt-month-box.has-data{
+  border-color:var(--rt-gold-deep);
+  background:var(--rt-gold-pale);
+}
+#view-retiro .rt-month-box .rt-month-name{
+  display:block;
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--rt-ink-soft);
+  font-weight:700;
+}
+#view-retiro .rt-month-box .rt-month-count{
+  display:block;
+  font-family:var(--rt-font-display);
+  font-size:18px;
+  color:var(--rt-navy-deep);
+  margin-top:2px;
+}
+#view-retiro .rt-pill{
+  display:inline-block;
+  font-size:11px;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:999px;
+}
+#view-retiro .rt-pill-ok{background:var(--rt-ok-bg);color:var(--rt-ok);}
+#view-retiro .rt-pill-no{background:var(--rt-danger-bg);color:var(--rt-danger);}
+#view-retiro .rt-table-scroll{max-height:520px;overflow:auto;border:1px solid var(--rt-line);border-radius:8px;}
+#view-retiro table{width:100%;border-collapse:collapse;font-size:13.5px;}
+#view-retiro thead th{
+  text-align:left;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:#fff;
+  background:var(--rt-navy);
+  padding:11px 12px;
+  position:sticky;
+  top:0;
+}
+#view-retiro tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--rt-line);
+  vertical-align:top;
+}
+#view-retiro tbody tr:hover{background:#f9f8f2;}
+#view-retiro .rt-icon-btn{
+  border:none;background:transparent;cursor:pointer;
+  color:var(--rt-ink-soft);font-size:13px;padding:4px 6px;border-radius:5px;
+}
+#view-retiro .rt-icon-btn:hover{background:var(--rt-line);color:var(--rt-ink);}
+#view-retiro .rt-empty-state{
+  text-align:center;
+  padding:50px 20px;
+  color:var(--rt-ink-soft);
+}
+#view-retiro .rt-empty-state .rt-glyph{font-size:34px;margin-bottom:8px;display:block;}
+#view-retiro .rt-report-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:14px;
+  margin-bottom:20px;
+}
+#view-retiro .rt-stat-card{
+  background:linear-gradient(160deg,#fff, #fbfaf4);
+  border:1px solid var(--rt-line);
+  border-left:4px solid var(--rt-gold-deep);
+  border-radius:9px;
+  padding:16px 18px;
+}
+#view-retiro .rt-stat-card .rt-stat-label{
+  font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--rt-ink-soft);font-weight:700;margin-bottom:6px;
+}
+#view-retiro .rt-stat-card .rt-stat-value{
+  font-family:var(--rt-font-display);
+  font-size:28px;
+  color:var(--rt-navy-deep);
+}
+#view-retiro .rt-stat-canvas{width:100%;max-height:240px;display:block;}
+#view-retiro .rt-insp-details{
+  margin-top:16px;
+  border-top:1px solid var(--rt-line);
+  padding-top:14px;
+}
+#view-retiro .rt-insp-details summary{
+  cursor:pointer;
+  font-weight:700;
+  color:var(--rt-navy);
+  font-size:13px;
+}
+#view-retiro .rt-gate{
+  max-width:380px;
+  margin:60px auto;
+  background:#fff;
+  border-radius:14px;
+  padding:36px 32px;
+  text-align:center;
+  box-shadow:0 10px 34px rgba(7,7,46,.14);
+}
+#view-retiro .rt-gate h1{
+  font-family:var(--rt-font-display);
+  color:var(--rt-navy-deep);
+  font-size:19px;
+  margin:0 0 6px;
+}
+#view-retiro .rt-gate p{color:var(--rt-ink-soft);font-size:13px;margin:0 0 20px;}
+#view-retiro .rt-gate form{display:flex;flex-direction:column;gap:10px;text-align:left;}
+#view-retiro .rt-gate input{
+  border:1.5px solid var(--rt-line);
+  border-radius:7px;
+  padding:12px;
+  font-size:18px;
+  text-align:center;
+  letter-spacing:.3em;
+}
+#view-retiro .rt-gate-error{color:var(--rt-danger);font-size:12.5px;margin:0;display:none;}
+#view-retiro .rt-gate-error.show{display:block;}
+
 </style>
 </head>
 <body>
@@ -1057,6 +1402,10 @@
     <button data-view="projects">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
       Proyectos
+    </button>
+    <button data-view="retiro">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg>
+      Retiro de estudiantes
     </button>
   </nav>
   <div class="sidebar-foot" style="border-bottom:1px solid rgba(255,255,255,0.14);">
@@ -1435,6 +1784,341 @@
     <div id="proj-list"></div>
     <div id="proj-empty" class="empty-state" style="display:none;">
       Todavía no hay proyectos registrados. Usa «Ingresar proyecto» para incorporar los proyectos ya creados de la unidad.
+    </div>
+  </section>
+
+
+  <!-- ================= RETIRO DE ESTUDIANTES ================= -->
+  <section id="view-retiro" class="view">
+
+    <!-- Acceso: este módulo comparte la base de datos (Firebase) con la
+         intranet institucional, así que usa el mismo PIN que ahí en vez
+         del login de "Funcionario" del libro digital. -->
+    <div id="rt-gate" class="rt-gate">
+      <h1>Retiro de estudiantes</h1>
+      <p>Este módulo comparte la base de datos con la intranet institucional. Ingresa el mismo PIN que usas ahí para continuar.</p>
+      <div class="rt-gate-error" id="rt-gate-error">PIN incorrecto.</div>
+      <form id="rt-pin-form">
+        <input type="password" id="rt-pin-input" placeholder="PIN" required autocomplete="off" inputmode="numeric">
+        <button type="submit" class="rt-btn rt-btn-primary">Ingresar</button>
+      </form>
+    </div>
+
+    <div id="rt-app" style="display:none;">
+      <div class="topbar">
+        <div>
+          <h1>Retiro de estudiantes</h1>
+          <div class="sub">Registre el retiro de un alumno durante la jornada escolar y genere el comprobante en PDF.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <select id="rt-anio-select" class="rt-year-select" title="Año escolar activo"></select>
+          <span style="font-size:12px;color:var(--rt-ink-soft);font-weight:600;" id="rt-session-user"></span>
+          <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="rt-logout-btn">Cerrar sesión</button>
+        </div>
+      </div>
+
+      <div class="rt-subtabs">
+        <button class="rt-subtab-btn active" data-subtab="retiro-nuevo">Nuevo retiro</button>
+        <button class="rt-subtab-btn" data-subtab="retiro-historial">Historial</button>
+        <button class="rt-subtab-btn" data-subtab="retiro-stats">Estadísticas</button>
+        <button class="rt-subtab-btn" data-subtab="retiro-importar">Importar matrícula</button>
+      </div>
+
+      <!-- Nuevo retiro -->
+      <div id="rt-sub-retiro-nuevo">
+        <div class="rt-card">
+          <form id="retiroForm">
+            <div class="rt-field">
+              <label for="ret-fecha">Fecha</label>
+              <input type="date" id="ret-fecha" required>
+            </div>
+            <div class="rt-field">
+              <label for="ret-hora">Hora de retiro</label>
+              <input type="time" id="ret-hora" required>
+            </div>
+            <div class="rt-field">
+              <label for="ret-alumno">Nombre del alumno</label>
+              <input type="text" id="ret-alumno" placeholder="Nombre y apellidos" list="ret-alumno-list" required>
+              <datalist id="ret-alumno-list"></datalist>
+            </div>
+            <div class="rt-field">
+              <label for="ret-curso">Curso</label>
+              <input type="text" id="ret-curso" placeholder="Ej: 1° Medio A" required>
+            </div>
+            <div class="rt-field">
+              <label for="ret-retira">Nombre de quien retira</label>
+              <input type="text" id="ret-retira" placeholder="Nombre y apellidos" required>
+            </div>
+            <div class="rt-field">
+              <label for="ret-relacion">Relación con el alumno</label>
+              <select id="ret-relacion">
+                <option value="Padre">Padre</option>
+                <option value="Madre">Madre</option>
+                <option value="Apoderado">Apoderado</option>
+                <option value="Otro autorizado">Otro autorizado</option>
+              </select>
+            </div>
+            <div class="rt-field">
+              <label for="ret-motivo">Motivo del retiro</label>
+              <select id="ret-motivo">
+                <option value="Enfermedad">Enfermedad</option>
+                <option value="Hora médica">Hora médica</option>
+                <option value="Trámites administrativos">Trámites administrativos</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="rt-field">
+              <label for="ret-justificado">¿Retiro justificado?</label>
+              <select id="ret-justificado">
+                <option value="Sí">Sí</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="rt-field rt-full">
+              <label for="ret-obs">Observaciones (opcional)</label>
+              <textarea id="ret-obs" placeholder="Detalle adicional si corresponde"></textarea>
+            </div>
+            <div class="rt-form-actions">
+              <button type="button" class="rt-btn rt-btn-ghost" id="retiroResetBtn">Limpiar formulario</button>
+              <button type="submit" class="rt-btn rt-btn-primary">Registrar y generar PDF</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="rt-card" id="retiroAlumnoHistCard" style="display:none;">
+          <h2 class="rt-section-title" style="font-size:15px;">Retiros del alumno durante el año <span id="retiroAlumnoAnio" class="rt-tag"></span></h2>
+          <div class="rt-alumno-hist-summary">
+            <span id="retiroAlumnoNombre"></span>
+            <span class="rt-alumno-hist-total" id="retiroAlumnoTotal">0 retiros</span>
+          </div>
+          <div class="rt-month-grid" id="retiroAlumnoMeses"></div>
+          <div class="rt-field" style="margin-top:14px;max-width:280px;">
+            <label for="retiroAsistenciaInput">% de asistencia actual</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" id="retiroAsistenciaInput" min="0" max="100" step="0.1" style="max-width:100px;">
+              <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="retiroAsistenciaGuardarBtn">Guardar</button>
+              <span class="rt-pill" id="retiroAsistenciaBadge" style="display:none;"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rt-card">
+          <div class="rt-note">Al registrar el retiro se generará un comprobante en PDF con folio correlativo, el cual debe ser <strong>impreso y firmado de forma manuscrita por el apoderado</strong> (quien retira al alumno) en el establecimiento. El documento incluye una declaración de responsabilidad del apoderado y advierte sobre la pérdida de cobertura del Seguro Escolar durante el retiro.</div>
+        </div>
+      </div>
+
+      <!-- Historial -->
+      <div id="rt-sub-retiro-historial" style="display:none;">
+        <div class="rt-card" style="padding:0;overflow:hidden;">
+          <div class="rt-table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Folio</th><th>Fecha</th><th>Hora</th><th>Curso</th><th>Alumno</th>
+                  <th>Retira</th><th>Motivo</th><th>Justificado</th><th>PDF</th>
+                </tr>
+              </thead>
+              <tbody id="retiroHistBody"></tbody>
+            </table>
+          </div>
+          <div class="rt-empty-state" id="retiroHistEmpty" style="display:none;">
+            <span class="rt-glyph">🚪</span>
+            Aún no hay retiros registrados en este año.
+          </div>
+        </div>
+
+        <div class="rt-card" id="retiroInspCard">
+          <h2 class="rt-section-title" style="font-size:15px;">Panel de Inspectoría General</h2>
+          <div class="rt-note">Permite corregir cualquier dato de un retiro ya registrado, o eliminarlo. Solo Claudio Valenzuela o Luis Cádiz Fuenzalida, con su clave personal, pueden usar este panel.</div>
+          <div class="rt-grid-2">
+            <div class="rt-field">
+              <label for="inspInspector">Inspector</label>
+              <select id="inspInspector">
+                <option value="Claudio Valenzuela">Claudio Valenzuela</option>
+                <option value="Luis Cádiz Fuenzalida">Luis Cádiz Fuenzalida</option>
+              </select>
+            </div>
+            <div class="rt-field">
+              <label for="inspClave">Clave personal</label>
+              <input type="password" id="inspClave" placeholder="Clave personal del inspector" autocomplete="off">
+            </div>
+            <div class="rt-field rt-full">
+              <label for="inspFolio">Retiro a editar o eliminar</label>
+              <select id="inspFolio"><option value="">Seleccione un retiro…</option></select>
+            </div>
+          </div>
+
+          <div id="inspEditFields" style="display:none;">
+            <div class="rt-grid-2" style="margin-top:6px;">
+              <div class="rt-field">
+                <label for="inspEdFecha">Fecha</label>
+                <input type="date" id="inspEdFecha">
+              </div>
+              <div class="rt-field">
+                <label for="inspEdHora">Hora de retiro</label>
+                <input type="time" id="inspEdHora">
+              </div>
+              <div class="rt-field">
+                <label for="inspEdAlumno">Nombre del alumno</label>
+                <input type="text" id="inspEdAlumno">
+              </div>
+              <div class="rt-field">
+                <label for="inspEdCurso">Curso</label>
+                <input type="text" id="inspEdCurso">
+              </div>
+              <div class="rt-field">
+                <label for="inspEdRetira">Nombre de quien retira</label>
+                <input type="text" id="inspEdRetira">
+              </div>
+              <div class="rt-field">
+                <label for="inspEdRelacion">Relación con el alumno</label>
+                <select id="inspEdRelacion">
+                  <option value="Padre">Padre</option>
+                  <option value="Madre">Madre</option>
+                  <option value="Apoderado">Apoderado</option>
+                  <option value="Otro autorizado">Otro autorizado</option>
+                </select>
+              </div>
+              <div class="rt-field">
+                <label for="inspEdMotivo">Motivo del retiro</label>
+                <select id="inspEdMotivo">
+                  <option value="Enfermedad">Enfermedad</option>
+                  <option value="Hora médica">Hora médica</option>
+                  <option value="Trámites administrativos">Trámites administrativos</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="rt-field">
+                <label for="inspEdJustificado">¿Retiro justificado?</label>
+                <select id="inspEdJustificado">
+                  <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+              <div class="rt-field rt-full">
+                <label for="inspEdObs">Observaciones</label>
+                <textarea id="inspEdObs"></textarea>
+              </div>
+            </div>
+            <div class="rt-form-actions rt-between">
+              <button type="button" class="rt-btn rt-btn-ghost" id="inspEliminarBtn" style="color:var(--rt-danger);border-color:var(--rt-danger);">Eliminar registro</button>
+              <button type="button" class="rt-btn rt-btn-primary" id="inspGuardarBtn">Guardar cambios</button>
+            </div>
+          </div>
+
+          <details class="rt-insp-details">
+            <summary>Cambiar mi clave personal</summary>
+            <div class="rt-grid-2" style="margin-top:12px;">
+              <div class="rt-field">
+                <label for="inspClaveInspector">Inspector</label>
+                <select id="inspClaveInspector">
+                  <option value="Claudio Valenzuela">Claudio Valenzuela</option>
+                  <option value="Luis Cádiz Fuenzalida">Luis Cádiz Fuenzalida</option>
+                </select>
+              </div>
+              <div class="rt-field">
+                <label for="inspClaveActual">Clave actual</label>
+                <input type="password" id="inspClaveActual" autocomplete="off">
+              </div>
+              <div class="rt-field">
+                <label for="inspClaveNueva">Nueva clave (mínimo 4 caracteres)</label>
+                <input type="password" id="inspClaveNueva" autocomplete="off">
+              </div>
+            </div>
+            <div class="rt-form-actions">
+              <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="inspCambiarClaveBtn">Cambiar clave</button>
+            </div>
+          </details>
+
+          <div class="rt-table-scroll" style="margin-top:14px;">
+            <table>
+              <thead>
+                <tr><th>Fecha</th><th>Inspector</th><th>Folio</th><th>Alumno</th><th>Cambio</th></tr>
+              </thead>
+              <tbody id="inspLogBody"></tbody>
+            </table>
+          </div>
+          <div class="rt-empty-state" id="inspLogEmpty" style="display:none;padding:14px 0 4px;">
+            Aún no hay cambios registrados en este panel.
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div id="rt-sub-retiro-stats" style="display:none;">
+        <div class="rt-card">
+          <h2 class="rt-section-title" style="font-size:15px;">Filtro por rango de fechas</h2>
+          <div class="rt-grid-2">
+            <div class="rt-field">
+              <label for="ret-stat-desde">Desde</label>
+              <input type="date" id="ret-stat-desde">
+            </div>
+            <div class="rt-field">
+              <label for="ret-stat-hasta">Hasta</label>
+              <input type="date" id="ret-stat-hasta">
+            </div>
+          </div>
+          <div class="rt-form-actions rt-between">
+            <button class="rt-btn rt-btn-ghost" id="retiroStatResetBtn">Ver todo el año</button>
+            <button class="rt-btn rt-btn-gold" id="retiroStatPdfBtn">Generar presentación gerencial (PDF)</button>
+          </div>
+        </div>
+
+        <div class="rt-card rt-empty-state" id="retiroStatNoData" style="display:none;">
+          <span class="rt-glyph">📊</span>No hay retiros registrados en el rango de fechas seleccionado.
+        </div>
+
+        <div id="retiroStatContent">
+          <div class="rt-report-grid">
+            <div class="rt-stat-card"><div class="rt-stat-label">Total de retiros</div><div class="rt-stat-value" id="retKpiTotal">0</div></div>
+            <div class="rt-stat-card"><div class="rt-stat-label">Retiros justificados</div><div class="rt-stat-value" id="retKpiJust">0%</div></div>
+            <div class="rt-stat-card"><div class="rt-stat-label">Retiros no justificados</div><div class="rt-stat-value" id="retKpiNoJust">0%</div></div>
+            <div class="rt-stat-card"><div class="rt-stat-label">Motivo más frecuente</div><div class="rt-stat-value" style="font-size:16px;" id="retKpiMotivo">-</div></div>
+          </div>
+
+          <div class="rt-card">
+            <h2 class="rt-section-title" style="font-size:15px;">Retiros por motivo</h2>
+            <canvas id="retChartMotivo" class="rt-stat-canvas"></canvas>
+          </div>
+          <div class="rt-card">
+            <h2 class="rt-section-title" style="font-size:15px;">Justificado vs. no justificado</h2>
+            <canvas id="retChartJust" class="rt-stat-canvas" style="max-height:220px;"></canvas>
+          </div>
+          <div class="rt-card">
+            <h2 class="rt-section-title" style="font-size:15px;">Retiros por curso</h2>
+            <canvas id="retChartCurso" class="rt-stat-canvas"></canvas>
+          </div>
+          <div class="rt-card">
+            <h2 class="rt-section-title" style="font-size:15px;">Evolución de retiros por fecha</h2>
+            <canvas id="retChartFecha" class="rt-stat-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Importar matrícula -->
+      <div id="rt-sub-retiro-importar" style="display:none;">
+        <div class="rt-card">
+          <h2 class="rt-section-title" style="font-size:15px;">Importar base de datos desde Excel</h2>
+          <p class="rt-section-desc" style="margin-top:-8px;">Sube la planilla oficial de matrícula (.xls o .xlsx, mismo formato REGISTRO). Se compara curso por curso contra la nómina actual y se detectan altas y bajas automáticamente. Esta es la misma base de datos que alimenta el autocompletado de "Nombre del alumno" en Nuevo retiro (compartida con la intranet).</p>
+          <div class="rt-grid-2">
+            <div class="rt-field rt-full">
+              <label for="asis-import-excel-file">Archivo Excel</label>
+              <input type="file" id="asis-import-excel-file" accept=".xls,.xlsx">
+            </div>
+          </div>
+          <div class="rt-form-actions">
+            <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="asis-analizar-excel-btn">Analizar archivo</button>
+          </div>
+          <div class="rt-note" id="asis-import-preview-box" style="display:none;">
+            <p id="asis-import-preview-text" style="font-weight:700;"></p>
+            <div class="rt-form-actions">
+              <button type="button" class="rt-btn rt-btn-primary rt-btn-sm" id="asis-confirmar-importacion-btn">Confirmar importación</button>
+              <button type="button" class="rt-btn rt-btn-ghost rt-btn-sm" id="asis-cancelar-importacion-btn">Cancelar</button>
+            </div>
+          </div>
+          <p id="asis-import-msg" style="font-size:13px;font-weight:700;"></p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -4865,5 +5549,1114 @@ async function init(){
 }
 init();
 </script>
+<script type="module">
+  // =====================================================================
+  // RETIRO DE ESTUDIANTES — módulo que comparte la base de datos (Firebase)
+  // con la intranet institucional (snlmjjs-tech/incosafinterno). Se ejecuta
+  // como su propio <script type="module"> y usa su propio login por PIN
+  // (mismas cuentas que en la intranet), independiente del login de
+  // "Funcionario" del resto del libro digital.
+  // =====================================================================
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, setDoc,
+    onSnapshot, query, orderBy, serverTimestamp, runTransaction
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  const { jsPDF } = window.jspdf;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMg-fnOkEdg_whrsj3O-HfKrezTXfYbXg",
+    authDomain: "incosafintranet.firebaseapp.com",
+    projectId: "incosafintranet",
+    storageBucket: "incosafintranet.firebasestorage.app",
+    messagingSenderId: "466123047655",
+    appId: "1:466123047655:web:510e737d3cb0eabcf61842"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Cuentas con acceso a Retiro de estudiantes en la intranet (mismo
+  // directorio: el código no contiene los PIN, solo el correo y el nombre;
+  // el PIN se prueba como contraseña contra cada correo hasta encontrar la
+  // cuenta a la que pertenece — igual que en la intranet).
+  const RT_USER_DIRECTORY = [
+    { email: 'luis.cadiz@incosafintranet.cl',        nombre: 'Luis Ramón Cádiz Fuenzalida' },
+    { email: 'claudio.valenzuela@incosafintranet.cl', nombre: 'Claudio Matías Valenzuela Fuentes' },
+    { email: 'alvaro.lisboa@incosafintranet.cl',      nombre: 'Álvaro Lisboa Roa' },
+    { email: 'sandy.bravo@incosafintranet.cl',        nombre: 'Sandy Bravo Cornejo' },
+    { email: 'raul.lopez@incosafintranet.cl',         nombre: 'Raúl López Ortega' },
+    { email: 'nery.marin@incosafintranet.cl',         nombre: 'Nery Marín' }
+  ];
+
+  function rtNameForEmail(email){
+    const entry = RT_USER_DIRECTORY.find(u=>u.email===email);
+    return entry ? entry.nombre : email;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function getCrestDataUrl(){
+    const img = document.querySelector('.sidebar-head img');
+    return img && img.src ? img.src : null;
+  }
+
+  let currentUserName = null;
+  const ASIS_ROSTER = {"1°A": ["ARCHILES RÍOS BASTIÁN EXEQUIEL", "CABRERA JORQUERA ISIDORA ANDREA", "CALQUÍN BECERRA CAMILA VICTORIA", "COLINA BECERRA JORGE EDUARDO", "CUADRA MAYORGA LUCAS ANDRÉS", "FLORES CONCHA ORLANDO EDGARDO", "GONZÁLEZ ROMERO VICENTE AGUSTÍN", "HERNÁNDEZ QUINTERO ERIALETH FERNANDA", "HERRERA ORTEGA CRISTÓBAL IGNACIO", "JAQUE SAAVEDRA EMILIO AGUSTÍN", "MORENO CORTES MARY MAR", "PINO PAREDES TRINIDAD ANAÍS", "QUEZADA PALOMINOS ISIDORA ANAIS", "RIVEROS CARREÑO FRANCHESCA ANDREA", "TOBAR VALDIVIA MÁXIMO WILLIAMS", "VALENZUELA CONTRERAS LISSETTE ANTONIA", "ORELLANA CORNEJO VALENTINA ALEJANDRA", "OSORIO PARRA TOMAS ANTONIO", "HERNANDEZ HEVIA ADRIEL ANTONIO"], "1°B": ["ARENAS TOBAR AYLINN AMANDA", "BARRIOS UZCATEGUI KENYABEL DEL CARMEN", "CABRERA RAMIREZ CARLOS BYRON", "CASTILLO PARDO MARIA ISABEL", "CONTRERAS VERGARA JEAN PIERRE", "CORNEJO ESCOBAR MARTÍN ALONSO", "GARRIDO ASTUDILLO LIZ GRACE", "GARRIDO CARVAJAL LAURA PASCAL", "JARAMILLO RAMÍREZ GABRIEL IGNACIO", "JIRÓN GONZÁLEZ MAXIMILIANO ALEXANDER", "LABRAÑA GÁLVEZ JORGE JESÚS", "METTIG GARCÍA SANTIAGO LEÓN", "MOYA GUERRA CONSTANZA MILY", "SERRANO VENEGAS ANASTASIA ALIET ODETTE", "RIOS PAUCARA JHON MIGUEL", "MORAGA OLGUIN JOSEFA ANTONELLA", "TRABOL SOTO VICENTE ANTONIO", "DÍAS ESPINOZA TRINIDAD IGNACIA", "ANDRADE URTUBIA JAVIERA PAULINA"], "1°C": ["BECERRA NAVARRO SOFÍA IGNACIA", "BOGADO ROJAS MAITE ESTHEFANIA", "CALDERÓN LORCA PAZ BELÉN", "CORNEJO CÁCERES ÉDAN ISMAEL", "CORRAL CABEZAS PÍA ISIDORA", "DÍAZ CARVAJAL MERCEDES ANTONIA", "ESPINOZA MOYA JADIEL ANDRÉS", "FLORES ARAYA NICOLÁS IGNACIO", "GONZÁLEZ ROJAS LUIS FRANCISCO", "IBARRA VALENZUELA MAITE ALEJANDRA", "JILBERTO BUSTOS SERGIO MATEO", "LÓPEZ CAMPOS VICENTE ANDRÉS", "MORALES PÉREZ CRISTAL", "MUÑOZ CASTILLO MATÍAS ALEXIS", "PARDO CARVAJAL CONSTANZA ANDREA", "PEREZ GONZALEZ ABRAHAM JOSE", "ROJAS AHUMADA JAVIER ANDRÉS", "ROJAS CASTRO MIA HERLEIN", "ROJAS ZURITA JUAN PABLO", "VALENZUELA SAAVEDRA AGUSTÍN ALEXANDER", "PÉREZ BRAVO FRANCISCO JAVIER"], "1°D": ["BOLIVAR HERNANDEZ DIEGO GABRIEL", "CAMPOS MENA LEAH ARACELY", "CANTILLANA ACEITUNO MAITE AMARAL", "CHÁVEZ ARIAS AGUSTÍN MAXIMILIANO", "CORNEJO RIQUELME MARTÍN ANDRÉS", "DUARTE SEPÚLVEDA AGUSTINA AMARAL", "FARÍAS ÓRDENES CONSTANZA JACQUELINE", "GÁLVEZ DÍAZ DIEGO FLAMINIO", "GONZÁLEZ DÍAZ CRISTIAN HERNÁN", "GONZÁLEZ POLANCO ZAIRA ANAÍS", "LAGOS MIRA ZAHIRA STEPHANIE", "PINO BALLESTA MAXIMILIANO IGNACIO", "RAMÍREZ MARTÍNEZ MARIANA JIMENA", "RANGEL FAJARDO SOFIA ISABELLA", "ROSALES RODRÍGUEZ ASHLOMINIC ESTRELLA", "TAPIA GONZÁLEZ PABLO IGNACIO", "UBILLA VALENZUELA GINNA APOLONIA", "URRUTIA BRIONES YONHATAN ALEJANDRO", "VALLADARES CORNEJO LISSETTE ANNAISS"], "1°E": ["ALVAREZ TOLOZA DAYAN ALEXIS", "BURDILES FLORES MARÍA FLORENCIA", "CABELLO GONZÁLEZ VICENTE ANTONIO", "CELIS RUZ JULIÁN ALONSO", "CORDERO CABEZAS RUBÉN CARLOS REINEL", "CORNEJO GUAJARDO BENJAMÍN SEBASTIÁN", "FLORES DUARTES RAFAEL ALONSO", "FREDES BECERRA JOAQUÍN ALEJANDRO", "GÓMEZ NÚÑEZ FERNANDA OLIVIA", "GONZÁLEZ DONOSO VALERIA FERNANDA", "GONZÁLEZ OLGUÍN DANIEL IGNACIO", "GONZÁLEZ VALENCIA WILLIAMS JEFERSON", "LÓPEZ BUSTAMANTE JAVIER ALEJANDRO", "MEDINA SALAZAR ISAAC", "MUÑOZ GÓMEZ SIMÓN IGNACIO", "NINA VELIZ JHANET CLARA", "PINO ARENAS MARTÍN NICOLÁS", "RAMÍREZ LETELIER VICENTE ANTONIO", "ROMÁN MENA MARÍA ESPERANZA", "RUBILAR MORAGA LEANDRO ANDRÉS", "OLIVARES SILVA JORGE ANDRES", "APOLONIO ESPINOZA RAÚL IGNACIO"], "1°F": ["ALBORNOZ ESPINOZA FABIÁN ALONSO", "CABEZAS GONZÁLEZ CARLOS CRISTÓBAL", "CELIS FARÍAS LUCAS BENJAMÍN", "CEPEDA CÁCERES AMANDA ANTONELLA", "COFRÉ ROMO RICARDO ANTONIO", "DONOSO MANCILLA CRISTÓBAL RENÉ", "DUARTE CHOQUE KEVIN", "ELIZONDO PEREIRA JAVIERA MONSERRAT", "ESPINOZA VERGARA ALAN BALTAZAR", "FUENZALIDA MADRID MONTSERRAT ANTONIA", "GÓMEZ GÓMEZ JAVIERA ANDREA", "JORQUERA ROMERO ALEXI ALEJANDRO", "LÓPEZ VALENZUELA ALISON CHARLOT", "LORCA ARANEDA MATILDA RAYEN", "LOYOLA ACEVEDO GABRIEL ALONSO", "ROJAS HUENCHULAO ANALÍA MARCELA", "SILVA MARTÍNEZ GABRIELA ALEJANDRA", "PINO CATALAN ISIDORA PASCAL", "CONTRERAS ARAYA VALENTIN AARON", "DONOSO CASTRO KRISHNA ESPERANZA"], "1°G": ["ACEITÓN CONTRERAS IVAN ANDRÉS", "ALBORNOZ RÍOS ANGELO DAMIÁN", "BARRERA GONZÁLEZ IVANNA ISIDORA", "BUSTOS FUENTES FLORENCIA AGUSTINA", "CABRERA GONZÁLEZ MARTINA ESTEFANÍA", "ERAZO ROJAS EMYLI PAZ", "FREIRE MONTENEGRO IRIS SUJEI", "GONZÁLEZ CÁRDENAS CRISTIAN BRAYAN", "GONZÁLEZ CÓRDOVA JOHANS EDGARDO", "MACHUCA DONOSO MARTÍN JOSÉ", "MORALES MUÑOZ JULIÁN ANDRÉS", "NÚÑEZ MATURANA JHENDELEN YAMILET", "PARRA MARTÍNEZ ESTEFANÍA VAITIARE", "PARRAGUEZ BALLESTEROS LUCAS ALEJANDRO", "QUEZADA MUÑOZ ANTONELLA IGNACIA", "RIQUELME FLORES THAÍS AGUSTINA", "ZUÑIGA ROMAN SARA ALEJANDRA", "DURAN FIERRO PAULO ANTONIO"], "2°A": ["ALBORNOZ JARA JOHAN VLADIMIR", "AVILÉS CORRADA JAVIER ANDRÉS", "CÁCERES PARRA VICENTE ARTURO", "CÓRDOVA MILLANAO SEBASTIÁN MATIAS", "DAZA GALARCE JAVIER ESTEBAN", "GONZÁLEZ ROMERO BENJAMÍN ISAAC", "JARA MUÑOZ MATÍAS IGNACIO", "LAGOS QUINTRIQUEO MAXIMILIANO ANDRES", "MENDIVIL CERVANTES CARLOS DANIEL", "MOYA BARRERA ROUSSEMERY SCARLETT", "MUNDACA ROJAS JAVIERA AMARAL", "MUÑOZ CASTRO MARTINA FLORENCIA DE JESÚS", "MUÑOZ LILLO MATÍAS IGNACIO", "NILO CALDERÓN AYLEEN ANTHONNELLA", "OSORIO ARÁNGUIZ LUCAS CRISTIAN", "PEREZ CAMEJO ROBERT EDICTO", "PONCE CÁRDENAS EMILY AMADA", "REYES LOBOS BASTIÁN ANTONIO", "RODRÍGUEZ CÁCERES DANIEL IGNACIO", "ROMÁN HUERTA EMERSON ANTONIO", "RUIZ CONCHA CATALINA ISABEL", "SALGADO LIZANA ALISON ABIGAIL", "TOBAR TORRES LUCAS MAXIMILIANO", "GUERRA CONTRERAS PASCAL MONSERRAT"], "2°B": ["ADRIAZOLA NÚÑEZ MARTINA CONSTANZA", "BERMUDEZ LOPEZ JUAN JOSE", "BERNAL BUSTOS BENJAMÍN ALONSO", "BUSTAMANTE ESCOBAR TOMÁS IGNACIO", "ESCOBAR PEREIRA MATÍAS ANDRÉS", "GAMBOA CLAVERÍA THIARE TRINIDAD ARLENE", "GUTIERREZ QUIJADA FABIOLA VALENTINA", "LEÓN GUTIÉRREZ FRANCISCA ANTONIA", "NAVARRO SAAVEDRA VÍCTOR DAVID", "NEIRA VALDIVIA JARIEL HERNÁN", "PÉREZ CHÁVEZ IGNACIO ANTONIO", "POBLETE MUÑOZ JOAQUÍN THOMAS", "ROJAS HORTA JAVIER EDUARDO", "ROMERO MUÑOZ IGNACIA VAITHIARE", "SAAVEDRA GAETE ESTEBAN ALEXIS", "SANTANDER SANHUEZA PAUL ALEXANDER", "URRUTIA BRIONES BENJAMÍN ALEJANDRO", "URZÚA VERGARA PASCALE ANASTACIA", "VÁSQUEZ BOZO IGNACIO ANSELMO", "VIDAL SEPÚLVEDA ORLANDO DAVID", "ZÚÑIGA CARIS MAXIMILIANO ESTIVEN", "ROJAS ARELLANO ANTHONELLA PERLA FERNANDA"], "2°C": ["BRAVO JIMÉNEZ VÍCTOR ESTEBAN", "CARO VARGAS NICOLÁS ANDRÉS", "FUENZALIDA JILBERTO MARÍA PAZ", "GARCIA GARCIA BRIGHTON BANKS", "IRAIRA FLORES WILLIAM IGNACIO", "LÓPEZ ROMERO AGUSTINA PAZ", "MENDOZA GONZALEZ BRYAN JOSE", "OLIVERA LÓPEZ JULIETA IGNACIA", "RIQUELME BARRA MAXIMILIANO ALONSO", "ROJAS RIQUELME LUIS ALBERTO", "ROJAS SANCHEZ CARLOS JOSE", "SANCHEZ CASTILLO AYMAR CAMILA", "URZÚA VERGARA LUKAS CRISTÓBAL", "VALENZUELA ATENAS AGUSTINA ELENA", "VALERIO INOSTROZA SOFÍA JACQUELINE", "VARGAS AHIJOS ARIEL EDRIAN IGNACIO", "VILLARREAL MORA JOSÉ PEDRO AGUSTÍN", "ZAPATA REBOLLEDO CATALINA ANTONIA", "RUJANO LEON ROSIBETH ANICHAS", "SILVA SILVA JULIO FRANCISCO", "MORALES MORA ZANIRA YAZMIN", "BENITEZ BARAHONA GASPAR ELISEO", "BECERRA UBILLA MILLARAY BELÉN"], "2°D": ["ARAQUE AGUILERA ANGELYS SOFIA", "ASTUDILLO ESCOBAR FRANCISCO ANTONIO", "BARAHONA FARÍAS ROUSE FLORENCIA", "BRIONES MUÑOZ GONZALO IGNACIO", "CÁCERES CERECEDA ROMINA ANTONIA", "CUEVAS VÁSQUEZ MATÍAS IGNACIO", "FIGUEROA MEJÍAS RICARDO ANTONIO", "FLORES MORA DARÍO ALEXIS", "GODOY JORQUERA LUIS RODRIGO", "GONZÁLEZ RAMÍREZ MONSERRAT POLETT", "HUICHICOI ABURTO FERNANDA YAZMIN", "LEAL SIBADA DESIREE CAROLINA", "LIZANA SALGADO BENJAMÍN ALEJANDRO", "MATURANA LÓPEZ AGUSTÍN JOSÉ", "MONARDE INOSTROZA GASPAR ANTHUAN", "MOYA VENEGAS JOAQUÍN ANDRÉS", "PINTO MUÑOZ KATRINA AURORA", "RAMÍREZ JARAMILLO ANTONIA CATALINA", "SALINAS MORALES GUSTAVO RAMÓN", "VALERIO INOSTROZA ALEJANDRO IGNACIO", "CAVIERES CALDERON FELIPE ISAIAS", "CERDA OLGUÍN PASCAL COLOMBA"], "2°E": ["ACEVEDO CIFUENTES THIARE ANAHIS", "AGÜERO AGUILAR VICENTE NICOLAS", "ÁVILA LOBOS MIGUEL ANGEL", "AVILÉS VALENZUELA KEVIN STEVEN", "BUSTAMANTE VARAS ÁLVARO SEBASTIÁN", "CAMPOS PIZARRO JOAQUÍN EMILIANO", "CASTRO GARCIA NAYRELIS NATHALY", "CIOLINA CAYUMÁN GUIANELLA BELÉN", "DÍAZ VALLADARES PILAR ANDREA", "DUME ROOD-SHNYDER", "DUME TOMMY LAURENT", "JIMÉNEZ ALVIAL MAXIMIANO ALBERTO", "JOSEPH WIDENSLEY", "LABBÉ DÍAZ JOEL ELÍAS", "MOSCOSO CARRIEL JORDÁN ANDRÉS", "ORELLANA BECERRA JOAQUÍN IGNACIO", "ORELLANA GÓMEZ JOAQUÍN FERNANDO", "ORMAZÁBAL CORTEZ BALTHAZAR CRISTÓBAL EDUARDO", "PERALTA LOBOS TOMÁS ALEXANDER", "POBLETE BARRIOS MARIO AGUSTÍN", "REYES MORENO DUVAN FELIPE", "ROJAS HUENCHULAO ALEXIS ANTONIO", "TACURI PACO JHASMIN ANDREA", "TAPIA LEIVA ALEX ORLANDO", "ZAMORANO PINO SOFÍA BELLA PASCAL"], "2°F": ["BAENA GIRALDO YHONEIKER STIVEN", "BECERRA DÍAZ HELENA VICTORIA", "DÍAZ TOBAR FELIPE IGNACIO", "GONZÁLEZ GONZÁLEZ EXEQUIEL ANTONIO", "GONZÁLEZ RODRÍGUEZ AGUSTÍN MIGUEL", "GUTIÉRREZ CORTEZ BENJAMÍN ALEXANDER", "HIDALGO FREDES ELIAS DANIEL ANDRES", "INOSTROZA LARA JOEL DAVID", "LOBOS GÓMEZ ISIDORA ANTONIA", "MENESES RÍOS GASPAR IGNACIO", "MUÑOZ SALAZAR SOFÍA ISIDORA", "OSORIO RIQUELME JONATHAN ALEJANDRO", "PARRA DUARTE JOSÉ THOMÁS", "PINO CASTRO CRISTOPHER LUCIANO", "RAMÍREZ MARTÍNEZ ALEJANDRO ESTEBAN", "RAMÍREZ PARRAGUEZ ALICIA MARLEY", "ROMÁN ROA AMALIA ESTEPHANYA", "ROMERO BENAVIDES DANIEL ANDRÉS", "ROZAS VARGAS MAITTE ANGELYNE", "RUIZ GONZÁLEZ MARTINA JOSEFA", "SILVA RAMÍREZ EXEQUIEL ALONSO", "SOTO LAMAS VALENTINA ANTONELLA", "YEE GARCIA ANDREA CATALINA", "MUÑOZ PIZARRO IGNACIA ANAIS", "GONZÁLEZ HERNANDEZ LITSSY ANTONELLA"], "2°G": ["ACEVEDO ARAYA GISELLA ESTRELLA", "ARCE CÁCERES CARLOS MARCELO", "BASCUÑÁN SALDÍA PAZ FLORENCIA", "CARDENAS MADRID LUISANGEL MIGUEL", "ESPÍNOLA PINO FLORENCIA VICTORIA", "MEDINA QUEZADA EVAN ZAID", "MEJIAS GARCIA ORIANNYS CECILIA", "MENDOZA ESPINOZA ERIC IGNACIO", "MUÑOZ SALAZAR SOFÍA ALEJANDRA IGNACIA", "MUÑOZ SALDAÑA DANIEL IGNACIO", "ORTEGA HERNÁNDEZ JERSON MAXIMILIANO", "PACHECO RUMATZ ALAN IGNACIO", "PALACIOS MENDOZA YUNIOR SAMIR", "PATETE PEREZ VALERIA VALENTINA", "PÉREZ CABEZAS CONSTANZA JAVIERA", "POBLETE CONTRERAS ANTONELA MONSERRATT", "RIQUELME CORNEJO KARINA ANTONIA", "RIQUELME CRUZ RENATO ANTONIO", "ROJAS CANALES RENATO BENJAMÍN", "SILVA MARTÍNEZ JESÚS GABRIEL", "VALENZUELA ARANEDA DAMIÁN ANTONIO", "ORMAZABAL CANEO SCARLET ALEXANDRA", "BRAVO PIÑA JOSÉ MARTÍN", "ITURRIAGA ZAMORANO AGATHA DEL MONSERRAT", "SANTANDER BUSTAMANTE FLORENCIA ANTONIA"], "3°A": ["ALDEA SOTO BIANCA MONSERRATT", "ARECHAVALA VALDIVIA MARTÍN IGNACIO", "ASTORGA ACEITÓN NATASHA VALENTINA", "BRAVO CABEZAS HAMBAR CATALINA", "BRIONES JARA CAMILO ANTONIO", "CÁCERES RETAMAL MARTINA BELEN OMAIRA", "CALDERÓN GÓMEZ JAVIERA IGNACIA", "CARREÑO LEÓN MATÍAS ALEJANDRO", "CARRIEL MUÑOZ CONSTANZA SILVANA BELÉN", "CEPEDA FUENTES CRISTOPHER GABRIEL", "CHÁVEZ CHÁVEZ MONZERRAT ESTEFANÍA", "CORTEZ RIVEROS JAVIERA MASSIELL", "DAZAROLA CAMPILLAY DARIELA ALEJANDRA", "DÍAZ ACEITUNO THIARE FERNANDA", "DÍAZ ARRIAGADA PRISCILA AMPARO", "GALAZ ANDRADES VALENTINA ESTEFANÍA", "GONZÁLEZ ROJAS MARCELO GABRIEL", "GUERRA FARÍAS FRANCISCO JAVIER", "HEVIA VERGARA JOSEPHA IGNACIA", "HORMAZÁBAL BUSTAMANTE CONSTANZA BELÉN", "LAFUENTE CASTELLON EYTHAN RUDY", "LOPEZ FRANCO LAURA PAMELA", "MANRÍQUEZ FUENTES BENJAMÍN ELÍAS", "MARTÍNEZ JAQUE ANTONELLA IGNACIA", "MARTÍNEZ PIÑA SEBASTIÁN AMARO", "MOYA OLIVOS LUCAS BASTIÁN", "NARANJO GUERRERO SOFÍA FERNANDA", "PINO ARENAS LUISA MATILDA ANTONIA", "ROZAS MATURANA MARTÍN JAVIER", "TAPIA FERNÁNDEZ ANTONELLA PAZ", "VALENZUELA ATENAS THIARE ANTONELLA", "VIDAL MILLA MASSIEL IGNACIA", "VIDAL MUÑOZ ÁLVARO ANTONIO", "ZEPEDA CARREÑO CATALINA PAZ", "GAMBOA CARO YESICA NICOL ESTEFANIA"], "3°B": ["ACEITÓN PINO JOSÉ ELÍAS ADRIÁN", "ARENAS MORENO MATÍAS FELIPE", "AROS VALENZUELA SEBASTIÁN IGNACIO", "BECERRA DÍAZ EMILIA IGNACIA", "BRAVO DÍAZ RAÚL MARTÍN", "BRIONES SEPÚLVEDA GABRIEL IGNACIO", "CABRERA SALINAS THOMAS ALONSO", "CASTILLO ARENAS MIA SCARLETH ANAHIS", "CASTRO SAN MARTÍN MIGUEL ANGEL", "CUEVAS OSORIO STACEY DANAE", "FARFÁN GALAZ MARTÍN ALONSO", "FARÍAS MUÑOZ BÁRBARA IVONNE", "GAETE MÉNDEZ SOFÍA ELENA", "GALAZ VARGAS PÍA VERÓNICA IGNACIA", "GALLARDO CARRERA ASHLEY MONSERRAT", "JARA GÁLVEZ MATÍAS FERNANDO", "LARENAS PINO FRANCHESCA PAZCAL", "LÓPEZ DÍAZ ANTONIA PAZ", "LOPEZ ZELADA JEN CARLO", "MAUREIRA BUSTOS DANAE MAGDALENA", "MENESES ROMERO ANAIIS AMPARO", "MUÑOZ PINTO SOFÍA ANTONIA", "NAVARRO QUIROZ VALENTINA DANAE", "NOGUERA PRADO EDGARLY CAMILA", "PARRAGUEZ BALLESTEROS LUIS TOMÁS", "RAMÍREZ GONZÁLEZ DALILA NICOL", "ROMERO RIVEROS CAROL MILLARAY", "SAN MARTÍN SOLÍS MAXIMILIANO ALEJANDRO", "SILVA GONZÁLEZ CRISTÓBAL ANDRÉS", "TOBAR SOTO ANTONIA BELÉN", "VALENZUELA HERNÁNDEZ AGUSTINA BELÉN", "VALENZUELA VEGA DILAN MOISÉS", "VARGAS CAÑETE LUIS ALEJANDRO", "PARRAGUEZ ROMERO FLORENCIA IGNACIA"], "3°C": ["ALIAGA NÚÑEZ NYDIA NOEMÍ", "CABELLO LLANCAFIL MATILDA RENATA", "CÁCERES GÓMEZ ESTEBAN ANTONIO", "CALDERÓN GÁLVEZ GENESIS ESPERANZA", "CARREÑO ROJAS CATALINA ANDREA", "CASTELLÓN DOTTIS ALEXIS ENRIQUE", "CAVIERES CORNEJO DAYANET ANTONELA", "CORDERO FARFÁN VÍCTOR JAVIER", "DONOSO ROJAS JAVIER ELÍAS", "GARRIDO ASTUDILLO GABRIELA CONSTANZA", "GÓMEZ NÚÑEZ LEONARDO ALFONSO", "LARENAS CORVALÁN TANIA BETSABET", "LEMUS PINTO ALISON MONSERRAT", "MEDINA CÁCERES MARÍA PAZ", "OSORIO JIMÉNEZ JOAN AGUSTÍN", "QUINTANILLA GONZÁLEZ ANTONIA PASKAL", "SALINAS DÍAZ BENJAMÍN NICOLÁS", "TORRES MANRÍQUEZ MICHELLE CAROLINA", "ABARCA JIMENEZ VALENTINA ALEXANDRA", "GONZALEZ HAYDEN AMELIA CAROLINA"], "3°D": ["ADASME ZÚÑIGA AILIN ANTONELLA PASKAL", "ÁLVAREZ MEZA ALONSO ANDRÉS", "ÁLVAREZ SILVA DENIS ANTONIA", "ARTIAGA BASCUÑÁN JOAN ISAIAS", "CÁCERES LIZANA GIANELLA ANDREA", "CALDERÓN SEPÚLVEDA CRISTIAN FRANCISCO", "CELIS RUZ VICENTE JAMIL RENÉ", "DÍAZ PINO RAYEN AMARAL", "DONOSO GÓMEZ GIANELLA MARIÓN", "FUENTES QUIROZ MÁXIMO EDEMIR", "GONZÁLEZ CARIS MICHEL ALEXIS", "GONZÁLEZ OLMEDO SOFÍA ANELIS", "IBÁÑEZ MOYA FRANK EDUAR", "MANRÍQUEZ AGUAYO OSCAR MAXIMILIANO", "PÉREZ JARAMILLO GABRIELA YARITZA", "QUINTERO DAZA MÁXIMO", "SOTO SILVA LOURDES IGNACIA", "TOLEDO GUERRERO MATÍAS ALONSO", "GUELFI RIQUELME ILIANNE ARLETTE", "RIQUELME CORNEJO ANTONIA ISIDORA"], "3°E": ["ARANCIBIA OSORIO CATALINA ANAÍS", "BRAVO EPUL NAHUEL FERNANDO", "CANALES SILVA NICOLÁS IGNACIO", "CAYUPE EVERT BRANDON MAXIMILIANO", "CORRAL CABEZAS DAVID ISAAC", "FABRES ESPINOZA THOMÁS GONZALO", "GONZÁLEZ ACUÑA VICENTE JESÚS", "GONZÁLEZ QUEZADA MAICOL NICOLÁS", "KONG MOYA DANIEL ELÍAS", "LINARES ARAUJO SANTIAGO JESUS", "LISHAM URRA SIMÓN ALONSO", "LÓPEZ BUSTAMANTE GABRIEL ALEXANDER", "MEZA VALENZUELA ABIGAIL VALENTINA", "MORA LIRA MÁXIMO AUGUSTO", "OLIVARES BECERRA STEVEN ANDRÉS", "ORMAZÁBAL CONTRERAS BENJAMÍN ABEL", "PAREDES CORONADO JOAQUÍN NICOLÁS", "PEÑALOZA REUMAY JAVIER ANTONIO JOSÉ", "PEREIRA BASTÍAS BASTIÁN ALEJANDRO", "PEREZ GONZÁLEZ RENATO BASTIÁN", "PINO AHUMADA JAVIER ALONSO", "PIÑA CHÁVEZ JORGE ALONSO", "ROJAS PALMA JOAQUÍN ALONSO", "RUZ REYES BASTIÁN ANDRÉS", "SALGADO ASTUDILLO KHEVIN ALEXIS", "SALINAS CANDIA MARTÍN ALEJANDRO", "SOTO GALLARDO YOVANY ANTONIO", "SPULER GONZÁLEZ SEBASTIÁN ALEXIS", "TAPIA ROJAS MARTÍN ISMAEL", "VAQUER CASTRO IAN ANTONIO", "VERGARA MUÑOZ BENJAMÍN MATEO", "ZÚÑIGA ESCOBAR DYLAN ROY"], "3°F": ["AGUIRRE ASTORGA FRANCISCA PILAR", "ALEGRÍA CELIS MARCELO ENRIQUE", "APONTE ROMERO EVEN ANTONIO", "BORRERO CASTRO ANDRES DAVID", "CABEZAS VALDERRAMA TOMÁS AGUSTÍN", "CALVO HORTA PATRICK IGNACIO", "CAMPOS MEDINA PEDRO JOAQUÍN IGNACIO", "CASTRO LÓPEZ AMARO ENRIQUE", "CERPA VIDAL MAXIMILIANO TOMÁS", "ESTELLE GONZÁLEZ TRINIDAD IGNACIA", "FABRES ESPINOZA NICOLÁS GONZALO", "GUERRERO IBARRA FRANCHESCA ANAHI", "GUERRERO SALAS CRISTIAN DANIEL", "LIBERONA ARMIJO MARTÍN EDUARDO", "MORALES CABEZAS VICENTE RAFAEL", "NIEVA ALARCÓN FRANCISCA", "ORTIZ TORRES ALEX ANDRÉS", "PEÑA LARA CRISTIAN ORLANDO", "ROGEL CANALES AGUSTÍN ADOLFO", "SALINAS BRAVO FLORENCIA IGNACIA", "SÁNCHEZ LÓPEZ OLIVER", "SILVA SALAZAR CAMILO ANTONIO", "SOTO LEIVA MIA VALERIE", "URRA LÓPEZ ALONSO ESTEBAN", "VALENZUELA ESPINA KEVIN ALEXANDER", "VALENZUELA OLEA CRISTIAN DAMIÁN", "VALVERDE CID TAIS MICOL", "VIDAL SÁNCHEZ EDUARDO JAVIER", "ROJAS ARAVENA CRISTIAN RODRIGO"], "4°A": ["ABARCA GÓMEZ CATALINA EMILIA", "ACUÑA MÁRQUEZ MARTINA ISABEL", "ALVAREZ TOLOZA YERLY JULIANA", "ARÉVALO NÚÑEZ MAXIMILIANO BENJAMÍN", "ARIAS ALARCÓN YASMIN BEATRIZ", "BRAVO LARENAS JOAQUÍN IGNACIO", "BRIONES ZAGAL ISRAEL EDUARDO", "CÁCERES GUERRERO MARÍA FRANCISCA", "CAMPOS MENA MARÍA IGNACIA", "CONTRERAS TOBAR ALESSANDRO DE JESÚS", "DELGADO BARRA ALONDRA NAYENIF", "ESPINOZA SILVA CRISTÓBAL ALEXANDER", "FIERRO DÍAZ AGUSTINA ANTONIA", "GALAZ GAMBOA JAVIERA ANTONIA", "GALAZ SALINAS PASKAL ALONDRA", "HUENTENAO VENEGAS VICENTE IGNACIO", "LEPE RIQUELME ANTONELLA ISIDORA", "LEYTON DUARTE IGNACIA BELÉN", "MEJÍAS JEREZ MANUEL ALEJANDRO", "MORENO NAVARRO SABRINA ALEJANDRA", "NÚÑEZ VILOS MONSERRAT NICOLE", "ORELLANA CASTRO VALENTINA ANTONIA", "OSORIO ARENAS TAMARA ALEJANDRA", "OSORIO SILVA AGUSTINA IGNACIA", "ROMÁN PRIETO ANTONELA CAROLINA", "SOTO RETAMAL ESTEBAN ALEXIS", "TONDRO ACUÑA LUZ MARGARITA", "URDANETA URDANETA CAMILA ALEXANDRA", "VALDERRAMA FLORES ALEXANDER ANTONIO", "VÁSQUEZ MELÉNDEZ JAVIER ALONSO", "VERGARA PAREDES DAMARY DANNAE", "VIDAL SAAVEDRA DIEGO BENJAMÍN", "ZAMBRANO SOLORZANO KIMBERLY PAMELA", "ZÚÑIGA CONTRERAS BRAULIO ALONSO"], "4°B": ["AGUILAR GALAZ PAZ VALENTINA", "ARIAS BRAVO GUSTAVO ADOLFO", "CÁCERES SOTO SOFÍA CATALINA", "CERPA MANRÍQUEZ CRICHNNA ANTONIA", "CHICO CAICEDO SEAN KELEER", "COLICHEO MEZA ISABEL ALEJANDRA", "DELGADO REYES JAVIERA ALEXANDRA", "DÍAZ MENESES JOAQUÍN ALFONSO", "ESCALONA GALAZ MARÍA PAZ VALENTINA", "GÓMEZ PIÑA BALTAZAR ALONSO", "GONZÁLEZ BECERRA DAPHNE ANTONELLA", "GONZÁLEZ MARTÍNEZ ALONSO OCTAVIO ANDRE", "GONZÁLEZ SEPÚLVEDA FERNANDO NICOLÁS", "IBARRA VALENZUELA NICOLÁS EDUARDO", "INOSTROZA ROJAS JASMÍN FLORENTINA", "LARA ESCALONA BETSABET VALENTINA", "LEIVA CRISTI AGUSTÍN EMILIANO", "LOBOS VILLALOBOS ANÍBAL RENÉ", "MADARIAGA NÚÑEZ JAVIERA ANTONIA", "ORZILE GABRIELLA LUCIEN", "RIOS LAGOS MATILDA DE JESÚS", "SALAS GONZÁLEZ MATÍAS ANDRÉS", "SANTIS GATICA NOEMY ESTEFANÍA", "SERRANO VENEGAS ALONDRA FELICINDA", "VALIENTE GONZÁLEZ CORIN ANDREA", "ZAVALA ROMÁN EMILY AMARAL"], "4°C": ["AGURTO LAUX ANNELIZ ESTEPHANÍA", "BELMAR CONTRERAS ALISON MONSERRAT", "CORNEJO FUENZALIDA DAPHNE CATALINA", "FARIAS BECERRA VICENTE ANDRÉS", "GAETE ROMÁN VÍCTOR ENRIQUE", "GODOY TORRES ARIEL", "LLANTÉN SABATHIER JASON STEVEN", "LÓPEZ CORTÉS ESTEBAN MARCELO", "MENESES MELGAR MAITE ANTONELLA", "MENESES MELGAR MELANY ANTONELLA", "MOSCOSO BARRIOS LUIS RENATO", "MUÑOZ GARCÍA ALISON MONSERRAT", "PERDRIEL PINEDO MARCIO FARID", "PÉREZ TORRES MARTÍN ARTURO", "RÍOS ESPINOZA JAZMÍN ARGELIA", "USECHE FERNÁNDEZ EDUARDO JOSÉ", "VALDIVIA ESPINACE MADELEINE JESÚS SERENA", "VARELA GAETE IGNACIA SCARLETT", "VEGA GONZÁLEZ BIANCA ANABELLA"], "4°D": ["ABALOS TORREZ RINA NADIA", "CÁCERES DONOSO ISIDORA VALENTINA", "CARVAJAL OLEA ROUSE ANTONELLA", "CELIS ARENAS EMILIA SARAID", "CHACÓN ARIAS CARLOS BENJAMÍN", "CONCHA RIVERA CONSTANZA CATALINA", "CONTRERAS VERGARA SEBASTIÁN ALBERTO", "DONOSO HERNÁNDEZ PAOLO ANDRÉS", "FLORES ARRIAGADA NICOLE ANTONIA", "GALLARDO CABEZAS AXEL GUILLERMO ALFONSO", "GÓMEZ NUÑEZ PAMELA GISLENE", "GONZALEZ DIAZ JUNIEM PATRICIA", "GONZÁLEZ MORALES HIBIS LILIAN", "LEIVA SILVA EDUARDO ANTONIO", "LUQUE MENESES MATÍAS SALOMÓN", "MUNDACA ROJAS MARTINA ISIDORA", "OYARCE CORNEJO VICTORIA JAVIERA", "PEREZ SAMBRANO JESUS DAVID", "POBLETE CELIS BELÉN ANTONIA", "SALAS PINILLA FRANCISCO IGNACIO"], "4°E": ["ANDRES ESPINOZA MOISES ALESSANDRO", "AVENDAÑO JIMÉNEZ SIMÓN ALEXANDER", "BATISTA LEMOS JORGE AGUSTIN", "BRETT FERNANDEZ SAMUEL ALEJANDRO", "BUSTOS PARDO FELIPE ALFREDO", "CÁCERES MÉNDEZ AXEL JAVIER", "CALQUÍN BECERRA IVAN LUIS", "CÉSPEDES CHACÓN PAZ BELÉN", "CRUZ ZAPATA ESTRELLA SCARLET", "DÍAZ CARVAJAL SIMÓN TOMÁS", "DIAZ UZCATEGUI ANDRES ESTIBENS", "FLORES MORA ISABELLA ANAÍS ANTONIA", "GALAZ HORMAZÁBAL JOSÉ LUIS OSVALDO", "GALLARDO LABRAÑA PAUL IGNACIO", "JARA ECHEVERRÍA ISAIAS ANTONIO", "MACHUCA LIZAMA PATRICIO RAFAEL", "MAUREIRA BUSTOS DUVAN ENRIQUE", "MENA TAPIA RENATO SAMUEL", "NECULMÁN PALOMINOS LUIS HERNÁN", "ORELLANA DÍAZ ANGELA VICTORIA", "ORTEGA ACASIO HECTOR EDUARDO", "PEÑALOZA CONTRERAS JOSE MARTIN", "PEREDO PADILLA ROYER", "PEREIRA LÓPEZ JOAQUÍN OTILIO", "PINO IBARRA MARTIN IGNACIO", "ROMÁN PÉREZ KEVIN PATRICK", "TRONCOSO VALDEBENITO MARTÍN IGNACIO", "VALDERRAMA CERDA JOAQUÍN IVAN", "VALENZUELA MENESES JOEL ANTONIO"], "4°F": ["ALIAGA ROJAS MARÍA PAZ", "ÁVILA MEDINA ANAÍS PASCAL", "BORRERO CASTRO ALAN MATTIAS", "BRIONES MANRÍQUEZ CHRISTIAN ANTUAN", "CALQUÍN TONDRO JOSE ARMANDO", "CELIS GONZÁLEZ JUAN DAVID ELIOT", "DANNA CAVIERES PIERMARIO COSTANZO", "ESPINOZA TORRES MARTIN IGNACIO", "FUENTES GONZÁLEZ THOMAS ENRIQUE", "JARA AZÚA BENJAMÍN FABIÁN", "LECAROS PIZARRO DIEGO AGUSTÍN", "LIZANA FARÍAS CHRISTIAN ANDRÉS", "MERCADO SAN MARTÍN VICENTE ESTEBAN", "MOLINA VALENZUELA ARIEL ESTEBAN", "PALACIOS GONZÁLEZ HÉCTOR ARIEL", "PARRAGUEZ PINO MIA PASCAL", "ROJAS ORELLANA MÁXIMO AGUSTÍN", "ROSSATI ARIAS ANTONELLA", "SEPÚLVEDA MOYA JOAQUÍN STEVEN", "SEPULVEDA SEGOVIA BENJAMÍN ANDRÉS", "SOBARZO PÉREZ EMILIA ANTONELA", "ULLOA TORO IGNACIO ALEJANDRO", "UTEAU CASTILLO JADIEL BRANDON", "VALENZUELA GALAZ ANASTASIA DE LOS ANGELES", "VERGARA MUÑOZ FRANCO MATÍAS", "VILLALÓN SUAREZ GABRIEL BENJAMÍN"]};
+  const ASIS_CURSOS = Object.keys(ASIS_ROSTER);
+
+  let retiros = [];
+  let retiroNombreCursoMap = {};
+  let retiroAsistencias = [];
+  let retiroInspLog = [];
+  let retiroInspAccessKeys = { 'Claudio Valenzuela': 'INCOSAF', 'Luis Cádiz Fuenzalida': 'INCOSAF' };
+  let asisRosterEventos = [];
+  let asisPendingImport = null;
+
+  async function logAudit(accion, rec){
+    try{
+      await addDoc(collection(db,'auditoria'), {
+        accion,
+        alumno: rec.nombre || '—',
+        curso: rec.curso || '—',
+        anio: rec.anio || null,
+        usuario: currentUserName || '—',
+        fecha: serverTimestamp()
+      });
+    }catch(e){
+      console.error('No se pudo registrar auditoría', e);
+    }
+  }
+
+  // ---------- Año escolar (filtro local de este módulo) ----------
+  const RT_ANIOS = ['2026','2027','2028','2029','2030'];
+  const RT_ANIO_KEY = 'retiro:anio';
+  const rtAnioSelect = document.getElementById('rt-anio-select');
+  rtAnioSelect.innerHTML = RT_ANIOS.map(a=>`<option value="${a}">${a}</option>`).join('');
+  rtAnioSelect.value = localStorage.getItem(RT_ANIO_KEY) || RT_ANIOS[0];
+  rtAnioSelect.addEventListener('change', ()=>{
+    localStorage.setItem(RT_ANIO_KEY, rtAnioSelect.value);
+    renderRetiroHistorial();
+    renderRetiroStats();
+    actualizarHistorialAlumno();
+  });
+
+  function anioDeRetiro(r){
+    return r.anio || (r.fecha ? r.fecha.slice(0,4) : null);
+  }
+  function retirosDelAnio(){
+    return retiros.filter(r=>anioDeRetiro(r)===rtAnioSelect.value);
+  }
+
+  // ---------- Firestore: escuchas en tiempo real ----------
+  function watchRetiros(){
+    const q = query(collection(db,'retiros'), orderBy('creadoEn','desc'));
+    onSnapshot(q, snap=>{
+      retiros = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderRetiroHistorial();
+      renderRetiroStats();
+      actualizarHistorialAlumno();
+    }, err=>{
+      console.error(err);
+      showToast('No se pudo conectar con los registros de retiro.');
+    });
+  }
+
+  // Folio correlativo por año escolar, generado de forma atómica para
+  // evitar que dos personas registrando al mismo tiempo obtengan el
+  // mismo número. Comparte el mismo contador que la intranet.
+  async function nextFolioRetiro(anio){
+    const ref = doc(db, 'contadores', 'retiros_'+anio);
+    return await runTransaction(db, async (tx)=>{
+      const snap = await tx.get(ref);
+      const siguiente = (snap.exists() ? (snap.data().ultimo||0) : 0) + 1;
+      tx.set(ref, { ultimo: siguiente }, { merge:true });
+      return siguiente;
+    });
+  }
+
+  // ---------- % de asistencia por alumno/año ----------
+  const ATTENDANCE_MIN = 85; // mínimo legal de asistencia en Chile
+
+  function slugAlumno(nombre){
+    return (nombre||'').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  }
+  function asistenciaId(nombre, anio){
+    return anio+'_'+slugAlumno(nombre);
+  }
+  function getAsistencia(nombre, anio){
+    const rec = retiroAsistencias.find(a=>a.id===asistenciaId(nombre, anio));
+    return rec && typeof rec.valor === 'number' ? rec.valor : null;
+  }
+  function watchRetiroAsistencias(){
+    onSnapshot(query(collection(db,'retiroAsistencia')), snap=>{
+      retiroAsistencias = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      actualizarHistorialAlumno();
+    }, err=>console.error(err));
+  }
+
+  // ---------- Panel de Inspectoría General ----------
+  function slugInspector(nombre){
+    return slugAlumno(nombre).replace(/_+/g,'-');
+  }
+  function watchRetiroConfig(){
+    onSnapshot(query(collection(db,'retiroConfig')), snap=>{
+      ['Claudio Valenzuela','Luis Cádiz Fuenzalida'].forEach(inspector=>{
+        const cfgDoc = snap.docs.find(d=>d.id===slugInspector(inspector));
+        retiroInspAccessKeys[inspector] = (cfgDoc && cfgDoc.data().accessKey) ? cfgDoc.data().accessKey : 'INCOSAF';
+      });
+    }, err=>console.error(err));
+  }
+  function watchRetiroInspLog(){
+    const q = query(collection(db,'retiroInspLog'), orderBy('creadoEn','desc'));
+    onSnapshot(q, snap=>{
+      retiroInspLog = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      renderInspLog();
+    }, err=>console.error(err));
+  }
+
+  // ---------- Nómina de matrícula compartida con la intranet ----------
+  function asisGetRoster(){
+    const roster = {};
+    ASIS_CURSOS.forEach(c=>{ roster[c] = ASIS_ROSTER[c].slice(); });
+    asisRosterEventos.slice().sort((a,b)=>{
+      const ta = a.creadoEn && a.creadoEn.toDate ? a.creadoEn.toDate().getTime() : 0;
+      const tb = b.creadoEn && b.creadoEn.toDate ? b.creadoEn.toDate().getTime() : 0;
+      return ta - tb;
+    }).forEach(ev=>{
+      if(ev.type==='alta'){
+        const arr = roster[ev.curso];
+        if(arr && !arr.includes(ev.nombre)) arr.push(ev.nombre);
+      } else if(ev.type==='baja'){
+        const arr = roster[ev.curso];
+        if(arr){ const i = arr.indexOf(ev.nombre); if(i>=0) arr.splice(i,1); }
+      } else if(ev.type==='cambio'){
+        const o = roster[ev.cursoOrigen];
+        if(o){ const i=o.indexOf(ev.nombre); if(i>=0) o.splice(i,1); }
+        const d2 = roster[ev.cursoDestino];
+        if(d2 && !d2.includes(ev.nombre)) d2.push(ev.nombre);
+      }
+    });
+    return roster;
+  }
+  function watchAsisRosterEventos(){
+    const q = query(collection(db,'asistenciaRosterEventos'), orderBy('creadoEn','desc'));
+    onSnapshot(q, snap=>{
+      asisRosterEventos = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      retiroDatalistBuild();
+    }, err=>console.error(err));
+  }
+
+  // ---------- PDF del comprobante de retiro ----------
+  const NOMBRES_MES_CORTO = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  function buildRetiroPDF(rec){
+    const pdf = new jsPDF({ unit:'mm', format:'letter' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const crest = getCrestDataUrl();
+    if(crest){ try{ pdf.addImage(crest, 'PNG', 15, 10, 16, 22); }catch(e){} }
+
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+    pdf.text('I. Comercial Alberto Valenzuela Llanos', pageW/2, 17, { align:'center' });
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
+    pdf.text('San Fernando', pageW/2, 23, { align:'center' });
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(14);
+    pdf.text('COMPROBANTE DE RETIRO DE ESTUDIANTE', pageW/2, 34, { align:'center' });
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(11);
+    pdf.text(`Folio N° ${String(rec.folio).padStart(5,'0')} — Año ${rec.anio}`, pageW/2, 41, { align:'center' });
+
+    let y = 54;
+    const filas = [
+      ['Fecha de retiro', fmtDate(rec.fecha)],
+      ['Hora de retiro', rec.hora || '—'],
+      ['Alumno(a)', rec.alumno || '—'],
+      ['Curso', rec.curso || '—'],
+      ['Retira', rec.retira || '—'],
+      ['Relación con el alumno', rec.relacion || '—'],
+      ['Motivo del retiro', rec.motivo || '—'],
+      ['¿Retiro justificado?', rec.justificado || '—'],
+      ['Observaciones', rec.observaciones || '—'],
+      ['Registrado por', rec.creadoPor || '—']
+    ];
+    pdf.setFontSize(10.5);
+    filas.forEach(([label,val])=>{
+      pdf.setFont('helvetica','bold');
+      pdf.text(label+':', 18, y);
+      pdf.setFont('helvetica','normal');
+      const lineas = pdf.splitTextToSize(String(val), 118);
+      pdf.text(lineas, 72, y);
+      y += 7 * lineas.length;
+    });
+
+    const mesesRec = new Array(12).fill(0);
+    retirosDelAnio().filter(r=>(r.alumno||'').trim().toLowerCase() === (rec.alumno||'').trim().toLowerCase())
+      .forEach(r=>{
+        if(r.fecha){
+          const m = parseInt(r.fecha.slice(5,7),10) - 1;
+          if(m>=0 && m<12) mesesRec[m]++;
+        }
+      });
+    const totalMeses = mesesRec.reduce((a,b)=>a+b,0);
+
+    y += 3;
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5);
+    pdf.text('Historial de retiros del alumno(a) en el año '+rec.anio, 18, y); y += 6;
+    const cellW = (pageW-36)/12, cellH = 12;
+    NOMBRES_MES_CORTO.forEach((mes,i)=>{
+      const x = 18 + i*cellW;
+      pdf.setFillColor(14,14,92);
+      pdf.rect(x, y, cellW, cellH/2, 'F');
+      pdf.setTextColor(255,255,255);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(7.5);
+      pdf.text(mes, x+cellW/2, y+cellH/4+1.5, { align:'center' });
+      if(mesesRec[i]>0) pdf.setFillColor(242,193,24); else pdf.setFillColor(251,250,244);
+      pdf.rect(x, y+cellH/2, cellW, cellH/2, 'F');
+      pdf.setTextColor(28,28,46);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+      pdf.text(String(mesesRec[i]), x+cellW/2, y+cellH*0.85, { align:'center' });
+    });
+    y += cellH + 6;
+    pdf.setTextColor(0,0,0);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
+    pdf.text(`Total: ${totalMeses} retiro${totalMeses===1?'':'s'} en el año`, 18, y);
+    y += 8;
+
+    const asistenciaVal = getAsistencia(rec.alumno, rec.anio);
+    if(asistenciaVal !== null){
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5);
+      const bajoMinimo = asistenciaVal < ATTENDANCE_MIN;
+      if(bajoMinimo) pdf.setTextColor(184,50,47);
+      pdf.text(`% de asistencia actual: ${asistenciaVal}%${bajoMinimo ? ' (bajo el mínimo legal de '+ATTENDANCE_MIN+'%)' : ''}`, 18, y);
+      pdf.setTextColor(0,0,0);
+      y += 10;
+    }
+
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5);
+    pdf.text('Declaración de responsabilidad', 18, y); y += 6;
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(9.5);
+    const declaracion = 'Quien firma este documento declara ser la persona autorizada para retirar al alumno(a) individualizado(a) durante la jornada escolar, y asume la responsabilidad por su cuidado y por las consecuencias que dicho retiro pueda tener en su rendimiento académico desde el momento del retiro.';
+    pdf.text(pdf.splitTextToSize(declaracion, pageW-36), 18, y);
+    y += 16;
+
+    pdf.setFont('helvetica','bold'); pdf.setTextColor(184,50,47);
+    pdf.text('IMPORTANTE:', 18, y);
+    pdf.setFont('helvetica','normal'); pdf.setTextColor(0,0,0);
+    const seguro = 'A partir del retiro, el(la) estudiante deja de estar bajo la cobertura del Seguro Escolar del establecimiento.';
+    y += 5;
+    pdf.text(pdf.splitTextToSize(seguro, pageW-36), 18, y);
+
+    y += 32;
+    pdf.line(30, y, pageW-30, y);
+    y += 5;
+    pdf.setFontSize(9.5);
+    pdf.text('Firma de quien retira al alumno(a)', pageW/2, y, { align:'center' });
+
+    pdf.save(`Retiro_${String(rec.folio).padStart(5,'0')}_${(rec.alumno||'').replace(/\s+/g,'_')}.pdf`);
+  }
+
+  // ---------- Historial del alumno (widget en pantalla) ----------
+  function actualizarHistorialAlumno(){
+    const card = document.getElementById('retiroAlumnoHistCard');
+    const alumnoInput = document.getElementById('ret-alumno');
+    if(!card || !alumnoInput) return;
+    const nombre = alumnoInput.value.trim();
+    if(!nombre){ card.style.display = 'none'; return; }
+
+    const delAlumno = retirosDelAnio().filter(r=>(r.alumno||'').trim().toLowerCase() === nombre.toLowerCase());
+    card.style.display = '';
+    document.getElementById('retiroAlumnoAnio').textContent = rtAnioSelect.value;
+    document.getElementById('retiroAlumnoNombre').textContent = nombre;
+    document.getElementById('retiroAlumnoTotal').textContent = `${delAlumno.length} retiro${delAlumno.length===1?'':'s'}`;
+
+    const meses = new Array(12).fill(0);
+    delAlumno.forEach(r=>{
+      if(r.fecha){
+        const m = parseInt(r.fecha.slice(5,7),10) - 1;
+        if(m>=0 && m<12) meses[m]++;
+      }
+    });
+    document.getElementById('retiroAlumnoMeses').innerHTML = meses.map((n,i)=>`
+      <div class="rt-month-box${n>0?' has-data':''}">
+        <span class="rt-month-name">${NOMBRES_MES_CORTO[i]}</span>
+        <span class="rt-month-count">${n}</span>
+      </div>
+    `).join('');
+
+    const asistenciaInput = document.getElementById('retiroAsistenciaInput');
+    const asistenciaBadge = document.getElementById('retiroAsistenciaBadge');
+    const valor = getAsistencia(nombre, rtAnioSelect.value);
+    asistenciaInput.value = valor===null ? '' : valor;
+    if(valor===null){
+      asistenciaBadge.style.display = 'none';
+    }else{
+      asistenciaBadge.style.display = '';
+      asistenciaBadge.className = 'rt-pill ' + (valor>=ATTENDANCE_MIN ? 'rt-pill-ok' : 'rt-pill-no');
+      asistenciaBadge.textContent = valor + '%' + (valor<ATTENDANCE_MIN ? ' — bajo el mínimo legal' : '');
+    }
+  }
+
+  // ---------- Autocompletado desde la base de matrícula ----------
+  const RETIRO_GRADO_PALABRAS = {
+    '1':'1', '1ero':'1', '1ro':'1', 'primero':'1', 'primer':'1',
+    '2':'2', '2do':'2', 'segundo':'2',
+    '3':'3', '3ro':'3', '3ero':'3', 'tercero':'3', 'tercer':'3',
+    '4':'4', '4to':'4', 'cuarto':'4'
+  };
+  function retiroCursoTextoAAsis(texto){
+    const m = (texto||'').trim().match(/^([a-záéíóúñ0-9]+)\s*°?\s*(?:medio\s*)?([a-záéíóúñ]+)\s*$/i);
+    if(!m) return null;
+    const grado = RETIRO_GRADO_PALABRAS[m[1].toLowerCase()];
+    if(!grado) return null;
+    const curso = grado+'°'+m[2].toUpperCase();
+    return ASIS_CURSOS.includes(curso) ? curso : null;
+  }
+  function asisCursoATextoRetiro(curso){
+    const m = curso.match(/^(\d)°(.+)$/);
+    if(!m) return curso;
+    return m[1]+'° Medio '+m[2];
+  }
+  function retiroDatalistBuild(){
+    const datalist = document.getElementById('ret-alumno-list');
+    const cursoInput = document.getElementById('ret-curso');
+    if(!datalist || !cursoInput) return;
+    const roster = asisGetRoster();
+    const cursoAsis = retiroCursoTextoAAsis(cursoInput.value);
+    retiroNombreCursoMap = {};
+    const nombres = [];
+    (cursoAsis ? [cursoAsis] : ASIS_CURSOS).forEach(c=>{
+      (roster[c]||[]).forEach(n=>{
+        retiroNombreCursoMap[n] = c;
+        nombres.push(n);
+      });
+    });
+    datalist.innerHTML = nombres.map(n=>`<option value="${escapeHtml(n)}">`).join('');
+  }
+  document.getElementById('ret-curso').addEventListener('input', retiroDatalistBuild);
+  document.getElementById('ret-alumno').addEventListener('input', ()=>{
+    const alumnoInput = document.getElementById('ret-alumno');
+    const cursoInput = document.getElementById('ret-curso');
+    const nombre = alumnoInput.value.trim().toUpperCase();
+    const cursoDelAlumno = retiroNombreCursoMap[nombre];
+    if(cursoDelAlumno && !retiroCursoTextoAAsis(cursoInput.value)){
+      cursoInput.value = asisCursoATextoRetiro(cursoDelAlumno);
+      retiroDatalistBuild();
+    }
+  });
+
+  // ---------- Historial (tabla) ----------
+  function renderRetiroHistorial(){
+    const body = document.getElementById('retiroHistBody');
+    const empty = document.getElementById('retiroHistEmpty');
+    if(!body) return;
+    const rows = retirosDelAnio().slice().sort((a,b)=>(b.folio||0)-(a.folio||0));
+    if(rows.length===0){
+      body.innerHTML = '';
+      empty.style.display = 'block';
+    }else{
+      empty.style.display = 'none';
+      body.innerHTML = rows.map(r=>`
+        <tr>
+          <td>${String(r.folio||0).padStart(5,'0')}</td>
+          <td>${fmtDate(r.fecha)}</td>
+          <td>${escapeHtml(r.hora||'—')}</td>
+          <td>${escapeHtml(r.curso||'—')}</td>
+          <td>${escapeHtml(r.alumno||'—')}</td>
+          <td>${escapeHtml(r.retira||'—')}</td>
+          <td>${escapeHtml(r.motivo||'—')}</td>
+          <td><span class="rt-pill ${r.justificado==='Sí'?'rt-pill-ok':'rt-pill-no'}">${escapeHtml(r.justificado||'—')}</span></td>
+          <td><button type="button" class="rt-icon-btn" title="Descargar PDF" data-retiro-pdf="${r.id}">📄</button></td>
+        </tr>
+      `).join('');
+    }
+    populateInspFolioSelect(rows);
+  }
+
+  document.getElementById('retiroHistBody').addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-retiro-pdf]');
+    if(!btn) return;
+    const rec = retiros.find(r=>r.id===btn.dataset.retiroPdf);
+    if(rec) buildRetiroPDF(rec);
+  });
+
+  document.getElementById('retiroAsistenciaGuardarBtn').addEventListener('click', async ()=>{
+    const nombre = document.getElementById('ret-alumno').value.trim();
+    if(!nombre){ showToast('Ingrese el nombre del alumno primero.'); return; }
+    const input = document.getElementById('retiroAsistenciaInput');
+    let valor = parseFloat(input.value);
+    if(isNaN(valor) || valor<0 || valor>100){
+      showToast('Ingrese un porcentaje de asistencia válido (0 a 100).');
+      return;
+    }
+    valor = Math.round(valor*10)/10;
+    const anio = rtAnioSelect.value;
+    try{
+      await setDoc(doc(db,'retiroAsistencia', asistenciaId(nombre, anio)), {
+        nombre, anio, valor,
+        actualizadoPor: currentUserName || '—',
+        actualizadoEn: serverTimestamp()
+      });
+      showToast('✓ Asistencia guardada.');
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo guardar la asistencia.');
+    }
+  });
+
+  // ---------- Panel de Inspectoría General ----------
+  function populateInspFolioSelect(rows){
+    const sel = document.getElementById('inspFolio');
+    if(!sel) return;
+    const prevValue = sel.value;
+    sel.innerHTML = '<option value="">Seleccione un retiro…</option>' +
+      rows.map(r=>`<option value="${r.id}">#${String(r.folio||0).padStart(5,'0')} — ${escapeHtml(r.alumno||'—')} (${fmtDate(r.fecha)}, ${escapeHtml(r.justificado||'—')})</option>`).join('');
+    if(prevValue && rows.some(r=>r.id===prevValue)){
+      sel.value = prevValue;
+      cargarInspEditFields(rows.find(r=>r.id===prevValue));
+    }else{
+      sel.value = '';
+      cargarInspEditFields(null);
+    }
+  }
+
+  function cargarInspEditFields(rec){
+    const wrap = document.getElementById('inspEditFields');
+    if(!wrap) return;
+    if(!rec){
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    document.getElementById('inspEdFecha').value = rec.fecha || '';
+    document.getElementById('inspEdHora').value = rec.hora || '';
+    document.getElementById('inspEdAlumno').value = rec.alumno || '';
+    document.getElementById('inspEdCurso').value = rec.curso || '';
+    document.getElementById('inspEdRetira').value = rec.retira || '';
+    document.getElementById('inspEdRelacion').value = rec.relacion || 'Padre';
+    document.getElementById('inspEdMotivo').value = rec.motivo || 'Enfermedad';
+    document.getElementById('inspEdJustificado').value = rec.justificado || 'Sí';
+    document.getElementById('inspEdObs').value = rec.observaciones || '';
+  }
+
+  document.getElementById('inspFolio').addEventListener('change', ()=>{
+    const sel = document.getElementById('inspFolio');
+    cargarInspEditFields(retiros.find(r=>r.id===sel.value) || null);
+  });
+
+  function renderInspLog(){
+    const body = document.getElementById('inspLogBody');
+    const empty = document.getElementById('inspLogEmpty');
+    if(!body) return;
+    const rows = retiroInspLog.filter(l=>(l.anio||null)===rtAnioSelect.value);
+    if(rows.length===0){
+      body.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    body.innerHTML = rows.slice(0,20).map(l=>{
+      const inspector = l.inspector || l.usuario || '—';
+      let cambio;
+      if(l.tipo === 'eliminacion'){
+        cambio = 'Eliminó el registro';
+      }else if(l.tipo === 'edicion'){
+        cambio = escapeHtml(l.detalle || 'Editó el registro');
+      }else{
+        cambio = `${escapeHtml(l.anterior||'—')} → ${escapeHtml(l.nuevo||'—')}`;
+      }
+      return `
+        <tr>
+          <td>${l.creadoEn && l.creadoEn.toDate ? l.creadoEn.toDate().toLocaleString('es-CL') : '—'}</td>
+          <td>${escapeHtml(inspector)}</td>
+          <td>${String(l.folio||0).padStart(5,'0')}</td>
+          <td>${escapeHtml(l.alumno||'—')}</td>
+          <td>${cambio}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const INSP_CAMPO_LABEL = {
+    fecha:'Fecha', hora:'Hora de retiro', alumno:'Nombre del alumno', curso:'Curso',
+    retira:'Quien retira', relacion:'Relación', motivo:'Motivo', justificado:'Justificado',
+    observaciones:'Observaciones'
+  };
+
+  document.getElementById('inspGuardarBtn').addEventListener('click', async ()=>{
+    const folioSel = document.getElementById('inspFolio');
+    const inspector = document.getElementById('inspInspector').value;
+    const claveInput = document.getElementById('inspClave');
+    if(!folioSel.value){ showToast('Seleccione un retiro para modificar.'); return; }
+    if(claveInput.value !== retiroInspAccessKeys[inspector]){
+      showToast('Clave de acceso incorrecta.');
+      claveInput.value = '';
+      return;
+    }
+    const rec = retiros.find(r=>r.id===folioSel.value);
+    if(!rec){ showToast('No se encontró el retiro seleccionado.'); return; }
+
+    const cambios = {
+      fecha: document.getElementById('inspEdFecha').value,
+      hora: document.getElementById('inspEdHora').value,
+      alumno: document.getElementById('inspEdAlumno').value.trim(),
+      curso: document.getElementById('inspEdCurso').value.trim(),
+      retira: document.getElementById('inspEdRetira').value.trim(),
+      relacion: document.getElementById('inspEdRelacion').value,
+      motivo: document.getElementById('inspEdMotivo').value,
+      justificado: document.getElementById('inspEdJustificado').value,
+      observaciones: document.getElementById('inspEdObs').value.trim()
+    };
+    const cambiosTexto = Object.keys(cambios)
+      .filter(k=>(cambios[k]||'') !== (rec[k]||''))
+      .map(k=>`${INSP_CAMPO_LABEL[k]}: "${rec[k]||'—'}" → "${cambios[k]||'—'}"`);
+    if(cambiosTexto.length===0){ showToast('No hay cambios para guardar.'); return; }
+
+    try{
+      await updateDoc(doc(db,'retiros', rec.id), cambios);
+      await addDoc(collection(db,'retiroInspLog'), {
+        folio: rec.folio,
+        alumno: cambios.alumno,
+        anio: rec.anio || rtAnioSelect.value,
+        inspector,
+        tipo: 'edicion',
+        detalle: cambiosTexto.join(' · '),
+        creadoEn: serverTimestamp()
+      });
+      await logAudit('Editó retiro de estudiante (Inspectoría General, libro digital)', { nombre: cambios.alumno, curso: cambios.curso, anio: rec.anio });
+      claveInput.value = '';
+      showToast('✓ Retiro actualizado.');
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo guardar el cambio.');
+    }
+  });
+
+  document.getElementById('inspEliminarBtn').addEventListener('click', async ()=>{
+    const folioSel = document.getElementById('inspFolio');
+    const inspector = document.getElementById('inspInspector').value;
+    const claveInput = document.getElementById('inspClave');
+    if(!folioSel.value){ showToast('Seleccione un retiro para eliminar.'); return; }
+    if(claveInput.value !== retiroInspAccessKeys[inspector]){
+      showToast('Clave de acceso incorrecta.');
+      claveInput.value = '';
+      return;
+    }
+    const rec = retiros.find(r=>r.id===folioSel.value);
+    if(!rec){ showToast('No se encontró el retiro seleccionado.'); return; }
+    if(!window.confirm(`¿Eliminar definitivamente el retiro #${String(rec.folio||0).padStart(5,'0')} de ${rec.alumno||'—'}? Esta acción no se puede deshacer.`)) return;
+
+    try{
+      await deleteDoc(doc(db,'retiros', rec.id));
+      await addDoc(collection(db,'retiroInspLog'), {
+        folio: rec.folio,
+        alumno: rec.alumno,
+        anio: rec.anio || rtAnioSelect.value,
+        inspector,
+        tipo: 'eliminacion',
+        detalle: 'Eliminó el registro',
+        creadoEn: serverTimestamp()
+      });
+      await logAudit('Eliminó retiro de estudiante (Inspectoría General, libro digital)', { nombre: rec.alumno, curso: rec.curso, anio: rec.anio });
+      claveInput.value = '';
+      showToast('✓ Retiro eliminado.');
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo eliminar el retiro.');
+    }
+  });
+
+  document.getElementById('inspCambiarClaveBtn').addEventListener('click', async ()=>{
+    const inspector = document.getElementById('inspClaveInspector').value;
+    const actualInput = document.getElementById('inspClaveActual');
+    const nuevaInput = document.getElementById('inspClaveNueva');
+    if(actualInput.value !== retiroInspAccessKeys[inspector]){
+      showToast('La clave actual no es correcta.');
+      return;
+    }
+    if(nuevaInput.value.trim().length < 4){
+      showToast('La nueva clave debe tener al menos 4 caracteres.');
+      return;
+    }
+    try{
+      await setDoc(doc(db,'retiroConfig', slugInspector(inspector)), { accessKey: nuevaInput.value.trim() }, { merge:true });
+      actualInput.value = '';
+      nuevaInput.value = '';
+      showToast('✓ Clave de acceso actualizada.');
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo actualizar la clave.');
+    }
+  });
+
+  // ---------- Estadísticas y gráficos ----------
+  const CHART_COLORS = ['#0e0e5c','#f2c118','#c99a06','#1a1a7a','#b8322f','#1f7a4d','#54546b','#fbe6a3'];
+
+  function setupCanvas(canvas){
+    const ctx = canvas.getContext('2d');
+    const w = canvas.parentElement.clientWidth || 360;
+    const h = 220;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w+'px';
+    canvas.style.height = h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    return { ctx, w, h };
+  }
+  function drawSinDatos(ctx,w,h){
+    ctx.fillStyle = '#54546b';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sin datos', w/2, h/2);
+  }
+  function drawBarChart(canvas, entries){
+    const { ctx, w, h } = setupCanvas(canvas);
+    if(!entries.length){ drawSinDatos(ctx,w,h); return; }
+    const max = Math.max(...entries.map(e=>e[1]), 1);
+    const padL=8, padR=8, padT=14, padB=30;
+    const chartW = w-padL-padR, chartH = h-padT-padB;
+    const gap = 10;
+    const barW = Math.max(12, (chartW - gap*(entries.length-1)) / entries.length);
+    entries.forEach(([label,val],i)=>{
+      const x = padL + i*(barW+gap);
+      const barH = (val/max) * chartH;
+      const y = padT + (chartH-barH);
+      ctx.fillStyle = CHART_COLORS[i % CHART_COLORS.length];
+      ctx.fillRect(x, y, barW, barH);
+      ctx.fillStyle = '#1c1c2e';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(val), x+barW/2, y-4);
+      const corta = String(label).length>10 ? String(label).slice(0,9)+'…' : String(label);
+      ctx.fillText(corta, x+barW/2, h-10);
+    });
+  }
+  function drawDonutChart(canvas, entries){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const total = entries.reduce((s,e)=>s+e[1],0);
+    if(!total){ drawSinDatos(ctx,w,h); return; }
+    const legendH = 22;
+    const cx = w/2, cy = (h-legendH)/2 + 6, r = Math.min(w, h-legendH)/2 - 12, rInner = r*0.55;
+    let start = -Math.PI/2;
+    entries.forEach(([,val],i)=>{
+      const slice = (val/total) * Math.PI*2;
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,start,start+slice);
+      ctx.closePath();
+      ctx.fillStyle = CHART_COLORS[i % CHART_COLORS.length];
+      ctx.fill();
+      start += slice;
+    });
+    ctx.beginPath();
+    ctx.arc(cx,cy,rInner,0,Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.fillStyle = '#1c1c2e';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(total), cx, cy+5);
+
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    let lx = 10;
+    const ly = h-8;
+    entries.forEach(([label,val],i)=>{
+      ctx.fillStyle = CHART_COLORS[i % CHART_COLORS.length];
+      ctx.fillRect(lx, ly-9, 9, 9);
+      ctx.fillStyle = '#1c1c2e';
+      const texto = `${label} (${val})`;
+      ctx.fillText(texto, lx+13, ly);
+      lx += ctx.measureText(texto).width + 26;
+    });
+  }
+  function drawLineChart(canvas, entries){
+    const { ctx, w, h } = setupCanvas(canvas);
+    if(!entries.length){ drawSinDatos(ctx,w,h); return; }
+    const max = Math.max(...entries.map(e=>e[1]), 1);
+    const padL=26, padR=12, padT=14, padB=28;
+    const chartW = w-padL-padR, chartH = h-padT-padB;
+    ctx.strokeStyle = '#dcdbe6';
+    ctx.beginPath();
+    ctx.moveTo(padL, padT); ctx.lineTo(padL, padT+chartH); ctx.lineTo(padL+chartW, padT+chartH);
+    ctx.stroke();
+    const stepX = entries.length>1 ? chartW/(entries.length-1) : 0;
+    ctx.beginPath();
+    entries.forEach(([,val],i)=>{
+      const x = padL + i*stepX;
+      const y = padT + chartH - (val/max)*chartH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = '#0e0e5c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#f2c118';
+    entries.forEach(([,val],i)=>{
+      const x = padL + i*stepX;
+      const y = padT + chartH - (val/max)*chartH;
+      ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = '#54546b';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    const cadaCuanto = Math.max(1, Math.ceil(entries.length/6));
+    entries.forEach(([fecha],i)=>{
+      if(i % cadaCuanto === 0 || i === entries.length-1){
+        const x = padL + i*stepX;
+        ctx.fillText(fmtDate(fecha).slice(0,5), x, h-10);
+      }
+    });
+  }
+
+  function retirosEnRango(){
+    const desde = document.getElementById('ret-stat-desde').value;
+    const hasta = document.getElementById('ret-stat-hasta').value;
+    return retirosDelAnio().filter(r=>{
+      if(desde && r.fecha < desde) return false;
+      if(hasta && r.fecha > hasta) return false;
+      return true;
+    });
+  }
+
+  function renderRetiroStats(){
+    const noData = document.getElementById('retiroStatNoData');
+    const content = document.getElementById('retiroStatContent');
+    if(!noData || !content) return;
+    const rows = retirosEnRango();
+    if(rows.length===0){
+      noData.style.display = 'block';
+      content.style.display = 'none';
+      return;
+    }
+    noData.style.display = 'none';
+    content.style.display = '';
+
+    const total = rows.length;
+    const just = rows.filter(r=>r.justificado==='Sí').length;
+    const noJust = total - just;
+    document.getElementById('retKpiTotal').textContent = total;
+    document.getElementById('retKpiJust').textContent = Math.round((just/total)*100)+'%';
+    document.getElementById('retKpiNoJust').textContent = Math.round((noJust/total)*100)+'%';
+
+    const porMotivo = {};
+    rows.forEach(r=>{ const m=r.motivo||'Otro'; porMotivo[m]=(porMotivo[m]||0)+1; });
+    const motivoTop = Object.entries(porMotivo).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('retKpiMotivo').textContent = motivoTop ? motivoTop[0] : '-';
+
+    const porCurso = {};
+    rows.forEach(r=>{ const c=r.curso||'—'; porCurso[c]=(porCurso[c]||0)+1; });
+
+    const porFecha = {};
+    rows.forEach(r=>{ if(r.fecha) porFecha[r.fecha]=(porFecha[r.fecha]||0)+1; });
+    const fechasOrdenadas = Object.keys(porFecha).sort();
+
+    drawBarChart(document.getElementById('retChartMotivo'), Object.entries(porMotivo));
+    drawDonutChart(document.getElementById('retChartJust'), [['Justificado',just],['No justificado',noJust]]);
+    drawBarChart(document.getElementById('retChartCurso'), Object.entries(porCurso));
+    drawLineChart(document.getElementById('retChartFecha'), fechasOrdenadas.map(f=>[f, porFecha[f]]));
+  }
+
+  function buildRetiroExecutivePDF(){
+    const rows = retirosEnRango();
+    if(rows.length===0){ showToast('No hay retiros en el rango seleccionado para generar el informe.'); return; }
+    const total = rows.length;
+    const just = rows.filter(r=>r.justificado==='Sí').length;
+    const noJust = total - just;
+    const desde = document.getElementById('ret-stat-desde').value;
+    const hasta = document.getElementById('ret-stat-hasta').value;
+
+    const pdf = new jsPDF({ unit:'mm', format:'letter' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const crest = getCrestDataUrl();
+    if(crest){ try{ pdf.addImage(crest, 'PNG', 15, 10, 15, 20); }catch(e){} }
+
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(15);
+    pdf.text('Informe de Retiros de Estudiantes', pageW/2, 18, { align:'center' });
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(10);
+    pdf.text('I. Comercial Alberto Valenzuela Llanos — San Fernando', pageW/2, 25, { align:'center' });
+    pdf.text(`Año ${rtAnioSelect.value}${(desde||hasta) ? ` · ${desde?fmtDate(desde):'inicio'} a ${hasta?fmtDate(hasta):'hoy'}` : ''}`, pageW/2, 31, { align:'center' });
+
+    let y = 44;
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(11);
+    pdf.text('Resumen', 18, y); y += 8;
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(10.5);
+    [
+      `Total de retiros: ${total}`,
+      `Retiros justificados: ${just} (${Math.round((just/total)*100)}%)`,
+      `Retiros no justificados: ${noJust} (${Math.round((noJust/total)*100)}%)`
+    ].forEach(linea=>{ pdf.text(linea, 18, y); y += 7; });
+    y += 4;
+
+    [
+      ['retChartMotivo','Retiros por motivo'],
+      ['retChartJust','Justificado vs. no justificado'],
+      ['retChartCurso','Retiros por curso'],
+      ['retChartFecha','Evolución de retiros por fecha']
+    ].forEach(([id,titulo])=>{
+      const canvas = document.getElementById(id);
+      if(!canvas) return;
+      if(y > 235){ pdf.addPage(); y = 20; }
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(10.5);
+      pdf.text(titulo, 18, y); y += 5;
+      try{
+        const img = canvas.toDataURL('image/png');
+        const imgW = pageW-36;
+        const imgH = Math.min(imgW * (canvas.height/canvas.width) * 0.5, 70);
+        pdf.addImage(img, 'PNG', 18, y, imgW, imgH);
+        y += imgH + 10;
+      }catch(e){ y += 10; }
+    });
+
+    pdf.save(`Informe_Retiros_${rtAnioSelect.value}.pdf`);
+  }
+
+  // ---------- Importar matrícula desde Excel (comparte la base con Asistencia) ----------
+  function asisAnalizarExcel(){
+    const fileInput = document.getElementById('asis-import-excel-file');
+    const msg = document.getElementById('asis-import-msg');
+    document.getElementById('asis-import-preview-box').style.display = 'none';
+    asisPendingImport = null;
+    if(!fileInput.files || fileInput.files.length===0){ msg.style.color='var(--rt-danger)'; msg.textContent='Selecciona un archivo Excel primero.'; return; }
+    if(typeof XLSX === 'undefined'){ msg.style.color='var(--rt-danger)'; msg.textContent='No se pudo cargar el lector de Excel. Revisa tu conexión a internet e intenta de nuevo.'; return; }
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const rosterActual = asisGetRoster();
+        const altas = [], bajas = [];
+        ASIS_CURSOS.forEach(curso=>{
+          const sheetName = wb.SheetNames.find(sn=>sn.trim()===curso);
+          if(!sheetName) return;
+          const sheet = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''});
+          const activosImportados = [];
+          for(let i=4;i<rows.length;i++){
+            const row = rows[i] || [];
+            const nombreRaw = (row[4]||'').toString().trim();
+            const retiro = (row[3]||'').toString().trim();
+            if(!nombreRaw) continue;
+            if(/[0-9]/.test(nombreRaw)) continue;
+            if(nombreRaw.split(' ').length < 2) continue;
+            const nombre = nombreRaw.toUpperCase();
+            if(!retiro){ if(!activosImportados.includes(nombre)) activosImportados.push(nombre); }
+          }
+          const actualesCurso = rosterActual[curso] || [];
+          activosImportados.forEach(n=>{ if(!actualesCurso.includes(n)) altas.push({curso, nombre:n}); });
+          actualesCurso.forEach(n=>{ if(!activosImportados.includes(n)) bajas.push({curso, nombre:n}); });
+        });
+        asisPendingImport = { altas, bajas };
+        if(altas.length===0 && bajas.length===0){
+          msg.style.color='var(--rt-ok)'; msg.textContent='La planilla no presenta diferencias con la nómina actual. No hay nada que importar.';
+          asisPendingImport = null; return;
+        }
+        document.getElementById('asis-import-preview-text').textContent = 'Se detectaron '+altas.length+' alumno(s) nuevo(s) y '+bajas.length+' retiro(s) respecto a la nómina actual. ¿Confirmas aplicar estos cambios?';
+        document.getElementById('asis-import-preview-box').style.display = 'block';
+        msg.textContent = '';
+      }catch(err){ msg.style.color='var(--rt-danger)'; msg.textContent='Error al leer el archivo: '+(err&&err.message?err.message:err); }
+    };
+    reader.onerror = function(){ msg.style.color='var(--rt-danger)'; msg.textContent='No se pudo leer el archivo seleccionado.'; };
+    reader.readAsArrayBuffer(file);
+  }
+  function asisCancelarImportacion(){
+    asisPendingImport = null;
+    document.getElementById('asis-import-preview-box').style.display = 'none';
+  }
+  async function asisConfirmarImportacion(){
+    if(!asisPendingImport) return;
+    const msg = document.getElementById('asis-import-msg');
+    try{
+      const escrituras = [];
+      asisPendingImport.altas.forEach(a=>{
+        escrituras.push(addDoc(collection(db,'asistenciaRosterEventos'), { type:'alta', curso:a.curso, nombre:a.nombre, usuario: currentUserName || '—', creadoEn: serverTimestamp() }));
+      });
+      asisPendingImport.bajas.forEach(b=>{
+        escrituras.push(addDoc(collection(db,'asistenciaRosterEventos'), { type:'baja', curso:b.curso, nombre:b.nombre, motivo:'Retiro según planilla importada', usuario: currentUserName || '—', creadoEn: serverTimestamp() }));
+      });
+      await Promise.all(escrituras);
+      msg.style.color='var(--rt-ok)';
+      msg.textContent = 'Importación aplicada: '+asisPendingImport.altas.length+' alta(s) y '+asisPendingImport.bajas.length+' baja(s), por '+(currentUserName||'—')+' el '+new Date().toLocaleString('es-CL')+'.';
+      document.getElementById('asis-import-preview-box').style.display = 'none';
+      document.getElementById('asis-import-excel-file').value = '';
+      asisPendingImport = null;
+    }catch(err){ console.error(err); msg.style.color='var(--rt-danger)'; msg.textContent='No se pudo aplicar la importación.'; }
+  }
+  document.getElementById('asis-analizar-excel-btn').addEventListener('click', asisAnalizarExcel);
+  document.getElementById('asis-confirmar-importacion-btn').addEventListener('click', asisConfirmarImportacion);
+  document.getElementById('asis-cancelar-importacion-btn').addEventListener('click', asisCancelarImportacion);
+
+  // ---------- Formulario y sub-pestañas ----------
+  document.getElementById('ret-fecha').valueAsDate = new Date();
+  document.getElementById('ret-alumno').addEventListener('input', actualizarHistorialAlumno);
+  document.getElementById('ret-fecha').addEventListener('change', actualizarHistorialAlumno);
+
+  document.getElementById('retiroForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const anio = rtAnioSelect.value;
+    const rec = {
+      fecha: document.getElementById('ret-fecha').value,
+      hora: document.getElementById('ret-hora').value,
+      alumno: document.getElementById('ret-alumno').value.trim(),
+      curso: document.getElementById('ret-curso').value.trim(),
+      retira: document.getElementById('ret-retira').value.trim(),
+      relacion: document.getElementById('ret-relacion').value,
+      motivo: document.getElementById('ret-motivo').value,
+      justificado: document.getElementById('ret-justificado').value,
+      observaciones: document.getElementById('ret-obs').value.trim(),
+      anio,
+      creadoPor: currentUserName,
+      creadoEn: serverTimestamp()
+    };
+    try{
+      const folio = await nextFolioRetiro(anio);
+      rec.folio = folio;
+      await addDoc(collection(db,'retiros'), rec);
+      await logAudit('Registró retiro de estudiante (libro digital)', { nombre: rec.alumno, curso: rec.curso, anio });
+      buildRetiroPDF(rec);
+      document.getElementById('retiroForm').reset();
+      document.getElementById('ret-fecha').valueAsDate = new Date();
+      document.getElementById('retiroAlumnoHistCard').style.display = 'none';
+      showToast('✓ Retiro registrado. Folio N° '+String(folio).padStart(5,'0'));
+    }catch(err){
+      console.error(err);
+      showToast('No se pudo registrar el retiro. Intente nuevamente.');
+    }
+  });
+
+  document.getElementById('retiroResetBtn').addEventListener('click', ()=>{
+    document.getElementById('retiroForm').reset();
+    document.getElementById('ret-fecha').valueAsDate = new Date();
+    document.getElementById('retiroAlumnoHistCard').style.display = 'none';
+  });
+
+  document.getElementById('retiroStatResetBtn').addEventListener('click', ()=>{
+    document.getElementById('ret-stat-desde').value = '';
+    document.getElementById('ret-stat-hasta').value = '';
+    renderRetiroStats();
+  });
+  document.getElementById('retiroStatPdfBtn').addEventListener('click', ()=>{
+    renderRetiroStats();
+    buildRetiroExecutivePDF();
+  });
+  ['ret-stat-desde','ret-stat-hasta'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', renderRetiroStats);
+  });
+
+  document.querySelectorAll('#view-retiro .rt-subtab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#view-retiro .rt-subtab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      ['retiro-nuevo','retiro-historial','retiro-stats','retiro-importar'].forEach(key=>{
+        document.getElementById('rt-sub-'+key).style.display = (key===btn.dataset.subtab) ? '' : 'none';
+      });
+      if(btn.dataset.subtab==='retiro-historial') renderRetiroHistorial();
+      if(btn.dataset.subtab==='retiro-stats') renderRetiroStats();
+    });
+  });
+
+  // ---------- Acceso: PIN compartido con la intranet ----------
+  const RT_ULTIMO_EMAIL_KEY = 'retiro:ultimoEmailLogin';
+  const rtGate = document.getElementById('rt-gate');
+  const rtApp = document.getElementById('rt-app');
+  const rtPinForm = document.getElementById('rt-pin-form');
+  const rtPinInput = document.getElementById('rt-pin-input');
+  const rtGateError = document.getElementById('rt-gate-error');
+  const rtSessionUser = document.getElementById('rt-session-user');
+  const rtLogoutBtn = document.getElementById('rt-logout-btn');
+
+  let rtWatchersStarted = false;
+  function rtStartWatchers(){
+    if(rtWatchersStarted) return;
+    rtWatchersStarted = true;
+    watchRetiros();
+    watchRetiroAsistencias();
+    watchRetiroConfig();
+    watchRetiroInspLog();
+    watchAsisRosterEventos();
+  }
+
+  function rtMostrarError(mensaje){
+    rtGateError.textContent = mensaje;
+    rtGateError.classList.add('show');
+    rtPinInput.value = '';
+    rtPinInput.focus();
+  }
+
+  rtPinForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const pin = rtPinInput.value;
+    rtGateError.classList.remove('show');
+
+    const ultimoEmail = localStorage.getItem(RT_ULTIMO_EMAIL_KEY);
+    if(ultimoEmail){
+      const usuario = RT_USER_DIRECTORY.find(u=>u.email===ultimoEmail);
+      if(usuario){
+        try{
+          await signInWithEmailAndPassword(auth, usuario.email, pin);
+          return; // onAuthStateChanged desbloquea el módulo al confirmar la sesión.
+        }catch(err){
+          if(err && err.code==='auth/too-many-requests'){
+            rtMostrarError('Demasiados intentos fallidos. Espera unos minutos e inténtalo nuevamente.');
+            return;
+          }
+          /* prueba con el resto de las cuentas */
+        }
+      }
+    }
+
+    for(const usuario of RT_USER_DIRECTORY){
+      if(usuario.email===ultimoEmail) continue;
+      try{
+        await signInWithEmailAndPassword(auth, usuario.email, pin);
+        localStorage.setItem(RT_ULTIMO_EMAIL_KEY, usuario.email);
+        return;
+      }catch(err){
+        if(err && err.code==='auth/too-many-requests'){
+          rtMostrarError('Demasiados intentos fallidos en una de las cuentas. Espera unos minutos e inténtalo nuevamente.');
+          return;
+        }
+        /* prueba con la siguiente cuenta */
+      }
+    }
+    rtMostrarError('PIN incorrecto.');
+  });
+
+  rtLogoutBtn.addEventListener('click', ()=>{ signOut(auth); });
+
+  onAuthStateChanged(auth, user=>{
+    // Solo cuentas del directorio de Retiro pueden desbloquear este módulo
+    // (otras cuentas válidas de la intranet, si alguna vez inician sesión
+    // aquí por error, no tienen nada que hacer en este módulo).
+    const usuario = user ? RT_USER_DIRECTORY.find(u=>u.email===user.email) : null;
+    if(user && usuario){
+      currentUserName = usuario.nombre;
+      rtGate.style.display = 'none';
+      rtApp.style.display = '';
+      rtSessionUser.textContent = currentUserName;
+      rtPinInput.value = '';
+      rtGateError.classList.remove('show');
+      rtStartWatchers();
+    }else{
+      if(user && !usuario){
+        // Sesión de Firebase válida pero sin acceso a Retiro: se cierra
+        // para volver a mostrar el formulario de PIN.
+        signOut(auth);
+        return;
+      }
+      currentUserName = null;
+      rtApp.style.display = 'none';
+      rtGate.style.display = '';
+    }
+  });
+</script>
+
 </body>
 </html>
