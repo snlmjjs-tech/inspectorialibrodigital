@@ -1698,6 +1698,30 @@
   </div>
 </div>
 
+<!-- ================= MODAL CAMBIAR DE CURSO ================= -->
+<div class="modal-overlay" id="modal-curso-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Cambiar de curso</h2>
+      <button class="modal-close" id="modal-curso-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="recover-answer-box" id="curso-student-label"></div>
+      <div class="recover-answer-box">El alumno conserva todas sus anotaciones del Libro digital, atrasos, suspensiones y fichas — solo cambia el curso en el que aparece listado.</div>
+      <form id="curso-form">
+        <div class="field">
+          <label for="cc-curso">Nuevo curso</label>
+          <select id="cc-curso" required></select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="curso-modal-cancel">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar cambio de curso</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- ================= MODAL FICHA DE MATRÍCULA (PDF) ================= -->
 <div class="modal-overlay large-modal" id="modal-fichamat-overlay">
   <div class="modal">
@@ -3150,6 +3174,7 @@ function renderNomina(){
         <td>${s.fecha_retiro ? `<span class="badge retirado">Retirado ${fmtDate(s.fecha_retiro)}</span>` : `<span class="badge activo">Activo</span>`}</td>
         <td style="white-space:nowrap;">
           <button class="task-del" data-fichamat="${s.id}" style="margin-right:12px;color:var(--navy);">Ficha</button>
+          ${!s.fecha_retiro ? `<button class="task-del" data-curso="${s.id}" style="margin-right:12px;color:var(--navy);">Cambiar curso</button>` : ''}
           ${!s.fecha_retiro ? `<button class="task-del" data-baja="${s.id}" style="margin-right:12px;">Registrar baja</button>` : ''}
           <button class="task-del" data-del="${s.id}">Eliminar</button>
         </td>
@@ -3176,7 +3201,48 @@ function renderNomina(){
   container.querySelectorAll('[data-fichamat]').forEach(btn=>{
     btn.addEventListener('click', ()=>openFichaMatModal(btn.dataset.fichamat));
   });
+  container.querySelectorAll('[data-curso]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openCursoModal(btn.dataset.curso));
+  });
 }
+
+/* ----- Cambiar de curso (mantiene el mismo id de alumno, no se pierde nada) ----- */
+const cursoOverlay = document.getElementById('modal-curso-overlay');
+let cursoTargetId = null;
+function openCursoModal(id){
+  const s = (matriculaData.roster||[]).find(x=>x.id===id);
+  if(!s) return;
+  cursoTargetId = id;
+  document.getElementById('curso-student-label').innerHTML = `<strong>${s.nombre}</strong> — Curso actual: ${s.curso} · Matrícula N° ${s.n_matricula}`;
+  document.getElementById('cc-curso').innerHTML = CURSO_ORDER.map(c=>`<option value="${c}" ${c===s.curso?'selected':''}>${c}</option>`).join('');
+  cursoOverlay.classList.add('active');
+}
+document.getElementById('modal-curso-close').addEventListener('click', ()=>cursoOverlay.classList.remove('active'));
+document.getElementById('curso-modal-cancel').addEventListener('click', ()=>cursoOverlay.classList.remove('active'));
+cursoOverlay.addEventListener('click', (e)=>{ if(e.target===cursoOverlay) cursoOverlay.classList.remove('active'); });
+
+document.getElementById('curso-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const s = (matriculaData.roster||[]).find(x=>x.id===cursoTargetId);
+  if(!s) return;
+  const nuevoCurso = document.getElementById('cc-curso').value;
+  if(nuevoCurso === s.curso){
+    cursoOverlay.classList.remove('active');
+    return;
+  }
+  const prevCurso = s.curso;
+  s.curso = nuevoCurso;
+  matriculaData.roster.sort((a,b)=> cursoIndex(a.curso)-cursoIndex(b.curso) || a.nombre.localeCompare(b.nombre,'es'));
+
+  if(!(await saveMatricula())){
+    s.curso = prevCurso;
+    return;
+  }
+  renderMatricula();
+  refreshStudentDependentViews();
+  cursoOverlay.classList.remove('active');
+  showToast(`${s.nombre} ahora aparece en el curso ${nuevoCurso}. Sus anotaciones y registros siguen intactos.`);
+});
 
 function renderAltas(){
   const tbody = document.querySelector('#altas-table tbody');
