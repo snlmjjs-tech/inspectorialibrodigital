@@ -6038,6 +6038,8 @@ init();
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   const { jsPDF } = window.jspdf;
 
+  // Login (Firebase Authentication) sigue validándose contra las cuentas
+  // de la intranet Incosaf — no se tocan ni se duplican esas cuentas.
   const firebaseConfig = {
     apiKey: "AIzaSyAMg-fnOkEdg_whrsj3O-HfKrezTXfYbXg",
     authDomain: "incosafintranet.firebaseapp.com",
@@ -6046,9 +6048,22 @@ init();
     messagingSenderId: "466123047655",
     appId: "1:466123047655:web:510e737d3cb0eabcf61842"
   };
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig, 'retiro-auth');
   const auth = getAuth(app);
+
+  // Los DATOS (retiros, contadores, auditoría, etc.) ahora se guardan en la
+  // base de datos propia del Libro digital, separada de la de Incosaf, para
+  // no compartir cuota de lecturas/escrituras con la intranet.
+  const dbFirebaseConfig = {
+    apiKey: "AIzaSyAVIbizU3MJyk-99qFMXtGyoNHP6NAGEp0",
+    authDomain: "inspectoria-libro-digital.firebaseapp.com",
+    projectId: "inspectoria-libro-digital",
+    storageBucket: "inspectoria-libro-digital.firebasestorage.app",
+    messagingSenderId: "240318386352",
+    appId: "1:240318386352:web:5dc1d222124d7955c26b75"
+  };
+  const dbApp = initializeApp(dbFirebaseConfig, 'retiro-db');
+  const db = getFirestore(dbApp);
 
   // Cuentas con acceso a Retiro de estudiantes en la intranet (mismo
   // directorio: el código no contiene los PIN, solo el correo y el nombre;
