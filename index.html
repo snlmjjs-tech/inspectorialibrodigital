@@ -1548,6 +1548,10 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M6 3h9l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v5h5"/><path d="M8.5 13.5l1.8 1.8 3.2-3.6"/></svg>
           Ficha de matrícula (PDF)
         </button>
+        <button class="btn-ghost" id="btn-nomina-pdf">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          Descargar nómina completa (PDF)
+        </button>
         <button class="btn-primary" id="btn-upload-matricula">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
           Subir base de datos
@@ -3741,6 +3745,18 @@ function parseWorkbook(workbook){
 document.getElementById('btn-upload-matricula').addEventListener('click', ()=>{
   document.getElementById('matricula-file-input').click();
 });
+document.getElementById('btn-nomina-pdf').addEventListener('click', ()=>{
+  if(!(matriculaData.roster||[]).length){
+    showToast('No hay alumnos cargados para este año.');
+    return;
+  }
+  try{
+    buildNominaPDF();
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el PDF de la nómina.');
+  }
+});
 document.getElementById('matricula-file-input').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -4601,6 +4617,121 @@ function buildActaAtencionPDF(entry, student){
   doc.text(`Documento generado por la plataforma interna de Inspectoría General · Folio ${entry.folio} · Emitido ${new Date(entry.creado).toLocaleString('es-CL')}`, pageW/2, 289, { align:'center' });
 
   return doc;
+}
+
+/* ----- Nómina completa de alumnos (PDF) ----- */
+function buildNominaPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const pageW = 210;
+  const marginL = 14, marginR = 14;
+  const contentW = pageW - marginL - marginR;
+  let y = 18;
+
+  const cols = [
+    { label:'N° Mat.', w:16 },
+    { label:'Nombre', w:70 },
+    { label:'RUN', w:26 },
+    { label:'Edad', w:14 },
+    { label:'Comuna', w:32 },
+    { label:'Estado', w:20 }
+  ];
+  function colX(i){
+    let x = marginL;
+    for(let j=0;j<i;j++) x += cols[j].w;
+    return x;
+  }
+  function drawHeader(){
+    doc.setFont('times','bold');
+    doc.setFontSize(9);
+    doc.setFillColor(15,27,64);
+    doc.setTextColor(255,255,255);
+    doc.rect(marginL, y-4.2, contentW, 6, 'F');
+    cols.forEach((c,i)=> doc.text(c.label, colX(i)+1.5, y));
+    doc.setTextColor(0,0,0);
+    y += 6.5;
+  }
+  function ensureSpace(needed, cursoLabel){
+    if(y + needed > 283){
+      doc.addPage();
+      y = 18;
+      doc.setFont('times','italic');
+      doc.setFontSize(8.5);
+      doc.setTextColor(120,120,120);
+      doc.text(`Nómina de alumnos ${currentYear} — ${cursoLabel} (continuación)`, marginL, y);
+      doc.setTextColor(0,0,0);
+      y += 7;
+      drawHeader();
+    }
+  }
+
+  try{
+    const logoImg = document.querySelector('.sidebar-head img');
+    if(logoImg && logoImg.src){
+      doc.addImage(logoImg.src, 'PNG', marginL, y-6, 18, 24);
+    }
+  }catch(err){ /* si falla el logo, se genera igual sin imagen */ }
+
+  doc.setFont('times','bold');
+  doc.setFontSize(13);
+  doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFont('times','normal');
+  doc.setFontSize(10.5);
+  doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+  y += 10;
+
+  doc.setDrawColor(180,150,60);
+  doc.setLineWidth(0.6);
+  doc.line(marginL, y, pageW-marginR, y);
+  y += 9;
+
+  doc.setFont('times','bold');
+  doc.setFontSize(15);
+  doc.text('NÓMINA COMPLETA DE ALUMNOS', pageW/2, y, { align:'center' });
+  y += 7;
+  doc.setFont('times','normal');
+  doc.setFontSize(10);
+  const roster = matriculaData.roster || [];
+  doc.text(`Año ${currentYear} — ${roster.length} alumnos — generado ${new Date().toLocaleDateString('es-CL')}`, pageW/2, y, { align:'center' });
+  y += 12;
+
+  const byCurso = {};
+  roster.forEach(s=>{
+    if(!byCurso[s.curso]) byCurso[s.curso] = [];
+    byCurso[s.curso].push(s);
+  });
+  const cursos = Object.keys(byCurso).sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+
+  cursos.forEach(curso=>{
+    ensureSpace(16, curso);
+    doc.setFont('times','bold');
+    doc.setFontSize(11);
+    doc.setTextColor(15,27,64);
+    doc.text(`Curso ${curso}  (${byCurso[curso].length} alumnos)`, marginL, y);
+    doc.setTextColor(0,0,0);
+    y += 6;
+    drawHeader();
+
+    doc.setFont('times','normal');
+    doc.setFontSize(8.5);
+    byCurso[curso]
+      .slice()
+      .sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))
+      .forEach(s=>{
+        ensureSpace(5.5, curso);
+        const estado = s.fecha_retiro ? 'Retirado' : 'Activo';
+        const valores = [s.n_matricula||'', s.nombre||'', s.run||'', s.edad||'', s.comuna||'', estado];
+        valores.forEach((val,i)=>{
+          const linea = doc.splitTextToSize(String(val), cols[i].w-2)[0] || '';
+          doc.text(linea, colX(i)+1.5, y);
+        });
+        y += 5;
+      });
+    y += 6;
+  });
+
+  doc.save(`nomina-alumnos-${currentYear}.pdf`);
 }
 
 /* ----- Resumen mensual del alumno (PDF) ----- */
