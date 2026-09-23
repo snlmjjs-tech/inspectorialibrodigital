@@ -4904,21 +4904,74 @@ function buildResumenMensualPDF(student){
   return doc;
 }
 
+// Cada anotación es su propio documento en Firestore (colección
+// libro-anotaciones), en vez de un solo bloque JSON con todas las
+// anotaciones del año. Antes, guardar sobreescribía el bloque completo:
+// si dos funcionarios anotaban casi al mismo tiempo, el segundo guardado
+// podía pisar y borrar la anotación que acababa de dejar el primero. Con
+// un documento por anotación eso ya no puede pasar — cada guardado toca
+// solo su propio documento.
 async function loadLibro(){
+  if(!firestoreDb){
+    try{
+      const result = await window.storage.get('libro-'+currentYear, true);
+      libroData = result && result.value ? JSON.parse(result.value) : [];
+    }catch(err){
+      libroData = [];
+    }
+    return;
+  }
   try{
-    const result = await window.storage.get('libro-'+currentYear, true);
-    libroData = result && result.value ? JSON.parse(result.value) : [];
+    const snap = await firestoreDb.collection('libro-anotaciones').where('anio','==',currentYear).get();
+    if(!snap.empty){
+      libroData = snap.docs.map(d=>d.data());
+      return;
+    }
+    // Migración automática, una sola vez por año: si la colección nueva
+    // está vacía pero el bloque antiguo tenía anotaciones, se copian como
+    // documentos individuales.
+    const old = await window.storage.get('libro-'+currentYear, true);
+    const oldData = old && old.value ? JSON.parse(old.value) : [];
+    if(oldData.length){
+      for(let i=0; i<oldData.length; i+=400){
+        const batch = firestoreDb.batch();
+        oldData.slice(i, i+400).forEach(entry=>{
+          batch.set(firestoreDb.collection('libro-anotaciones').doc(entry.id), { ...entry, anio: currentYear });
+        });
+        await batch.commit();
+      }
+    }
+    libroData = oldData;
   }catch(err){
+    console.error('Storage error:', err);
     libroData = [];
   }
 }
-async function saveLibro(){
+async function saveLibroEntry(entry){
+  if(!firestoreDb){
+    showToast('No se pudo guardar: sin conexión a la base de datos compartida.');
+    return false;
+  }
   try{
-    await window.storage.set('libro-'+currentYear, JSON.stringify(libroData), true);
+    await firestoreDb.collection('libro-anotaciones').doc(entry.id).set({ ...entry, anio: currentYear });
     return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar en la base de datos compartida. Revisa tu conexión e inténtalo de nuevo.');
+    return false;
+  }
+}
+async function deleteLibroEntry(id){
+  if(!firestoreDb){
+    showToast('No se pudo eliminar: sin conexión a la base de datos compartida.');
+    return false;
+  }
+  try{
+    await firestoreDb.collection('libro-anotaciones').doc(id).delete();
+    return true;
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo eliminar la anotación. Intenta nuevamente.');
     return false;
   }
 }
@@ -5278,12 +5331,8 @@ function renderFichaTimeline(){
   container.querySelectorAll('[data-del-entry]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar esta anotación?')) return;
-      const backup = libroData;
+      if(!(await deleteLibroEntry(btn.dataset.delEntry))) return;
       libroData = libroData.filter(x=>x.id!==btn.dataset.delEntry);
-      if(!(await saveLibro())){
-        libroData = backup;
-        return;
-      }
       renderFichaTimeline();
       renderFichaAlertas();
       renderLibro();
@@ -5322,7 +5371,8 @@ document.getElementById('ficha-form').addEventListener('submit', async (e)=>{
     gravedad: tipo === 'negativa' ? document.getElementById('fi-gravedad').value : '',
     descripcion: document.getElementById('fi-desc').value.trim(),
     autor: currentUser ? currentUser.nombre : '—',
-    creado: Date.now()
+    creado: Date.now(),
+    anio: currentYear
   };
 
   if(tipo === 'atencion'){
@@ -5336,19 +5386,17 @@ document.getElementById('ficha-form').addEventListener('submit', async (e)=>{
   submitBtn.disabled = true;
   submitBtn.textContent = 'Guardando...';
 
-  // Trae la versión más reciente antes de agregar la anotación, para no
-  // pisar lo que haya guardado otro funcionario mientras este modal estaba abierto.
-  await loadLibro();
-  libroData.push(entry);
-  const saved = await saveLibro();
+  // Cada anotación se guarda como su propio documento, así que no hace
+  // falta traer ni volver a escribir las anotaciones de otros funcionarios.
+  const saved = await saveLibroEntry(entry);
 
   submitBtn.disabled = false;
   submitBtn.textContent = originalLabel;
 
   if(!saved){
-    libroData = libroData.filter(x => x.id !== entry.id);
     return; // se deja el formulario tal cual para que puedan reintentar
   }
+  libroData.push(entry);
 
   if(tipo === 'atencion'){
     atencionCounter += 1;
