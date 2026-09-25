@@ -2578,6 +2578,17 @@
   </div>
 </div>
 
+<!-- ================= MODAL DETALLE DE ASISTENCIA ================= -->
+<div class="modal-overlay" id="modal-asis-detalle-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="asis-detalle-title">Detalle de asistencia</h2>
+      <button class="modal-close" id="modal-asis-detalle-close">&times;</button>
+    </div>
+    <div class="modal-body" id="asis-detalle-body"></div>
+  </div>
+</div>
+
 <!-- ================= MODAL REGISTRAR ATRASO ================= -->
 <div class="modal-overlay" id="modal-atraso-overlay">
   <div class="modal">
@@ -4404,6 +4415,32 @@ function statusCounts(rec){
   return c;
 }
 
+const asisDetalleOverlay = document.getElementById('modal-asis-detalle-overlay');
+document.getElementById('modal-asis-detalle-close').addEventListener('click', ()=>asisDetalleOverlay.classList.remove('active'));
+asisDetalleOverlay.addEventListener('click', (e)=>{ if(e.target===asisDetalleOverlay) asisDetalleOverlay.classList.remove('active'); });
+const ASIS_STATUS_LABEL = { ausente:'Ausente', atrasado:'Atrasado', justificado:'Justificado', presente:'Presente' };
+function openAsisDetalle(key){
+  const [fecha, curso] = key.split('|');
+  const rec = (asistenciaData.records||{})[key] || {};
+  document.getElementById('asis-detalle-title').textContent = `${curso} — ${fmtDate(fecha)}`;
+  const grupos = { ausente:[], atrasado:[], justificado:[], presente:[] };
+  Object.entries(rec).forEach(([sid, status])=>{
+    const s = findStudent(sid);
+    const nombre = s ? s.nombre : '(alumno eliminado)';
+    (grupos[status] || grupos.presente).push(nombre);
+  });
+  Object.values(grupos).forEach(list=>list.sort((a,b)=>a.localeCompare(b,'es')));
+  document.getElementById('asis-detalle-body').innerHTML = ['ausente','atrasado','justificado','presente'].map(estado=>{
+    const list = grupos[estado];
+    return `
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:600;color:var(--navy-deep);margin-bottom:6px;">${ASIS_STATUS_LABEL[estado]} (${list.length})</div>
+        ${list.length ? `<ul style="margin:0;padding-left:18px;">${list.map(n=>`<li>${n}</li>`).join('')}</ul>` : `<div style="color:var(--ink-soft);font-size:13px;">Nadie en este estado.</div>`}
+      </div>`;
+  }).join('');
+  asisDetalleOverlay.classList.add('active');
+}
+
 function renderAsisHistorial(){
   const tbody = document.querySelector('#asis-historial-table tbody');
   const empty = document.getElementById('asis-historial-empty');
@@ -4423,9 +4460,15 @@ function renderAsisHistorial(){
     return `<tr>
       <td>${fmtDate(fecha)}</td><td>${curso}</td>
       <td>${c.presente}</td><td>${c.ausente}</td><td>${c.atrasado}</td><td>${c.justificado}</td>
-      <td><button class="task-del" data-del-rec="${k}">Eliminar</button></td>
+      <td style="white-space:nowrap;">
+        <button class="task-del" data-ver-rec="${k}" style="margin-right:10px;color:var(--navy);">Ver</button>
+        <button class="task-del" data-del-rec="${k}">Eliminar</button>
+      </td>
     </tr>`;
   }).join('');
+  tbody.querySelectorAll('[data-ver-rec]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openAsisDetalle(btn.dataset.verRec));
+  });
   tbody.querySelectorAll('[data-del-rec]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de asistencia?')) return;
