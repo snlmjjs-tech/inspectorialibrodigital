@@ -865,6 +865,18 @@
   .status-btn[data-s="ausente"].on{background:#A8462F;color:#fff;border-color:#A8462F;}
   .status-btn[data-s="atrasado"].on{background:var(--warn);color:#fff;border-color:var(--warn);}
   .status-btn[data-s="justificado"].on{background:var(--pending);color:#fff;border-color:var(--pending);}
+  .atraso-add-btn{
+    all:unset;cursor:pointer;
+    width:24px;height:24px;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:700;
+    border:1px solid var(--warn);
+    color:var(--warn);
+    border-radius:50%;
+    margin-left:6px;
+    flex-shrink:0;
+  }
+  .atraso-add-btn:hover{background:var(--warn);color:#fff;}
 
   .attend-summary-bar{
     display:flex;gap:22px;flex-wrap:wrap;
@@ -4348,6 +4360,7 @@ function renderAsisTomar(){
         <div class="status-group">
           ${statuses.map(st=>`<button type="button" class="status-btn ${estadoActual===st.k?'on':''}" data-s="${st.k}" data-student="${s.id}">${st.l}</button>`).join('')}
           <input type="time" class="atraso-hora-input" data-student="${s.id}" value="${horaActual}" style="display:${estadoActual==='atrasado'?'inline-block':'none'};margin-left:8px;width:100px;">
+          <button type="button" class="atraso-add-btn" data-student="${s.id}" title="Agregar otro atraso (llegó tarde a otra clase)">+</button>
         </div>
       </td>
     </tr>`;
@@ -4388,6 +4401,9 @@ function renderAsisTomar(){
       }
     });
   });
+  container.querySelectorAll('.atraso-add-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>agregarAtrasoAdicional(btn.dataset.student, fecha));
+  });
 
   guardarWrap.innerHTML = `<button class="btn-primary" id="asis-guardar-btn">Guardar asistencia (${students.length} alumnos)</button>`;
   document.getElementById('asis-guardar-btn').addEventListener('click', async (ev)=>{
@@ -4415,6 +4431,42 @@ function renderAsisTomar(){
     renderAsisResumenAlumno();
     await syncAtrasosFromAsistencia(fecha, curso, students);
   });
+}
+
+// Botón "+" junto a cada alumno: registra de inmediato un atraso extra
+// (por ejemplo, llegó tarde a una clase más adelante en el día), sin
+// tener que guardar toda la asistencia de nuevo. Queda como un registro
+// aparte en Atrasos, no reemplaza al de la asistencia del día.
+async function agregarAtrasoAdicional(studentId, fecha){
+  const s = findStudent(studentId);
+  if(!s) return;
+  const now = new Date();
+  const sugerida = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const hora = prompt(`Hora de este otro atraso para ${s.nombre}:`, sugerida);
+  if(hora === null) return;
+  if(!/^\d{1,2}:\d{2}$/.test(hora)){
+    alert('Ingresa la hora en formato HH:MM (ej: 12:45).');
+    return;
+  }
+  const entry = {
+    id: 'at_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    studentId,
+    curso: s.curso,
+    nombre: s.nombre,
+    run: s.run,
+    fecha,
+    hora,
+    justificado: false,
+    observacion: 'Atraso adicional registrado desde Asistencia',
+    autor: currentUser ? currentUser.nombre : '—',
+    creado: Date.now(),
+    anio: currentYear,
+    origen: 'asistencia'
+  };
+  if(!(await saveAtrasoEntry(entry))) return;
+  atrasosData.push(entry);
+  if(typeof renderAtrasos === 'function') renderAtrasos();
+  showToast(`Atraso adicional registrado para ${s.nombre} (${hora})`);
 }
 
 // Marcar "Atrasado" al tomar asistencia y registrar un atraso en el
