@@ -4413,7 +4413,51 @@ function renderAsisTomar(){
     showToast('Asistencia guardada correctamente ✓');
     renderAsisHistorial();
     renderAsisResumenAlumno();
+    await syncAtrasosFromAsistencia(fecha, curso, students);
   });
+}
+
+// Marcar "Atrasado" al tomar asistencia y registrar un atraso en el
+// módulo "Atrasos" eran dos cosas separadas que nunca se conectaban entre
+// sí. Cada vez que se guarda la asistencia, esto deja (o quita, si el
+// estado cambió) un registro espejo en Atrasos por cada alumno marcado
+// atrasado, usando un id fijo por alumno+fecha para no duplicar si se
+// vuelve a guardar la asistencia del mismo día.
+async function syncAtrasosFromAsistencia(fecha, curso, students){
+  if(!firestoreDb) return;
+  for(const s of students){
+    const val = asisTomarState[s.id];
+    const status = asisStatusOf(val);
+    const docId = 'asis_' + fecha + '_' + s.id;
+    try{
+      if(status === 'atrasado'){
+        const entry = {
+          id: docId,
+          studentId: s.id,
+          curso: s.curso,
+          nombre: s.nombre,
+          run: s.run,
+          fecha,
+          hora: asisHoraOf(val) || '',
+          justificado: false,
+          observacion: 'Registrado desde Asistencia',
+          autor: currentUser ? currentUser.nombre : '—',
+          creado: Date.now(),
+          anio: currentYear,
+          origen: 'asistencia'
+        };
+        await firestoreDb.collection('atrasos-registros').doc(docId).set(entry);
+        const idx = atrasosData.findIndex(a=>a.id===docId);
+        if(idx>=0) atrasosData[idx] = entry; else atrasosData.push(entry);
+      } else if(atrasosData.some(a=>a.id===docId)){
+        await firestoreDb.collection('atrasos-registros').doc(docId).delete();
+        atrasosData = atrasosData.filter(a=>a.id!==docId);
+      }
+    }catch(err){
+      console.error('No se pudo sincronizar el atraso de', s.nombre, err);
+    }
+  }
+  if(typeof renderAtrasos === 'function') renderAtrasos();
 }
 
 document.getElementById('asis-marcar-todos').addEventListener('click', ()=>{
