@@ -4337,16 +4337,21 @@ function renderAsisTomar(){
     { k:'atrasado', l:'Atrasado' },
     { k:'justificado', l:'Justificado' }
   ];
-  const rows = students.map(s=>`
+  const rows = students.map(s=>{
+    const estadoActual = asisStatusOf(asisTomarState[s.id]);
+    const horaActual = asisHoraOf(asisTomarState[s.id]);
+    return `
     <tr data-student="${s.id}">
       <td>${s.nombre}</td>
       <td><span style="font-size:11.5px;color:var(--ink-soft);">${s.run}</span></td>
       <td>
         <div class="status-group">
-          ${statuses.map(st=>`<button type="button" class="status-btn ${asisTomarState[s.id]===st.k?'on':''}" data-s="${st.k}" data-student="${s.id}">${st.l}</button>`).join('')}
+          ${statuses.map(st=>`<button type="button" class="status-btn ${estadoActual===st.k?'on':''}" data-s="${st.k}" data-student="${s.id}">${st.l}</button>`).join('')}
+          <input type="time" class="atraso-hora-input" data-student="${s.id}" value="${horaActual}" style="display:${estadoActual==='atrasado'?'inline-block':'none'};margin-left:8px;width:100px;">
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   container.innerHTML = `
     <table class="attend-table">
@@ -4358,10 +4363,29 @@ function renderAsisTomar(){
     btn.addEventListener('click', ()=>{
       const sid = btn.dataset.student;
       const st = btn.dataset.s;
-      asisTomarState[sid] = st;
+      const horaInput = container.querySelector(`.atraso-hora-input[data-student="${sid}"]`);
+      if(st === 'atrasado'){
+        if(!horaInput.value){
+          const now = new Date();
+          horaInput.value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+        }
+        asisTomarState[sid] = { status:'atrasado', hora: horaInput.value };
+        horaInput.style.display = 'inline-block';
+      } else {
+        asisTomarState[sid] = st;
+        horaInput.style.display = 'none';
+      }
       container.querySelectorAll(`.status-btn[data-student="${sid}"]`).forEach(b=>{
         b.classList.toggle('on', b.dataset.s === st);
       });
+    });
+  });
+  container.querySelectorAll('.atraso-hora-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const sid = inp.dataset.student;
+      if(asisTomarState[sid] && typeof asisTomarState[sid] === 'object'){
+        asisTomarState[sid].hora = inp.value;
+      }
     });
   });
 
@@ -4409,9 +4433,18 @@ document.getElementById('asis-subtabs').addEventListener('click', (e)=>{
   if(btn.dataset.sub === 'resumen-alumno') renderAsisResumenAlumno();
 });
 
+// Un registro de asistencia normalmente es solo un texto ('presente',
+// 'ausente', etc.), pero cuando es 'atrasado' puede venir como
+// { status:'atrasado', hora:'08:15' } para guardar la hora de llegada.
+function asisStatusOf(val){
+  return (val && typeof val === 'object') ? val.status : val;
+}
+function asisHoraOf(val){
+  return (val && typeof val === 'object') ? (val.hora||'') : '';
+}
 function statusCounts(rec){
   const c = { presente:0, ausente:0, atrasado:0, justificado:0 };
-  Object.values(rec||{}).forEach(st=>{ if(c[st]!==undefined) c[st]++; });
+  Object.values(rec||{}).forEach(v=>{ const st = asisStatusOf(v); if(c[st]!==undefined) c[st]++; });
   return c;
 }
 
@@ -4424,9 +4457,12 @@ function openAsisDetalle(key){
   const rec = (asistenciaData.records||{})[key] || {};
   document.getElementById('asis-detalle-title').textContent = `${curso} — ${fmtDate(fecha)}`;
   const grupos = { ausente:[], atrasado:[], justificado:[], presente:[] };
-  Object.entries(rec).forEach(([sid, status])=>{
+  Object.entries(rec).forEach(([sid, val])=>{
+    const status = asisStatusOf(val);
+    const hora = asisHoraOf(val);
     const s = findStudent(sid);
-    const nombre = s ? s.nombre : '(alumno eliminado)';
+    let nombre = s ? s.nombre : '(alumno eliminado)';
+    if(status === 'atrasado' && hora) nombre += ` — ${hora}`;
     (grupos[status] || grupos.presente).push(nombre);
   });
   Object.values(grupos).forEach(list=>list.sort((a,b)=>a.localeCompare(b,'es')));
@@ -4493,7 +4529,8 @@ function renderAsisResumenAlumno(){
 
   const perStudent = {};
   Object.entries(records).forEach(([key, rec])=>{
-    Object.entries(rec).forEach(([sid, status])=>{
+    Object.entries(rec).forEach(([sid, val])=>{
+      const status = asisStatusOf(val);
       if(!perStudent[sid]) perStudent[sid] = { presente:0, ausente:0, atrasado:0, justificado:0 };
       if(perStudent[sid][status]!==undefined) perStudent[sid][status]++;
     });
