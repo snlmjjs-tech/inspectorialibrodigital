@@ -1736,8 +1736,9 @@
     </div>
 
     <div class="subview active" id="atrasos-sub-historial">
-      <div class="search-bar">
-        <input type="text" id="atrasos-search" placeholder="Buscar alumno por nombre o RUN...">
+      <div class="search-bar" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input type="text" id="atrasos-search" placeholder="Buscar alumno por nombre o RUN..." style="flex:1;min-width:200px;">
+        <select id="atrasos-curso-filter" style="max-width:200px;"></select>
       </div>
       <table class="data-table" id="atrasos-table">
         <thead><tr><th>Fecha</th><th>Hora</th><th>Alumno</th><th>Curso</th><th>Justificado</th><th>Observación</th><th>Acciones</th></tr></thead>
@@ -2619,6 +2620,7 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-ghost" id="atraso-modal-cancel">Cancelar</button>
+          <button type="submit" class="btn-ghost" id="atraso-guardar-otro">Guardar y agregar otro</button>
           <button type="submit" class="btn-primary">Guardar atraso</button>
         </div>
       </form>
@@ -4244,6 +4246,15 @@ function populateCourseSelectors(){
     el.innerHTML = opts || '<option value="">Sin cursos cargados</option>';
     if(cursos.includes(prev)) el.value = prev;
   });
+  populateAtrasosCursoFilter();
+}
+function populateAtrasosCursoFilter(){
+  const el = document.getElementById('atrasos-curso-filter');
+  if(!el) return;
+  const cursos = activeCourses();
+  const prev = el.value;
+  el.innerHTML = '<option value="">Todos los cursos</option>' + cursos.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cursos.includes(prev)) el.value = prev;
 }
 // Refresca las vistas que dependen de la nómina (Atrasos, Libro digital,
 // Asistencia) cada vez que se matricula, da de baja o elimina un alumno,
@@ -5580,21 +5591,68 @@ function renderHoja(){
 let atrasosData = [];
 const ATRASO_ALERTA_UMBRAL = 3;
 
+// Igual que en Libro digital: cada atraso es su propio documento en
+// Firestore (colección atrasos-registros), en vez de un solo bloque JSON
+// con todos los atrasos del año — así dos funcionarios registrando atrasos
+// al mismo tiempo (típico en la entrada de clases) no se pisan entre sí.
 async function loadAtrasos(){
+  if(!firestoreDb){
+    try{
+      const result = await window.storage.get('atrasos-'+currentYear, true);
+      atrasosData = result && result.value ? JSON.parse(result.value) : [];
+    }catch(err){
+      atrasosData = [];
+    }
+    return;
+  }
   try{
-    const result = await window.storage.get('atrasos-'+currentYear, true);
-    atrasosData = result && result.value ? JSON.parse(result.value) : [];
+    const snap = await firestoreDb.collection('atrasos-registros').where('anio','==',currentYear).get();
+    if(!snap.empty){
+      atrasosData = snap.docs.map(d=>d.data());
+      return;
+    }
+    const old = await window.storage.get('atrasos-'+currentYear, true);
+    const oldData = old && old.value ? JSON.parse(old.value) : [];
+    if(oldData.length){
+      for(let i=0; i<oldData.length; i+=400){
+        const batch = firestoreDb.batch();
+        oldData.slice(i, i+400).forEach(entry=>{
+          batch.set(firestoreDb.collection('atrasos-registros').doc(entry.id), { ...entry, anio: currentYear });
+        });
+        await batch.commit();
+      }
+    }
+    atrasosData = oldData;
   }catch(err){
+    console.error('Storage error:', err);
     atrasosData = [];
   }
 }
-async function saveAtrasos(){
+async function saveAtrasoEntry(entry){
+  if(!firestoreDb){
+    showToast('No se pudo guardar: sin conexión a la base de datos compartida.');
+    return false;
+  }
   try{
-    await window.storage.set('atrasos-'+currentYear, JSON.stringify(atrasosData), true);
+    await firestoreDb.collection('atrasos-registros').doc(entry.id).set({ ...entry, anio: currentYear });
     return true;
   }catch(err){
     console.error('Storage error:', err);
     showToast('No se pudo guardar el atraso. Intenta nuevamente.');
+    return false;
+  }
+}
+async function deleteAtrasoEntry(id){
+  if(!firestoreDb){
+    showToast('No se pudo eliminar: sin conexión a la base de datos compartida.');
+    return false;
+  }
+  try{
+    await firestoreDb.collection('atrasos-registros').doc(id).delete();
+    return true;
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo eliminar el atraso. Intenta nuevamente.');
     return false;
   }
 }
@@ -5626,6 +5684,7 @@ atrasoOverlay.addEventListener('click', (e)=>{ if(e.target===atrasoOverlay) atra
 
 document.getElementById('atraso-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
+  const guardarOtro = e.submitter && e.submitter.id === 'atraso-guardar-otro';
   const studentId = document.getElementById('at-alumno').value;
   const s = findStudent(studentId);
   if(!s){ showToast('Selecciona un alumno válido.'); return; }
@@ -5640,16 +5699,25 @@ document.getElementById('atraso-form').addEventListener('submit', async (e)=>{
     justificado: document.getElementById('at-justificado').value === 'si',
     observacion: document.getElementById('at-obs').value.trim(),
     autor: currentUser ? currentUser.nombre : '—',
-    creado: Date.now()
+    creado: Date.now(),
+    anio: currentYear
   };
+  if(!(await saveAtrasoEntry(entry))) return;
   atrasosData.push(entry);
-  if(!(await saveAtrasos())){
-    atrasosData = atrasosData.filter(x=>x.id !== entry.id);
-    return;
-  }
-  atrasoOverlay.classList.remove('active');
   renderAtrasos();
-  showToast('Atraso registrado');
+
+  if(guardarOtro){
+    // Deja el mismo alumno y curso seleccionados, solo actualiza la hora a
+    // la actual, para registrar rápido un atraso a otra clase el mismo día.
+    const now = new Date();
+    document.getElementById('at-hora').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('at-justificado').value = 'no';
+    document.getElementById('at-obs').value = '';
+    showToast(`Atraso registrado. Agrega otro para ${s.nombre} si llegó tarde a otra clase.`);
+  } else {
+    atrasoOverlay.classList.remove('active');
+    showToast('Atraso registrado');
+  }
 });
 
 document.getElementById('atrasos-subtabs').addEventListener('click', (e)=>{
@@ -5661,13 +5729,18 @@ document.getElementById('atrasos-subtabs').addEventListener('click', (e)=>{
   document.getElementById('atrasos-sub-'+btn.dataset.sub).classList.add('active');
 });
 document.getElementById('atrasos-search').addEventListener('input', renderAtrasosHistorial);
+document.getElementById('atrasos-curso-filter').addEventListener('change', renderAtrasosHistorial);
 
 function renderAtrasosHistorial(){
   const tbody = document.querySelector('#atrasos-table tbody');
   const empty = document.getElementById('atrasos-empty');
   const q = (document.getElementById('atrasos-search').value || '').trim().toLowerCase();
+  const cursoFiltro = document.getElementById('atrasos-curso-filter').value;
 
   let list = atrasosData.slice().sort((a,b)=> (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+  if(cursoFiltro){
+    list = list.filter(a=>a.curso === cursoFiltro);
+  }
   if(q){
     list = list.filter(a=>a.nombre.toLowerCase().includes(q) || (a.run||'').toLowerCase().includes(q));
   }
@@ -5689,12 +5762,8 @@ function renderAtrasosHistorial(){
   tbody.querySelectorAll('[data-del-atraso]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de atraso?')) return;
-      const backup = atrasosData;
+      if(!(await deleteAtrasoEntry(btn.dataset.delAtraso))) return;
       atrasosData = atrasosData.filter(x=>x.id!==btn.dataset.delAtraso);
-      if(!(await saveAtrasos())){
-        atrasosData = backup;
-        return;
-      }
       renderAtrasos();
       showToast('Atraso eliminado');
     });
