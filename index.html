@@ -1946,19 +1946,59 @@
       </div>
     </div>
 
-    <div class="picker-row">
-      <div class="picker-field">
-        <label for="libro-curso">Curso</label>
-        <select id="libro-curso"></select>
-      </div>
-      <div class="picker-field" style="flex:1;min-width:220px;">
-        <label for="libro-search">Buscar alumno</label>
-        <input type="text" id="libro-search" placeholder="Nombre o RUN...">
-      </div>
+    <div class="sub-tabs" id="libro-subtabs">
+      <button data-sub="alumnos" class="active">Alumnos</button>
+      <button data-sub="suspensiones">Suspensiones</button>
     </div>
 
-    <div class="student-pick-list" id="libro-student-list"></div>
-    <div class="empty-state" id="libro-empty" style="display:none;"></div>
+    <div class="subview active" id="libro-sub-alumnos">
+      <div class="picker-row">
+        <div class="picker-field">
+          <label for="libro-curso">Curso</label>
+          <select id="libro-curso"></select>
+        </div>
+        <div class="picker-field" style="flex:1;min-width:220px;">
+          <label for="libro-search">Buscar alumno</label>
+          <input type="text" id="libro-search" placeholder="Nombre o RUN...">
+        </div>
+      </div>
+
+      <div class="student-pick-list" id="libro-student-list"></div>
+      <div class="empty-state" id="libro-empty" style="display:none;"></div>
+    </div>
+
+    <div class="subview" id="libro-sub-suspensiones">
+      <div class="sub-tabs" id="susp-subtabs">
+        <button data-sub="historial" class="active">Historial</button>
+        <button data-sub="ranking">Alumnos con más suspensiones</button>
+        <button data-sub="porsuspender">Por suspender (faltas graves)</button>
+      </div>
+
+      <div class="subview active" id="susp-sub-historial">
+        <table class="data-table" id="susp-hist-table">
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Días</th><th>Motivo</th><th>Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-hist-empty" style="display:none;">Aún no hay suspensiones registradas este año.</div>
+      </div>
+
+      <div class="subview" id="susp-sub-ranking">
+        <table class="data-table" id="susp-ranking-table">
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Total de suspensiones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-ranking-empty" style="display:none;">Aún no hay suspensiones registradas este año.</div>
+      </div>
+
+      <div class="subview" id="susp-sub-porsuspender">
+        <div class="recover-answer-box" style="margin-bottom:14px;">Alumnos con 2 o más faltas graves, o 1 o más gravísima, registradas en el Libro Digital, que aún no tienen ninguna suspensión este año.</div>
+        <table class="data-table" id="susp-porsuspender-table">
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Detalle</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-porsuspender-empty" style="display:none;">No hay alumnos por suspender en este momento.</div>
+      </div>
+    </div>
   </section>
 
   <!-- ================= HOJA DE TRABAJO (INSPECTOR GENERAL) ================= -->
@@ -5430,21 +5470,69 @@ const UMBRAL_LEVES = 3;
 const UMBRAL_GRAVES = 2;
 const UMBRAL_SUSPENSIONES_COMITE = 3;
 
+// Un documento por suspensión (colección suspensiones-registros), en vez
+// de un solo bloque JSON con todas las suspensiones del año — mismo
+// motivo que libro-anotaciones y atrasos-registros: evita que dos
+// guardados casi simultáneos se pisen y borren una suspensión recién
+// registrada.
 async function loadSuspensiones(){
+  if(!firestoreDb){
+    try{
+      const result = await window.storage.get('suspensiones-'+currentYear, true);
+      suspensionesData = result && result.value ? JSON.parse(result.value) : [];
+    }catch(err){
+      suspensionesData = [];
+    }
+    return;
+  }
   try{
-    const result = await window.storage.get('suspensiones-'+currentYear, true);
-    suspensionesData = result && result.value ? JSON.parse(result.value) : [];
+    const snap = await firestoreDb.collection('suspensiones-registros').where('anio','==',currentYear).get();
+    if(!snap.empty){
+      suspensionesData = snap.docs.map(d=>d.data());
+      return;
+    }
+    const old = await window.storage.get('suspensiones-'+currentYear, true);
+    const oldData = old && old.value ? JSON.parse(old.value) : [];
+    if(oldData.length){
+      for(let i=0; i<oldData.length; i+=400){
+        const batch = firestoreDb.batch();
+        oldData.slice(i, i+400).forEach(entry=>{
+          batch.set(firestoreDb.collection('suspensiones-registros').doc(entry.id), { ...entry, anio: currentYear });
+        });
+        await batch.commit();
+      }
+    }
+    suspensionesData = oldData;
   }catch(err){
+    console.error('Storage error:', err);
     suspensionesData = [];
   }
 }
-async function saveSuspensiones(){
+async function saveSuspensionEntry(entry){
+  if(!firestoreDb){
+    showToast('No se pudo guardar: sin conexión a la base de datos compartida.');
+    return false;
+  }
   try{
-    await window.storage.set('suspensiones-'+currentYear, JSON.stringify(suspensionesData), true);
+    await firestoreDb.collection('suspensiones-registros').doc(entry.id).set({ ...entry, anio: currentYear });
     return true;
   }catch(err){
     console.error('Storage error:', err);
-    showToast('No se pudo guardar la suspensión. Intenta nuevamente.');
+    showToast('No se pudo guardar la suspensión en la base de datos compartida. Revisa tu conexión e inténtalo de nuevo.');
+    return false;
+  }
+}
+async function deleteSuspensionEntry(id){
+  if(!firestoreDb){
+    showToast('No se pudo eliminar: sin conexión a la base de datos compartida.');
+    return false;
+  }
+  try{
+    await firestoreDb.collection('suspensiones-registros').doc(id).delete();
+    return true;
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo eliminar la suspensión. Intenta nuevamente.');
     return false;
   }
 }
@@ -5602,15 +5690,12 @@ function renderSuspensionTable(){
   wrap.querySelectorAll('[data-del-susp]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de suspensión?')) return;
-      const backup = suspensionesData;
+      if(!(await deleteSuspensionEntry(btn.dataset.delSusp))) return;
       suspensionesData = suspensionesData.filter(x=>x.id!==btn.dataset.delSusp);
-      if(!(await saveSuspensiones())){
-        suspensionesData = backup;
-        return;
-      }
       renderSuspensionTable();
       renderFichaAlertas();
       renderHoja();
+      if(typeof renderSuspensionesSeccion === 'function') renderSuspensionesSeccion();
       showToast('Suspensión eliminada');
     });
   });
@@ -5646,11 +5731,8 @@ document.getElementById('suspension-form').addEventListener('submit', async (e)=
     autor: currentUser ? currentUser.nombre : '—',
     creado: Date.now()
   };
+  if(!(await saveSuspensionEntry(susp))) return;
   suspensionesData.push(susp);
-  if(!(await saveSuspensiones())){
-    suspensionesData = suspensionesData.filter(x=>x.id !== susp.id);
-    return;
-  }
 
   try{
     const doc = buildCartaCitacionPDF(susp, s);
@@ -5666,8 +5748,122 @@ document.getElementById('suspension-form').addEventListener('submit', async (e)=
   renderSuspensionTable();
   renderFichaAlertas();
   renderHoja();
+  if(typeof renderSuspensionesSeccion === 'function') renderSuspensionesSeccion();
   showToast('Suspensión registrada y carta generada');
 });
+
+/* ---------------- Suspensiones: sección propia (historial / ranking / por suspender) ---------------- */
+document.getElementById('libro-subtabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#libro-subtabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#view-libro > .subview').forEach(v=>v.classList.remove('active'));
+  document.getElementById('libro-sub-'+btn.dataset.sub).classList.add('active');
+  if(btn.dataset.sub === 'suspensiones') renderSuspensionesSeccion();
+});
+
+document.getElementById('susp-subtabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#susp-subtabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#libro-sub-suspensiones > .subview').forEach(v=>v.classList.remove('active'));
+  document.getElementById('susp-sub-'+btn.dataset.sub).classList.add('active');
+  renderSuspensionesSeccion();
+});
+
+function renderSuspensionesSeccion(){
+  const activo = document.querySelector('#susp-subtabs button.active');
+  const sub = activo ? activo.dataset.sub : 'historial';
+  if(sub === 'historial') renderSuspensionesHistorial();
+  else if(sub === 'ranking') renderSuspensionesRanking();
+  else renderSuspensionesPorSuspender();
+}
+
+function renderSuspensionesHistorial(){
+  const tbody = document.querySelector('#susp-hist-table tbody');
+  const empty = document.getElementById('susp-hist-empty');
+  const list = suspensionesData.slice().sort((a,b)=>(b.creado||0)-(a.creado||0));
+  if(!list.length){
+    tbody.innerHTML = '';
+    document.getElementById('susp-hist-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('susp-hist-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(s=>`
+    <tr>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${s.dias}</td><td>${s.motivo}</td>
+      <td style="white-space:nowrap;">
+        <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--navy);">Descargar carta</button>
+        <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
+      </td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-susp-carta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const rec = suspensionesData.find(x=>x.id===btn.dataset.suspCarta);
+      const s = rec ? findStudent(rec.studentId) : null;
+      if(!rec || !s) return;
+      try{
+        const doc = buildCartaCitacionPDF(rec, s);
+        doc.save(`carta-citacion-${s.nombre.trim().replace(/\s+/g,'-').toLowerCase()}-${rec.fecha}.pdf`);
+      }catch(err){
+        console.error(err);
+        showToast('No se pudo generar el PDF.');
+      }
+    });
+  });
+  tbody.querySelectorAll('[data-susp-ficha]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openFicha(btn.dataset.suspFicha));
+  });
+}
+
+function renderSuspensionesRanking(){
+  const tbody = document.querySelector('#susp-ranking-table tbody');
+  const empty = document.getElementById('susp-ranking-empty');
+  const perStudent = {};
+  suspensionesData.forEach(s=>{
+    if(!perStudent[s.studentId]) perStudent[s.studentId] = { nombre:s.nombre, curso:s.curso, total:0 };
+    perStudent[s.studentId].total++;
+  });
+  const rows = Object.values(perStudent).sort((a,b)=>b.total-a.total);
+  if(!rows.length){
+    tbody.innerHTML = '';
+    document.getElementById('susp-ranking-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('susp-ranking-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r.nombre}${r.total>=UMBRAL_SUSPENSIONES_COMITE ? `<span class="atraso-alert">≥ ${UMBRAL_SUSPENSIONES_COMITE} suspensiones</span>` : ''}</td>
+      <td>${r.curso}</td><td>${r.total}</td>
+    </tr>`).join('');
+}
+
+function renderSuspensionesPorSuspender(){
+  const tbody = document.querySelector('#susp-porsuspender-table tbody');
+  const empty = document.getElementById('susp-porsuspender-empty');
+  const casos = computeHojaCases().filter(c=>c.flags.includes('suspension'));
+  if(!casos.length){
+    tbody.innerHTML = '';
+    document.getElementById('susp-porsuspender-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('susp-porsuspender-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = casos.map(c=>`
+    <tr>
+      <td><a href="#" data-susp-caso-ficha="${c.studentId}">${c.nombre}</a></td><td>${c.curso}</td><td>${c.detalle}</td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-susp-caso-ficha]').forEach(a=>{
+    a.addEventListener('click', (e)=>{ e.preventDefault(); openFicha(a.dataset.suspCasoFicha); });
+  });
+}
 
 function renderLibro(){
   const curso = document.getElementById('libro-curso').value;
