@@ -5449,7 +5449,7 @@ document.getElementById('libro-curso').addEventListener('change', renderLibro);
 document.getElementById('libro-search').addEventListener('input', renderLibro);
 
 const fichaOverlay = document.getElementById('modal-ficha-overlay');
-function openFicha(studentId){
+async function openFicha(studentId){
   const s = findStudent(studentId);
   if(!s) return;
   fichaTargetId = studentId;
@@ -5461,10 +5461,24 @@ function openFicha(studentId){
   document.getElementById('suspension-form').reset();
   document.getElementById('sp-fecha').value = new Date().toISOString().slice(0,10);
   document.getElementById('sp-dias').value = 2;
+  // Se vuelve a cargar desde la base de datos compartida cada vez que se
+  // abre una ficha: si la sesión llevaba tiempo abierta y otro funcionario
+  // agregó una anotación mientras tanto, libroData en memoria podía estar
+  // desactualizado y esa anotación parecía "no guardarse" hasta refrescar
+  // la página. Con esto siempre se ve lo último que hay guardado.
   renderFichaTimeline();
   renderSuspensionTable();
   renderFichaAlertas();
   fichaOverlay.classList.add('active');
+  try{
+    await Promise.all([loadLibro(), loadSuspensiones()]);
+  }catch(err){
+    console.error('Error al refrescar ficha:', err);
+  }
+  if(fichaTargetId !== studentId) return; // se cerró/cambió de ficha mientras cargaba
+  renderFichaTimeline();
+  renderSuspensionTable();
+  renderFichaAlertas();
 }
 document.getElementById('modal-ficha-close').addEventListener('click', ()=>fichaOverlay.classList.remove('active'));
 fichaOverlay.addEventListener('click', (e)=>{ if(e.target===fichaOverlay) fichaOverlay.classList.remove('active'); });
