@@ -1972,6 +1972,7 @@
         <button data-sub="historial" class="active">Historial</button>
         <button data-sub="ranking">Alumnos con más suspensiones</button>
         <button data-sub="porsuspender">Por suspender (faltas graves)</button>
+        <button data-sub="motivos">Motivos más frecuentes</button>
       </div>
 
       <div class="subview active" id="susp-sub-historial">
@@ -1997,6 +1998,21 @@
           <tbody></tbody>
         </table>
         <div class="empty-state" id="susp-porsuspender-empty" style="display:none;">No hay alumnos por suspender en este momento.</div>
+      </div>
+
+      <div class="subview" id="susp-sub-motivos">
+        <div class="recover-answer-box" style="margin-bottom:14px;">Clasificación automática por palabras clave del motivo escrito en cada suspensión. Es una aproximación: revisa "Otros / sin clasificar" si algo no calzó bien.</div>
+        <div class="panel">
+          <h2>Motivos más frecuentes</h2>
+          <div class="body">
+            <canvas id="susp-motivos-canvas" style="width:100%;height:220px;display:block;"></canvas>
+          </div>
+        </div>
+        <table class="data-table" id="susp-motivos-table" style="margin-top:18px;">
+          <thead><tr><th>Categoría</th><th>Cantidad</th><th>% del total</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-motivos-empty" style="display:none;">Aún no hay suspensiones registradas este año.</div>
       </div>
     </div>
   </section>
@@ -5778,7 +5794,8 @@ function renderSuspensionesSeccion(){
   const sub = activo ? activo.dataset.sub : 'historial';
   if(sub === 'historial') renderSuspensionesHistorial();
   else if(sub === 'ranking') renderSuspensionesRanking();
-  else renderSuspensionesPorSuspender();
+  else if(sub === 'porsuspender') renderSuspensionesPorSuspender();
+  else renderSuspensionesMotivos();
 }
 
 function renderSuspensionesHistorial(){
@@ -5863,6 +5880,60 @@ function renderSuspensionesPorSuspender(){
   tbody.querySelectorAll('[data-susp-caso-ficha]').forEach(a=>{
     a.addEventListener('click', (e)=>{ e.preventDefault(); openFicha(a.dataset.suspCasoFicha); });
   });
+}
+
+// Clasificación por palabras clave del motivo (texto libre que escribe
+// cada funcionario). Es una aproximación, no una IA: revisa la primera
+// categoría de la lista cuyas palabras clave aparezcan en el texto, así
+// que el orden importa (lo más específico primero). Lo que no calza con
+// ninguna cae en "Otros / sin clasificar".
+const MOTIVO_CATEGORIAS = [
+  { key:'consumo', label:'Consumo de alcohol/drogas', kws:['consum','droga','alcohol','cigarro','vapeador','vape','zopiclona','zopicolna','marihuana'] },
+  { key:'agresion', label:'Agresión física', kws:['agres','golpe','pelea','empuj','pega'] },
+  { key:'celular', label:'Uso de celular/audífonos', kws:['celular','audifono','telefono','dispositivo'] },
+  { key:'fuga', label:'Fuga / ausentarse del establecimiento o aula', kws:['fuga','ausent','abandon','sale de su hogar','no se presenta','se retira sin autorizacion'] },
+  { key:'respeto', label:'Falta de respeto / lenguaje inadecuado', kws:['falta de respeto','irrespetuos','groseria','mala manera','insult','garabato'] },
+  { key:'instrucciones', label:'Incumplimiento de instrucciones o trabajo', kws:['caso omiso','no trabaja','no realiza','se niega'] }
+];
+function categorizarMotivo(motivo){
+  const texto = normalizeAnswer(motivo || '');
+  for(const cat of MOTIVO_CATEGORIAS){
+    if(cat.kws.some(kw=>texto.includes(kw))) return cat;
+  }
+  return { key:'otros', label:'Otros / sin clasificar' };
+}
+
+function renderSuspensionesMotivos(){
+  const tbody = document.querySelector('#susp-motivos-table tbody');
+  const empty = document.getElementById('susp-motivos-empty');
+  const total = suspensionesData.length;
+  const canvas = document.getElementById('susp-motivos-canvas');
+
+  if(!total){
+    tbody.innerHTML = '';
+    document.getElementById('susp-motivos-table').style.display = 'none';
+    empty.style.display = 'block';
+    if(typeof window.drawBarChart === 'function') window.drawBarChart(canvas, []);
+    return;
+  }
+  document.getElementById('susp-motivos-table').style.display = 'table';
+  empty.style.display = 'none';
+
+  const conteo = {};
+  suspensionesData.forEach(s=>{
+    const cat = categorizarMotivo(s.motivo);
+    if(!conteo[cat.key]) conteo[cat.key] = { label: cat.label, total: 0 };
+    conteo[cat.key].total++;
+  });
+  const filas = Object.values(conteo).sort((a,b)=>b.total-a.total);
+
+  if(typeof window.drawBarChart === 'function'){
+    window.drawBarChart(canvas, filas.map(f=>[f.label, f.total]));
+  }
+  tbody.innerHTML = filas.map(f=>`
+    <tr>
+      <td>${f.label}</td><td>${f.total}</td><td>${Math.round((f.total/total)*1000)/10}%</td>
+    </tr>`).join('');
 }
 
 function renderLibro(){
