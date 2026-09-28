@@ -1995,6 +1995,14 @@
 
       <!-- Historial -->
       <div id="rt-sub-retiro-historial" style="display:none;">
+        <div class="search-bar">
+          <input type="text" id="retiroHistBuscar" placeholder="Buscar alumno por nombre...">
+          <select id="retiroHistJustificado" style="max-width:200px;">
+            <option value="">Todos (justificados y no)</option>
+            <option value="si">Solo justificados</option>
+            <option value="no">Solo no justificados</option>
+          </select>
+        </div>
         <div class="rt-card" style="padding:0;overflow:hidden;">
           <div class="rt-table-scroll">
             <table>
@@ -6903,7 +6911,20 @@ init();
     const body = document.getElementById('retiroHistBody');
     const empty = document.getElementById('retiroHistEmpty');
     if(!body) return;
-    const rows = retirosDelAnio().slice().sort((a,b)=>(b.folio||0)-(a.folio||0));
+    const allRows = retirosDelAnio().slice().sort((a,b)=>(b.folio||0)-(a.folio||0));
+    let rows = allRows;
+    const buscarEl = document.getElementById('retiroHistBuscar');
+    const justEl = document.getElementById('retiroHistJustificado');
+    const q = buscarEl ? buscarEl.value.trim().toLowerCase() : '';
+    const justFiltro = justEl ? justEl.value : '';
+    if(q){
+      rows = rows.filter(r=>(r.alumno||'').toLowerCase().includes(q));
+    }
+    if(justFiltro === 'si'){
+      rows = rows.filter(r=>r.justificado === 'Sí');
+    }else if(justFiltro === 'no'){
+      rows = rows.filter(r=>r.justificado !== 'Sí');
+    }
     if(rows.length===0){
       body.innerHTML = '';
       empty.style.display = 'block';
@@ -6923,7 +6944,7 @@ init();
         </tr>
       `).join('');
     }
-    populateInspFolioSelect(rows);
+    populateInspFolioSelect(allRows);
   }
 
   document.getElementById('retiroHistBody').addEventListener('click', (e)=>{
@@ -6932,6 +6953,9 @@ init();
     const rec = retiros.find(r=>r.id===btn.dataset.retiroPdf);
     if(rec) buildRetiroPDF(rec);
   });
+
+  document.getElementById('retiroHistBuscar').addEventListener('input', renderRetiroHistorial);
+  document.getElementById('retiroHistJustificado').addEventListener('change', renderRetiroHistorial);
 
   document.getElementById('retiroAsistenciaGuardarBtn').addEventListener('click', async ()=>{
     const nombre = document.getElementById('ret-alumno').value.trim();
