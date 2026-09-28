@@ -293,7 +293,6 @@
   .staff-card-actions button:hover{color:var(--navy);}
   .staff-card-actions button.danger:hover{color:#A8462F;}
 
-  /* ---------- PROYECTOS ---------- */
   .proj-toolbar{
     display:flex;
     justify-content:space-between;
@@ -339,78 +338,6 @@
   }
   .btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
 
-  #proj-list{display:flex;flex-direction:column;gap:12px;}
-  .proj-card{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-left:3px solid var(--pending);
-    padding:18px 22px;
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:10px 20px;
-  }
-  .proj-card.estado-ok{border-left-color:var(--ok);}
-  .proj-card.estado-warn{border-left-color:var(--warn);}
-  .proj-card.estado-pending{border-left-color:var(--pending);}
-  .proj-title{
-    font-family:'Libre Caslon Text',serif;
-    font-size:17px;
-    color:var(--navy-deep);
-    grid-column:1;
-  }
-  .proj-meta{
-    grid-column:1;
-    display:flex;
-    gap:16px;
-    flex-wrap:wrap;
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-top:-2px;
-  }
-  .proj-desc{
-    grid-column:1;
-    font-size:13.5px;
-    color:var(--ink);
-    line-height:1.6;
-    margin-top:2px;
-  }
-  .proj-side{
-    grid-column:2;
-    grid-row:1/4;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    gap:10px;
-  }
-  .status-pill{
-    font-size:11px;
-    padding:4px 10px;
-    border-radius:2px;
-    color:#fff;
-    white-space:nowrap;
-  }
-  .proj-link{font-size:12px;color:var(--navy);text-decoration:underline;}
-  .proj-del{
-    all:unset;cursor:pointer;
-    font-size:11.5px;
-    color:#A8462F;
-  }
-  .proj-del:hover{text-decoration:underline;}
-  .proj-check{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:11.5px;
-    color:var(--ink-soft);
-    cursor:pointer;
-    user-select:none;
-  }
-  .proj-check input{
-    width:14px;height:14px;
-    accent-color:var(--ok);
-    cursor:pointer;
-  }
-  .proj-check.is-done{color:var(--ok);font-weight:600;}
   .empty-state{
     text-align:center;
     padding:50px 20px;
@@ -424,7 +351,7 @@
     display:none;
     position:fixed;inset:0;
     background:rgba(11,18,64,0.45);
-    z-index:50;
+    z-index:90;
     align-items:center;
     justify-content:center;
     padding:20px;
@@ -490,7 +417,7 @@
     opacity:0;
     transform:translateY(8px);
     transition:opacity .25s, transform .25s;
-    z-index:60;
+    z-index:95;
   }
   .toast.show{opacity:1;transform:none;}
 
@@ -1716,10 +1643,6 @@
     <div class="login-error" id="login-error"></div>
     <form id="login-form">
       <div class="field">
-        <label for="login-user">Funcionario</label>
-        <select id="login-user" required></select>
-      </div>
-      <div class="field">
         <label for="login-pin-0">Ingresa tus 4 dígitos</label>
         <div class="pin-boxes" id="login-pin-boxes">
           <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-0" autocomplete="off">
@@ -1823,10 +1746,6 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M8 12l2.5 2.5L16 9"/></svg>
       Tareas
     </button>
-    <button data-view="projects">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
-      Proyectos
-    </button>
     <button data-view="retiro">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4"/><path d="M14 8l4 4-4 4"/><path d="M18 12H9"/></svg>
       Retiro de estudiantes
@@ -1862,14 +1781,13 @@
     <div class="topbar">
       <div>
         <h1>Panel de control</h1>
-        <div class="sub">Visión general del equipo y los proyectos en curso</div>
+        <div class="sub">Visión general del equipo y las tareas en curso</div>
       </div>
       <div class="date" id="today-date"></div>
     </div>
 
     <div class="stat-row">
       <div class="stat"><div class="num" id="stat-total-staff">0</div><div class="lab">Funcionarios en el equipo</div></div>
-      <div class="stat"><div class="num" id="stat-total-proj">0</div><div class="lab">Proyectos registrados</div></div>
       <div class="stat"><div class="num" id="stat-tasks-pending">0</div><div class="lab">Tareas pendientes del equipo</div></div>
       <div class="stat"><div class="num" id="stat-tasks-mine">0</div><div class="lab">Mis tareas pendientes</div></div>
     </div>
@@ -1878,22 +1796,14 @@
       <div class="panel">
         <h2>Bienvenida</h2>
         <div class="body welcome-text">
-          <p id="welcome-text-p">Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando. Aquí el equipo lleva las tareas y proyectos de la unidad, consultando su estado o incorporando lo que ya está en marcha.</p>
+          <p id="welcome-text-p">Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando. Aquí el equipo lleva las tareas de la unidad, consultando su estado o incorporando lo que ya está en marcha.</p>
           <p>Lo que se ingrese queda guardado en esta plataforma y es visible para todo el equipo que la utilice.</p>
         </div>
       </div>
-      <div class="row-grid">
-        <div class="panel">
-          <h2>Mis tareas pendientes</h2>
-          <div class="body">
-            <ul class="mini-list" id="home-mytasks-list"></ul>
-          </div>
-        </div>
-        <div class="panel">
-          <h2>Últimos proyectos</h2>
-          <div class="body">
-            <ul class="mini-list" id="home-recent-list"></ul>
-          </div>
+      <div class="panel">
+        <h2>Mis tareas pendientes</h2>
+        <div class="body">
+          <ul class="mini-list" id="home-mytasks-list"></ul>
         </div>
       </div>
     </div>
@@ -2005,6 +1915,7 @@
       <button data-sub="tomar" class="active">Tomar asistencia</button>
       <button data-sub="historial">Historial</button>
       <button data-sub="resumen-alumno">Resumen por alumno</button>
+      <button data-sub="reporte">Ver reporte</button>
     </div>
 
     <!-- Tomar asistencia -->
@@ -2044,6 +1955,46 @@
         <tbody></tbody>
       </table>
       <div class="empty-state" id="asis-resumen-empty" style="display:none;">Aún no hay registros de asistencia este año.</div>
+    </div>
+
+    <!-- Ver reporte -->
+    <div class="subview" id="asis-sub-reporte">
+      <div class="picker-row">
+        <div class="picker-field">
+          <label for="asis-rep-periodo">Ver por</label>
+          <select id="asis-rep-periodo">
+            <option value="dia">Día</option>
+            <option value="mes">Mes</option>
+            <option value="anio">Año completo</option>
+          </select>
+        </div>
+        <div class="picker-field" id="asis-rep-fecha-wrap">
+          <label for="asis-rep-fecha">Fecha</label>
+          <input type="date" id="asis-rep-fecha">
+        </div>
+        <div class="picker-field" id="asis-rep-mes-wrap" style="display:none;">
+          <label for="asis-rep-mes">Mes</label>
+          <input type="month" id="asis-rep-mes">
+        </div>
+        <div class="picker-field">
+          <label for="asis-rep-curso">Curso</label>
+          <select id="asis-rep-curso"><option value="">Todos los cursos</option></select>
+        </div>
+        <button class="btn-ghost" id="asis-rep-pdf">Descargar PDF</button>
+      </div>
+
+      <div class="panel" style="margin-top:6px;">
+        <h2 id="asis-rep-title">Reporte de asistencia</h2>
+        <div class="body">
+          <canvas id="asis-rep-canvas" style="width:100%;height:220px;display:block;"></canvas>
+        </div>
+      </div>
+
+      <table class="data-table" id="asis-rep-table" style="margin-top:18px;">
+        <thead id="asis-rep-thead"></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty-state" id="asis-rep-empty" style="display:none;">No hay registros de asistencia para este período.</div>
     </div>
   </section>
 
@@ -2192,35 +2143,6 @@
       No hay tareas para este filtro. Usa «Nueva tarea» para agregar trabajo pendiente de la unidad.
     </div>
   </section>
-
-  <!-- ================= PROYECTOS ================= -->
-  <section id="view-projects" class="view">
-    <div class="topbar">
-      <div>
-        <h1>Proyectos</h1>
-        <div class="sub">Registro y seguimiento de proyectos de la unidad</div>
-      </div>
-    </div>
-
-    <div class="proj-toolbar">
-      <div class="filters" id="proj-filters">
-        <button data-filter="todos" class="active">Todos</button>
-        <button data-filter="curso">En curso</button>
-        <button data-filter="completado">Completados</button>
-        <button data-filter="pendiente">Pendientes</button>
-      </div>
-      <button class="btn-primary" id="btn-new-project">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-        Ingresar proyecto
-      </button>
-    </div>
-
-    <div id="proj-list"></div>
-    <div id="proj-empty" class="empty-state" style="display:none;">
-      Todavía no hay proyectos registrados. Usa «Ingresar proyecto» para incorporar los proyectos ya creados de la unidad.
-    </div>
-  </section>
-
 
   <!-- ================= RETIRO DE ESTUDIANTES ================= -->
   <section id="view-retiro" class="view">
@@ -3297,56 +3219,6 @@
   </div>
 </div>
 
-<!-- ================= MODAL NUEVO PROYECTO ================= -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>Ingresar proyecto</h2>
-      <button class="modal-close" id="modal-close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <form id="project-form">
-        <div class="field">
-          <label for="f-nombre">Nombre del proyecto</label>
-          <input type="text" id="f-nombre" required placeholder="Ej: Plan de Convivencia Escolar 2026">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="f-responsable">Responsable</label>
-            <select id="f-responsable" required></select>
-          </div>
-          <div class="field">
-            <label for="f-estado">Estado</label>
-            <select id="f-estado">
-              <option value="curso">En curso</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="completado">Completado</option>
-            </select>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="f-inicio">Fecha de inicio</label>
-            <input type="date" id="f-inicio">
-          </div>
-          <div class="field">
-            <label for="f-link">Enlace o carpeta (opcional)</label>
-            <input type="text" id="f-link" placeholder="https://...">
-          </div>
-        </div>
-        <div class="field">
-          <label for="f-desc">Descripción</label>
-          <textarea id="f-desc" placeholder="Objetivo del proyecto, alcance, próximos pasos..."></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" id="modal-cancel">Cancelar</button>
-          <button type="submit" class="btn-primary">Guardar proyecto</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -3484,15 +3356,12 @@ function refreshStaffDependentSelects(){
   if(fResp) fResp.innerHTML = STAFF.map(s=>`<option value="${s.nombre}">${s.nombre} — ${s.cargo}</option>`).join('');
 }
 
-const PROJ_KEY = "proyectos-inspectoria";
 const TASK_KEY = "tareas-inspectoria";
 const AUTH_KEY = "auth-inspectoria";
 const DEFAULT_PASSWORD = "0000";
 
-let projects = [];
 let tasks = [];
 let AUTH = {};
-let currentFilter = "todos";
 let currentTaskFilter = "todas";
 let currentUser = null; // { nombre, cargo, slug }
 let recoverSlug = null;
@@ -3522,12 +3391,6 @@ async function sha256(text){
 function normalizeAnswer(a){
   return a.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
-function estadoLabel(e){
-  return { curso:"En curso", completado:"Completado", pendiente:"Pendiente" }[e] || e;
-}
-function estadoClass(e){
-  return { curso:"warn", completado:"ok", pendiente:"pending" }[e] || "pending";
-}
 function fmtDate(d){
   if(!d) return "Sin fecha";
   const dt = new Date(d + "T00:00:00");
@@ -3555,7 +3418,6 @@ document.querySelectorAll('nav.primary button').forEach(btn=>{
 /* ================= AUTENTICACIÓN ================= */
 function populateStaffSelects(){
   const opts = STAFF.map(s=>`<option value="${s.slug}">${s.nombre}</option>`).join('');
-  document.getElementById('login-user').innerHTML = opts;
   document.getElementById('recover-user').innerHTML = opts;
 }
 
@@ -3618,33 +3480,52 @@ pinBoxes().forEach((box, i)=>{
   });
 });
 
+// Ingreso solo con PIN, sin elegir primero el nombre (igual que en la
+// intranet Incosaf): se prueba el PIN contra cada funcionario, empezando
+// por el último que inició sesión en este navegador para que sea
+// instantáneo en el uso normal del día a día.
+const LOGIN_ULTIMO_SLUG_KEY = 'libro:ultimoLoginSlug';
+async function staffPinMatches(slug, pass){
+  const rec = AUTH[slug];
+  if(rec && rec.passwordHash){
+    return (await sha256(pass)) === rec.passwordHash;
+  }
+  return pass === DEFAULT_PASSWORD;
+}
+
 document.getElementById('login-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   clearLoginError();
-  const slug = document.getElementById('login-user').value;
   const pass = getPinValue();
-  const staff = STAFF.find(s=>s.slug===slug);
-  const rec = AUTH[slug];
 
   if(pass.length < PIN_LENGTH){
     loginError('Ingresa los 4 dígitos de tu PIN.');
     return;
   }
 
-  let ok = false;
-  if(rec && rec.passwordHash){
-    ok = (await sha256(pass)) === rec.passwordHash;
-  } else {
-    ok = pass === DEFAULT_PASSWORD;
+  const ultimoSlug = localStorage.getItem(LOGIN_ULTIMO_SLUG_KEY);
+  const ordenados = STAFF.slice().sort((a,b)=>{
+    if(a.slug===ultimoSlug) return -1;
+    if(b.slug===ultimoSlug) return 1;
+    return 0;
+  });
+
+  let match = null;
+  for(const staff of ordenados){
+    if(await staffPinMatches(staff.slug, pass)){
+      match = staff;
+      break;
+    }
   }
 
-  if(!ok){
+  if(!match){
     clearPinBoxes();
     pinBoxes()[0].focus();
     loginError('PIN incorrecto. Verifica e intenta nuevamente.');
     return;
   }
-  currentUser = { nombre: staff.nombre, cargo: staff.cargo, slug: staff.slug };
+  localStorage.setItem(LOGIN_ULTIMO_SLUG_KEY, match.slug);
+  currentUser = { nombre: match.nombre, cargo: match.cargo, slug: match.slug };
   enterApp();
 });
 
@@ -3655,10 +3536,9 @@ function enterApp(){
   document.getElementById('account-role').textContent = currentUser.cargo;
   clearPinBoxes();
   document.getElementById('welcome-text-p').textContent =
-    'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando. Aquí el equipo lleva las tareas y proyectos de la unidad, consultando su estado o incorporando lo que ya está en marcha.';
+    'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando. Aquí el equipo lleva las tareas de la unidad, consultando su estado o incorporando lo que ya está en marcha.';
   applyRoleVisibility();
   renderTasks();
-  renderProjects();
 }
 
 function applyRoleVisibility(){
@@ -3966,7 +3846,7 @@ document.getElementById('staff-form').addEventListener('submit', async (e)=>{
 async function deleteStaffMember(slug){
   const s = STAFF.find(x=>x.slug===slug);
   if(!s) return;
-  if(!confirm(`¿Eliminar a "${s.nombre}" de la nómina de funcionarios?\n\nSu acceso a la plataforma quedará deshabilitado. Las tareas y proyectos ya registrados a su nombre no se eliminan.`)) return;
+  if(!confirm(`¿Eliminar a "${s.nombre}" de la nómina de funcionarios?\n\nSu acceso a la plataforma quedará deshabilitado. Las tareas ya registradas a su nombre no se eliminan.`)) return;
   const backup = STAFF;
   STAFF = STAFF.filter(x=>x.slug!==slug);
   if(!(await saveStaffRoster())){
@@ -3975,149 +3855,6 @@ async function deleteStaffMember(slug){
   }
   renderStaff();
   showToast('Funcionario eliminado de la nómina');
-}
-
-/* ---------------- RENDER PROYECTOS ---------------- */
-function renderProjects(){
-  const listEl = document.getElementById('proj-list');
-  const emptyEl = document.getElementById('proj-empty');
-  const filtered = currentFilter === 'todos' ? projects : projects.filter(p=>p.estado===currentFilter);
-
-  listEl.innerHTML = "";
-  if(!filtered.length){
-    emptyEl.style.display = 'block';
-    emptyEl.textContent = projects.length
-      ? "No hay proyectos con este estado."
-      : "Todavía no hay proyectos registrados. Usa «Ingresar proyecto» para incorporar los proyectos ya creados de la unidad.";
-  } else {
-    emptyEl.style.display = 'none';
-  }
-
-  filtered
-    .slice()
-    .sort((a,b)=> (b.creado||0) - (a.creado||0))
-    .forEach(p=>{
-      const card = document.createElement('div');
-      card.className = 'proj-card estado-' + estadoClass(p.estado);
-      card.innerHTML = `
-        <div class="proj-title">${p.nombre}</div>
-        <div class="proj-side">
-          <span class="status-pill" style="background:var(--${p.estado==='curso'?'warn':p.estado==='completado'?'ok':'pending'})">${estadoLabel(p.estado)}</span>
-          <label class="proj-check ${p.estado==='completado' ? 'is-done' : ''}">
-            <input type="checkbox" class="proj-done-check" data-id="${p.id}" ${p.estado==='completado' ? 'checked' : ''}>
-            Completado
-          </label>
-          <button class="proj-del" data-id="${p.id}">Eliminar</button>
-        </div>
-        <div class="proj-meta">
-          <span>Responsable: ${p.responsable}</span>
-          <span>Inicio: ${fmtDate(p.inicio)}</span>
-          ${p.link ? `<a class="proj-link" href="${p.link}" target="_blank" rel="noopener">Ver enlace</a>` : ''}
-        </div>
-        ${p.descripcion ? `<div class="proj-desc">${p.descripcion}</div>` : ''}
-      `;
-      listEl.appendChild(card);
-    });
-
-  listEl.querySelectorAll('.proj-del').forEach(btn=>{
-    btn.addEventListener('click', ()=>deleteProject(btn.dataset.id));
-  });
-  listEl.querySelectorAll('.proj-done-check').forEach(chk=>{
-    chk.addEventListener('change', ()=>toggleProjectDone(chk.dataset.id, chk.checked));
-  });
-
-  // stats
-  document.getElementById('stat-total-proj').textContent = projects.length;
-
-  // home recent list
-  const recent = document.getElementById('home-recent-list');
-  if(!projects.length){
-    recent.innerHTML = `<li style="color:var(--ink-soft);">Aún no se han ingresado proyectos.</li>`;
-  } else {
-    recent.innerHTML = projects
-      .slice()
-      .sort((a,b)=> (b.creado||0) - (a.creado||0))
-      .slice(0,6)
-      .map(p=>`<li><span>${p.nombre}</span><span class="tag ${estadoClass(p.estado)}">${estadoLabel(p.estado)}</span></li>`)
-      .join('');
-  }
-}
-
-/* ---------------- FILTROS ---------------- */
-document.getElementById('proj-filters').addEventListener('click', (e)=>{
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  document.querySelectorAll('#proj-filters button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  currentFilter = btn.dataset.filter;
-  renderProjects();
-});
-
-/* ---------------- MODAL ---------------- */
-const overlay = document.getElementById('modal-overlay');
-function openModal(){
-  document.getElementById('project-form').reset();
-  overlay.classList.add('active');
-}
-function closeModal(){ overlay.classList.remove('active'); }
-document.getElementById('btn-new-project').addEventListener('click', openModal);
-document.getElementById('modal-close').addEventListener('click', closeModal);
-document.getElementById('modal-cancel').addEventListener('click', closeModal);
-overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
-
-document.getElementById('project-form').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const proj = {
-    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-    nombre: document.getElementById('f-nombre').value.trim(),
-    responsable: document.getElementById('f-responsable').value,
-    estado: document.getElementById('f-estado').value,
-    inicio: document.getElementById('f-inicio').value,
-    link: document.getElementById('f-link').value.trim(),
-    descripcion: document.getElementById('f-desc').value.trim(),
-    creado: Date.now()
-  };
-  projects.push(proj);
-  if(!(await saveProjects())){
-    projects = projects.filter(p=>p.id !== proj.id);
-    return;
-  }
-  renderProjects();
-  closeModal();
-  showToast('Proyecto guardado');
-});
-
-async function deleteProject(id){
-  const backup = projects;
-  projects = projects.filter(p=>p.id !== id);
-  if(!(await saveProjects())){
-    projects = backup;
-    return;
-  }
-  renderProjects();
-  showToast('Proyecto eliminado');
-}
-
-async function toggleProjectDone(id, done){
-  const p = projects.find(p=>p.id === id);
-  if(!p) return;
-  const prevEstado = p.estado;
-  const prevAnterior = p.estadoAnterior;
-  if(done){
-    p.estadoAnterior = p.estado;
-    p.estado = 'completado';
-  } else {
-    p.estado = p.estadoAnterior || 'curso';
-    delete p.estadoAnterior;
-  }
-  if(!(await saveProjects())){
-    p.estado = prevEstado;
-    p.estadoAnterior = prevAnterior;
-    renderProjects();
-    return;
-  }
-  renderProjects();
-  showToast(done ? 'Proyecto marcado como completado' : 'Proyecto vuelto a marcar como pendiente');
 }
 
 /* ================= TAREAS ================= */
@@ -4263,24 +4000,6 @@ async function deleteTask(id){
 }
 
 /* ---------------- STORAGE ---------------- */
-async function saveProjects(){
-  try{
-    await window.storage.set(PROJ_KEY, JSON.stringify(projects), true);
-    return true;
-  }catch(err){
-    console.error('Storage error:', err);
-    showToast('No se pudo guardar el proyecto. Intenta nuevamente.');
-    return false;
-  }
-}
-async function loadProjects(){
-  try{
-    const result = await window.storage.get(PROJ_KEY, true);
-    projects = result && result.value ? JSON.parse(result.value) : [];
-  }catch(err){
-    projects = [];
-  }
-}
 async function saveTasks(){
   try{
     await window.storage.set(TASK_KEY, JSON.stringify(tasks), true);
@@ -4916,9 +4635,13 @@ function populateCourseSelectors(){
     if(cursos.includes(prev)) el.value = prev;
   });
   populateAtrasosCursoFilter();
+  populateCursoFilterWithTodos('asis-rep-curso');
 }
 function populateAtrasosCursoFilter(){
-  const el = document.getElementById('atrasos-curso-filter');
+  populateCursoFilterWithTodos('atrasos-curso-filter');
+}
+function populateCursoFilterWithTodos(id){
+  const el = document.getElementById(id);
   if(!el) return;
   const cursos = activeCourses();
   const prev = el.value;
@@ -4994,11 +4717,12 @@ function renderAsisTomar(){
     { k:'ausente', l:'Ausente' },
     { k:'atrasado', l:'Atrasado' }
   ];
-  const rows = students.map(s=>{
+  const rows = students.map((s,idx)=>{
     const estadoActual = asisStatusOf(asisTomarState[s.id]);
     const horaActual = asisHoraOf(asisTomarState[s.id]);
     return `
     <tr data-student="${s.id}">
+      <td style="color:var(--ink-soft);">${idx+1}</td>
       <td>${s.nombre}</td>
       <td><span style="font-size:11.5px;color:var(--ink-soft);">${s.run}</span></td>
       <td>
@@ -5013,7 +4737,7 @@ function renderAsisTomar(){
 
   container.innerHTML = `
     <table class="attend-table">
-      <thead><tr><th>Alumno</th><th>RUN</th><th>Estado</th></tr></thead>
+      <thead><tr><th>N°</th><th>Alumno</th><th>RUN</th><th>Estado</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 
@@ -5172,6 +4896,7 @@ document.getElementById('asis-subtabs').addEventListener('click', (e)=>{
   document.getElementById('asis-sub-'+btn.dataset.sub).classList.add('active');
   if(btn.dataset.sub === 'historial') renderAsisHistorial();
   if(btn.dataset.sub === 'resumen-alumno') renderAsisResumenAlumno();
+  if(btn.dataset.sub === 'reporte') renderAsisReporte();
 });
 
 // Un registro de asistencia normalmente es solo un texto ('presente',
@@ -5308,10 +5033,210 @@ function renderAsisResumenAlumno(){
 }
 document.getElementById('asis-resumen-search').addEventListener('input', renderAsisResumenAlumno);
 
+/* ---------------- Ver reporte (gráfico de barras + PDF) ---------------- */
+const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_LABEL_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function sumStatusCounts(keys, records){
+  const total = { presente:0, ausente:0, atrasado:0, justificado:0 };
+  keys.forEach(k=>{
+    const c = statusCounts(records[k]);
+    total.presente += c.presente;
+    total.ausente += c.ausente;
+    total.atrasado += c.atrasado;
+    total.justificado += c.justificado;
+  });
+  return total;
+}
+function pctAsistencia(c){
+  const total = c.presente + c.ausente + c.atrasado + c.justificado;
+  return total ? Math.round(((c.presente + c.atrasado) / total) * 1000) / 10 : 0;
+}
+
+function asisReporteDatos(){
+  const periodo = document.getElementById('asis-rep-periodo').value;
+  const cursoFiltro = document.getElementById('asis-rep-curso').value;
+  const records = asistenciaData.records || {};
+  let keys = Object.keys(records);
+  if(cursoFiltro) keys = keys.filter(k=>k.split('|')[1]===cursoFiltro);
+
+  if(periodo === 'dia'){
+    const fecha = document.getElementById('asis-rep-fecha').value;
+    const keysDia = keys.filter(k=>k.split('|')[0]===fecha);
+    const total = sumStatusCounts(keysDia, records);
+    const chart = [['Presente', total.presente], ['Ausente', total.ausente], ['Atrasado', total.atrasado]];
+    if(total.justificado) chart.push(['Justificado', total.justificado]);
+    const cursosDia = [...new Set(keysDia.map(k=>k.split('|')[1]))].sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+    const filas = cursosDia.map(curso=>{
+      const c = statusCounts(records[fecha+'|'+curso]);
+      return [curso, c.presente, c.ausente, c.atrasado, c.justificado, pctAsistencia(c)+'%'];
+    });
+    return {
+      titulo: `Asistencia del ${fmtDate(fecha)}${cursoFiltro ? ' — '+cursoFiltro : ''}`,
+      chart, cabecera: ['Curso','Presentes','Ausentes','Atrasados','Justificados','% Asistencia'],
+      filas, sinDatos: !keysDia.length
+    };
+  }
+
+  if(periodo === 'mes'){
+    const mes = document.getElementById('asis-rep-mes').value; // 'YYYY-MM'
+    const keysMes = keys.filter(k=>k.split('|')[0].slice(0,7)===mes);
+    const dias = [...new Set(keysMes.map(k=>k.split('|')[0]))].sort();
+    const chart = dias.map(fecha=>{
+      const c = sumStatusCounts(keysMes.filter(k=>k.split('|')[0]===fecha), records);
+      return [fecha.slice(8,10), pctAsistencia(c)];
+    });
+    const filas = dias.map(fecha=>{
+      const c = sumStatusCounts(keysMes.filter(k=>k.split('|')[0]===fecha), records);
+      return [fmtDate(fecha), c.presente, c.ausente, c.atrasado, c.justificado, pctAsistencia(c)+'%'];
+    });
+    const [anio, mesNum] = mes ? mes.split('-') : ['',''];
+    const mesLabel = mesNum ? MESES_LABEL_LARGO[parseInt(mesNum,10)-1] : '';
+    return {
+      titulo: `Asistencia de ${mesLabel} ${anio}${cursoFiltro ? ' — '+cursoFiltro : ''} (% de asistencia por día)`,
+      chart, cabecera: ['Fecha','Presentes','Ausentes','Atrasados','Justificados','% Asistencia'],
+      filas, sinDatos: !dias.length
+    };
+  }
+
+  // año completo
+  const chart = [];
+  const filas = [];
+  let huboDatos = false;
+  for(let m=0; m<12; m++){
+    const prefijo = String(currentYear)+'-'+String(m+1).padStart(2,'0');
+    const keysMes = keys.filter(k=>k.split('|')[0].slice(0,7)===prefijo);
+    const c = sumStatusCounts(keysMes, records);
+    if(keysMes.length) huboDatos = true;
+    chart.push([MESES_LABEL[m], pctAsistencia(c)]);
+    filas.push([MESES_LABEL_LARGO[m], c.presente, c.ausente, c.atrasado, c.justificado, pctAsistencia(c)+'%']);
+  }
+  return {
+    titulo: `Asistencia año ${currentYear}${cursoFiltro ? ' — '+cursoFiltro : ''} (% de asistencia por mes)`,
+    chart, cabecera: ['Mes','Presentes','Ausentes','Atrasados','Justificados','% Asistencia'],
+    filas, sinDatos: !huboDatos
+  };
+}
+
+function renderAsisReporte(){
+  const datos = asisReporteDatos();
+  document.getElementById('asis-rep-title').textContent = datos.titulo;
+  const canvas = document.getElementById('asis-rep-canvas');
+  if(typeof window.drawBarChart === 'function'){
+    window.drawBarChart(canvas, datos.chart);
+  }
+  const tbody = document.querySelector('#asis-rep-table tbody');
+  const empty = document.getElementById('asis-rep-empty');
+  document.getElementById('asis-rep-thead').innerHTML = '<tr>' + datos.cabecera.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  if(datos.sinDatos){
+    tbody.innerHTML = '';
+    document.getElementById('asis-rep-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('asis-rep-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = datos.filas.map(fila=>'<tr>'+fila.map(v=>`<td>${v}</td>`).join('')+'</tr>').join('');
+}
+
+function asisReportePeriodoCambio(){
+  const periodo = document.getElementById('asis-rep-periodo').value;
+  document.getElementById('asis-rep-fecha-wrap').style.display = periodo==='dia' ? 'block' : 'none';
+  document.getElementById('asis-rep-mes-wrap').style.display = periodo==='mes' ? 'block' : 'none';
+  renderAsisReporte();
+}
+document.getElementById('asis-rep-periodo').addEventListener('change', asisReportePeriodoCambio);
+document.getElementById('asis-rep-fecha').addEventListener('change', renderAsisReporte);
+document.getElementById('asis-rep-mes').addEventListener('change', renderAsisReporte);
+document.getElementById('asis-rep-curso').addEventListener('change', renderAsisReporte);
+
+document.getElementById('asis-rep-pdf').addEventListener('click', ()=>{
+  try{
+    const datos = asisReporteDatos();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageW = 210;
+    const marginL = 16, contentW = pageW - 32;
+    let y = 18;
+
+    try{
+      const logoImg = document.querySelector('.sidebar-head img');
+      if(logoImg && logoImg.src) doc.addImage(logoImg.src, 'PNG', 16, y-6, 20, 27);
+    }catch(err){ /* si falla el logo, se genera igual sin imagen */ }
+
+    doc.setFont('times','bold');
+    doc.setFontSize(13);
+    doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+    y += 6;
+    doc.setFont('times','normal');
+    doc.setFontSize(10.5);
+    doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+    y += 12;
+
+    doc.setDrawColor(180,150,60);
+    doc.setLineWidth(0.6);
+    doc.line(16, y, pageW-16, y);
+    y += 9;
+
+    doc.setFont('times','bold');
+    doc.setFontSize(14);
+    const tituloLineas = doc.splitTextToSize(datos.titulo, contentW);
+    doc.text(tituloLineas, pageW/2, y, { align:'center' });
+    y += tituloLineas.length*6 + 8;
+
+    const canvas = document.getElementById('asis-rep-canvas');
+    const imgData = canvas.toDataURL('image/png');
+    const imgW = contentW;
+    const imgH = imgW * (canvas.height/canvas.width);
+    doc.addImage(imgData, 'PNG', marginL, y, imgW, imgH);
+    y += imgH + 10;
+
+    if(datos.sinDatos){
+      doc.setFont('times','italic');
+      doc.setFontSize(10);
+      doc.setTextColor(120,120,120);
+      doc.text('No hay registros de asistencia para este período.', marginL, y);
+      doc.setTextColor(0,0,0);
+    } else {
+      const colW = contentW / datos.cabecera.length;
+      doc.setFont('times','bold');
+      doc.setFontSize(9.5);
+      datos.cabecera.forEach((h,i)=> doc.text(String(h), marginL + i*colW, y));
+      y += 5;
+      doc.setDrawColor(200,200,200);
+      doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
+      doc.setFont('times','normal');
+      datos.filas.forEach(fila=>{
+        if(y > 278){
+          doc.addPage();
+          y = 18;
+        }
+        fila.forEach((v,i)=> doc.text(String(v), marginL + i*colW, y));
+        y += 5.5;
+      });
+    }
+
+    doc.setFontSize(8);
+    doc.setTextColor(140,140,140);
+    doc.text(`Documento generado por la plataforma interna de Inspectoría General · Emitido ${new Date().toLocaleString('es-CL')}`, pageW/2, 292, { align:'center' });
+
+    doc.save(`reporte-asistencia-${document.getElementById('asis-rep-periodo').value}.pdf`);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el PDF del reporte.');
+  }
+});
+
 function renderAsistenciaAll(){
   populateCourseSelectors();
   if(!document.getElementById('asis-fecha').value){
     document.getElementById('asis-fecha').value = new Date().toISOString().slice(0,10);
+  }
+  if(!document.getElementById('asis-rep-fecha').value){
+    document.getElementById('asis-rep-fecha').value = new Date().toISOString().slice(0,10);
+  }
+  if(!document.getElementById('asis-rep-mes').value){
+    document.getElementById('asis-rep-mes').value = new Date().toISOString().slice(0,7);
   }
   renderAsisTomar();
   renderAsisHistorial();
@@ -7191,7 +7116,6 @@ async function init(){
   await loadStaffRoster();
   renderStaff();
   await loadAuth();
-  await loadProjects();
   await loadTasks();
   await loadMatricula();
   await loadAsistencia();
@@ -7931,6 +7855,10 @@ init();
       ctx.fillText(corta, x+barW/2, h-10);
     });
   }
+  // Se expone para que la sección de Asistencia (script clásico, fuera de
+  // este módulo) pueda dibujar el mismo tipo de gráfico de barras en el
+  // reporte, sin duplicar la lógica de dibujo.
+  window.drawBarChart = drawBarChart;
   function drawDonutChart(canvas, entries){
     const { ctx, w, h } = setupCanvas(canvas);
     const total = entries.reduce((s,e)=>s+e[1],0);
