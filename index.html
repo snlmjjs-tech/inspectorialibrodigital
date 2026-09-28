@@ -1785,7 +1785,7 @@
 
     <div class="subview" id="atrasos-sub-ranking">
       <table class="data-table" id="atrasos-ranking-table">
-        <thead><tr><th>Alumno</th><th>Curso</th><th>Total de atrasos</th><th>Justificados</th><th>Sin justificar</th></tr></thead>
+        <thead><tr><th>Alumno</th><th>Curso</th><th>Total de atrasos</th><th>PDF</th></tr></thead>
         <tbody></tbody>
       </table>
       <div class="empty-state" id="atrasos-ranking-empty" style="display:none;">Aún no hay atrasos registrados este año.</div>
@@ -5997,9 +5997,8 @@ function renderAtrasosRanking(){
   const empty = document.getElementById('atrasos-ranking-empty');
   const perStudent = {};
   atrasosData.forEach(a=>{
-    if(!perStudent[a.studentId]) perStudent[a.studentId] = { nombre:a.nombre, curso:a.curso, total:0, justificados:0 };
+    if(!perStudent[a.studentId]) perStudent[a.studentId] = { studentId:a.studentId, nombre:a.nombre, curso:a.curso, total:0 };
     perStudent[a.studentId].total++;
-    if(a.justificado) perStudent[a.studentId].justificados++;
   });
   const rows = Object.values(perStudent).sort((a,b)=>b.total-a.total);
   if(!rows.length){
@@ -6013,8 +6012,117 @@ function renderAtrasosRanking(){
   tbody.innerHTML = rows.map(r=>`
     <tr>
       <td>${r.nombre}${r.total>=ATRASO_ALERTA_UMBRAL ? `<span class="atraso-alert">≥ ${ATRASO_ALERTA_UMBRAL} atrasos</span>` : ''}</td>
-      <td>${r.curso}</td><td>${r.total}</td><td>${r.justificados}</td><td>${r.total-r.justificados}</td>
+      <td>${r.curso}</td><td>${r.total}</td>
+      <td><button type="button" class="task-del" data-atrasos-pdf="${r.studentId}" style="background:none;color:var(--navy-deep);text-decoration:underline;">Descargar PDF</button></td>
     </tr>`).join('');
+  tbody.querySelectorAll('[data-atrasos-pdf]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      try{
+        const doc = buildAtrasosStudentPDF(btn.dataset.atrasosPdf);
+        const r = perStudent[btn.dataset.atrasosPdf];
+        const nombreArchivo = (r.nombre||'alumno').trim().replace(/\s+/g,'-').toLowerCase();
+        doc.save(`atrasos-${nombreArchivo}.pdf`);
+      }catch(err){
+        console.error(err);
+        showToast('No se pudo generar el PDF de atrasos.');
+      }
+    });
+  });
+}
+
+function buildAtrasosStudentPDF(studentId){
+  const s = findStudent(studentId);
+  const entries = atrasosData.filter(a=>a.studentId===studentId).sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  const nombre = s ? s.nombre : (entries[0] && entries[0].nombre) || '—';
+  const curso = s ? s.curso : (entries[0] && entries[0].curso) || '—';
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const pageW = 210;
+  const marginL = 16, contentW = pageW - 32;
+  let y = 18;
+
+  function ensureSpace(needed){
+    if(y + needed > 278){
+      doc.addPage();
+      y = 18;
+      doc.setFont('times','italic');
+      doc.setFontSize(9);
+      doc.setTextColor(120,120,120);
+      doc.text(`Atrasos — ${nombre} (continuación)`, marginL, y);
+      doc.setTextColor(0,0,0);
+      y += 9;
+    }
+  }
+
+  try{
+    const logoImg = document.querySelector('.sidebar-head img');
+    if(logoImg && logoImg.src){
+      doc.addImage(logoImg.src, 'PNG', 16, y-6, 20, 27);
+    }
+  }catch(err){ /* si falla el logo, se genera igual sin imagen */ }
+
+  doc.setFont('times','bold');
+  doc.setFontSize(13);
+  doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFont('times','normal');
+  doc.setFontSize(10.5);
+  doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+  y += 12;
+
+  doc.setDrawColor(180,150,60);
+  doc.setLineWidth(0.6);
+  doc.line(16, y, pageW-16, y);
+  y += 9;
+
+  doc.setFont('times','bold');
+  doc.setFontSize(15);
+  doc.text('REGISTRO DE ATRASOS DEL ALUMNO', pageW/2, y, { align:'center' });
+  y += 7;
+  doc.setFont('times','normal');
+  doc.setFontSize(10);
+  doc.text(`Año ${currentYear}`, pageW/2, y, { align:'center' });
+  y += 12;
+
+  doc.setFont('times','bold'); doc.setFontSize(11); doc.text('Alumno:', marginL, y);
+  doc.setFont('times','normal'); doc.text(nombre, marginL+22, y);
+  y += 6.5;
+  doc.setFont('times','bold'); doc.text('Curso:', marginL, y);
+  doc.setFont('times','normal'); doc.text(curso || '—', marginL+22, y);
+  doc.setFont('times','bold'); doc.text('Total de atrasos:', marginL+70, y);
+  doc.setFont('times','normal'); doc.text(String(entries.length), marginL+112, y);
+  y += 12;
+
+  if(!entries.length){
+    doc.setFont('times','italic');
+    doc.setFontSize(10);
+    doc.setTextColor(120,120,120);
+    doc.text('Sin atrasos registrados este año.', marginL, y);
+    doc.setTextColor(0,0,0);
+  } else {
+    entries.forEach((a,i)=>{
+      ensureSpace(12);
+      doc.setFont('times','bold');
+      doc.setFontSize(10);
+      doc.text(`${i+1}. ${fmtDate(a.fecha)} — ${a.hora || '—'} hrs`, marginL, y);
+      y += 5.5;
+      if(a.observacion){
+        doc.setFont('times','normal');
+        doc.setFontSize(9.5);
+        const obs = doc.splitTextToSize(a.observacion, contentW-6);
+        doc.text(obs, marginL+6, y);
+        y += obs.length*4.6;
+      }
+      y += 4;
+    });
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(140,140,140);
+  doc.text(`Documento generado por la plataforma interna de Inspectoría General · Emitido ${new Date().toLocaleString('es-CL')}`, pageW/2, 292, { align:'center' });
+
+  return doc;
 }
 
 function renderAtrasos(){
