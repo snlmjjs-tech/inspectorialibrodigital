@@ -4378,8 +4378,7 @@ function renderAsisTomar(){
   const statuses = [
     { k:'presente', l:'Presente' },
     { k:'ausente', l:'Ausente' },
-    { k:'atrasado', l:'Atrasado' },
-    { k:'justificado', l:'Justificado' }
+    { k:'atrasado', l:'Atrasado' }
   ];
   const rows = students.map(s=>{
     const estadoActual = asisStatusOf(asisTomarState[s.id]);
