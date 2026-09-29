@@ -1997,6 +1997,13 @@
           <tbody></tbody>
         </table>
         <div class="empty-state" id="susp-vigentes-empty" style="display:none;">No hay ningún alumno suspendido actualmente.</div>
+
+        <h3 style="font-family:'Libre Caslon Text',serif;font-weight:400;font-size:15px;color:var(--navy-deep);margin:28px 0 12px;">Estudiantes por suspender (ya registradas, comienzan más adelante)</h3>
+        <table class="data-table" id="susp-futuras-table">
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Comienza el</th><th>Hasta (se reintegra)</th><th>Motivo</th><th>Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-futuras-empty" style="display:none;">No hay suspensiones registradas con fecha futura.</div>
       </div>
 
       <div class="subview" id="susp-sub-historial">
@@ -5969,7 +5976,7 @@ document.getElementById('susp-subtabs').addEventListener('click', (e)=>{
 function renderSuspensionesSeccion(){
   const activo = document.querySelector('#susp-subtabs button.active');
   const sub = activo ? activo.dataset.sub : 'vigentes';
-  if(sub === 'vigentes') renderSuspensionesVigentes();
+  if(sub === 'vigentes'){ renderSuspensionesVigentes(); renderSuspensionesFuturas(); }
   else if(sub === 'historial') renderSuspensionesHistorial();
   else if(sub === 'ranking') renderSuspensionesRanking();
   else if(sub === 'porsuspender') renderSuspensionesPorSuspender();
@@ -5986,6 +5993,35 @@ function suspensionesVigentesHoy(){
     .map(s=>({ ...s, fecha_retorno: addDaysStr(s.fecha, s.dias) }))
     .filter(s=> hoy >= s.fecha && hoy < s.fecha_retorno)
     .sort((a,b)=> a.fecha_retorno.localeCompare(b.fecha_retorno));
+}
+// Suspensiones ya registradas cuya fecha de inicio todavía no llega — para
+// que se sepa con anticipación quién va a estar suspendido, no solo quién
+// lo está hoy.
+function suspensionesFuturasDesdeHoy(){
+  const hoy = new Date().toISOString().slice(0,10);
+  return suspensionesData
+    .map(s=>({ ...s, fecha_retorno: addDaysStr(s.fecha, s.dias) }))
+    .filter(s=> s.fecha > hoy)
+    .sort((a,b)=> a.fecha.localeCompare(b.fecha));
+}
+function wireSuspAccionesButtons(tbody){
+  tbody.querySelectorAll('[data-susp-carta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const rec = suspensionesData.find(x=>x.id===btn.dataset.suspCarta);
+      const s = rec ? findStudent(rec.studentId) : null;
+      if(!rec || !s) return;
+      try{
+        const doc = buildCartaCitacionPDF(rec, s);
+        doc.save(`carta-citacion-${s.nombre.trim().replace(/\s+/g,'-').toLowerCase()}-${rec.fecha}.pdf`);
+      }catch(err){
+        console.error(err);
+        showToast('No se pudo generar el PDF.');
+      }
+    });
+  });
+  tbody.querySelectorAll('[data-susp-ficha]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openFicha(btn.dataset.suspFicha));
+  });
 }
 
 function renderSuspensionesVigentes(){
@@ -6008,27 +6044,35 @@ function renderSuspensionesVigentes(){
         <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
       </td>
     </tr>`).join('');
-  tbody.querySelectorAll('[data-susp-carta]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const rec = suspensionesData.find(x=>x.id===btn.dataset.suspCarta);
-      const s = rec ? findStudent(rec.studentId) : null;
-      if(!rec || !s) return;
-      try{
-        const doc = buildCartaCitacionPDF(rec, s);
-        doc.save(`carta-citacion-${s.nombre.trim().replace(/\s+/g,'-').toLowerCase()}-${rec.fecha}.pdf`);
-      }catch(err){
-        console.error(err);
-        showToast('No se pudo generar el PDF.');
-      }
-    });
-  });
-  tbody.querySelectorAll('[data-susp-ficha]').forEach(btn=>{
-    btn.addEventListener('click', ()=>openFicha(btn.dataset.suspFicha));
-  });
+  wireSuspAccionesButtons(tbody);
+}
+
+function renderSuspensionesFuturas(){
+  const tbody = document.querySelector('#susp-futuras-table tbody');
+  const empty = document.getElementById('susp-futuras-empty');
+  const list = suspensionesFuturasDesdeHoy();
+  if(!list.length){
+    tbody.innerHTML = '';
+    document.getElementById('susp-futuras-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('susp-futuras-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(s=>`
+    <tr>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${s.motivo}</td>
+      <td style="white-space:nowrap;">
+        <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--navy);">Descargar carta</button>
+        <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
+      </td>
+    </tr>`).join('');
+  wireSuspAccionesButtons(tbody);
 }
 
 function buildSuspendidosVigentesPDF(){
-  const lista = suspensionesVigentesHoy();
+  const vigentes = suspensionesVigentesHoy();
+  const futuras = suspensionesFuturasDesdeHoy();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
   const pageW = 210;
@@ -6073,16 +6117,29 @@ function buildSuspendidosVigentesPDF(){
   y += 7;
   doc.setFont('times','normal');
   doc.setFontSize(10);
-  doc.text(`Al ${fmtDate(new Date().toISOString().slice(0,10))} — ${lista.length} alumno(s)`, pageW/2, y, { align:'center' });
+  doc.text(`Al ${fmtDate(new Date().toISOString().slice(0,10))}`, pageW/2, y, { align:'center' });
   y += 12;
 
-  if(!lista.length){
-    doc.setFont('times','italic');
-    doc.setFontSize(10);
-    doc.setTextColor(120,120,120);
-    doc.text('No hay ningún alumno suspendido en este momento.', marginL, y);
+  function seccion(titulo, lista, fraseVacia, fraseFecha){
+    ensureSpace(16);
+    doc.setFillColor(244,242,233);
+    doc.rect(marginL, y-5, contentW, 8, 'F');
+    doc.setFont('times','bold');
+    doc.setFontSize(11.5);
+    doc.setTextColor(15,27,64);
+    doc.text(`${titulo} (${lista.length})`, marginL+2, y);
     doc.setTextColor(0,0,0);
-  } else {
+    y += 11;
+
+    if(!lista.length){
+      doc.setFont('times','italic');
+      doc.setFontSize(10);
+      doc.setTextColor(120,120,120);
+      doc.text(fraseVacia, marginL, y);
+      doc.setTextColor(0,0,0);
+      y += 9;
+      return;
+    }
     lista.forEach((s,i)=>{
       ensureSpace(20);
       doc.setFont('times','bold');
@@ -6091,13 +6148,17 @@ function buildSuspendidosVigentesPDF(){
       y += 5.5;
       doc.setFont('times','normal');
       doc.setFontSize(9.5);
-      doc.text(`Suspendido desde ${fmtDate(s.fecha)} hasta ${fmtDate(s.fecha_retorno)} (se reintegra ese día)`, marginL, y);
+      doc.text(`${fraseFecha} ${fmtDate(s.fecha)} hasta ${fmtDate(s.fecha_retorno)} (se reintegra ese día)`, marginL, y);
       y += 5;
       const motivo = doc.splitTextToSize(`Motivo: ${s.motivo || '—'}`, contentW);
       doc.text(motivo, marginL, y);
       y += motivo.length*4.6 + 5;
     });
+    y += 3;
   }
+
+  seccion('Suspendidos actualmente', vigentes, 'No hay ningún alumno suspendido en este momento.', 'Suspendido desde');
+  seccion('Por suspender (comienzan más adelante)', futuras, 'No hay suspensiones registradas con fecha futura.', 'Comienza el');
 
   doc.setFontSize(8);
   doc.setTextColor(140,140,140);
