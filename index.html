@@ -1986,6 +1986,12 @@
       </div>
 
       <div class="subview active" id="susp-sub-vigentes">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button type="button" class="btn-ghost" id="btn-susp-vigentes-pdf">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M6 9V3h9l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1v-2"/><path d="M14 3v5h5"/><rect x="2" y="14" width="10" height="7" rx="1"/></svg>
+            Descargar informe de estudiantes suspendidos actuales
+          </button>
+        </div>
         <table class="data-table" id="susp-vigentes-table">
           <thead><tr><th>Alumno</th><th>Curso</th><th>Suspendido desde</th><th>Hasta (se reintegra)</th><th>Motivo</th><th>Acciones</th></tr></thead>
           <tbody></tbody>
@@ -6020,6 +6026,94 @@ function renderSuspensionesVigentes(){
     btn.addEventListener('click', ()=>openFicha(btn.dataset.suspFicha));
   });
 }
+
+function buildSuspendidosVigentesPDF(){
+  const lista = suspensionesVigentesHoy();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const pageW = 210;
+  const marginL = 16, contentW = pageW - 32;
+  let y = 18;
+
+  function ensureSpace(needed){
+    if(y + needed > 278){
+      doc.addPage();
+      y = 18;
+      doc.setFont('times','italic');
+      doc.setFontSize(9);
+      doc.setTextColor(120,120,120);
+      doc.text('Alumnos suspendidos actualmente (continuación)', marginL, y);
+      doc.setTextColor(0,0,0);
+      y += 9;
+    }
+  }
+
+  try{
+    const logoImg = document.querySelector('.sidebar-head img');
+    if(logoImg && logoImg.src) doc.addImage(logoImg.src, 'PNG', 16, y-6, 20, 27);
+  }catch(err){ /* si falla el logo, se genera igual sin imagen */ }
+
+  doc.setFont('times','bold');
+  doc.setFontSize(13);
+  doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFont('times','normal');
+  doc.setFontSize(10.5);
+  doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+  y += 12;
+
+  doc.setDrawColor(180,150,60);
+  doc.setLineWidth(0.6);
+  doc.line(16, y, pageW-16, y);
+  y += 9;
+
+  doc.setFont('times','bold');
+  doc.setFontSize(15);
+  doc.text('ALUMNOS SUSPENDIDOS ACTUALMENTE', pageW/2, y, { align:'center' });
+  y += 7;
+  doc.setFont('times','normal');
+  doc.setFontSize(10);
+  doc.text(`Al ${fmtDate(new Date().toISOString().slice(0,10))} — ${lista.length} alumno(s)`, pageW/2, y, { align:'center' });
+  y += 12;
+
+  if(!lista.length){
+    doc.setFont('times','italic');
+    doc.setFontSize(10);
+    doc.setTextColor(120,120,120);
+    doc.text('No hay ningún alumno suspendido en este momento.', marginL, y);
+    doc.setTextColor(0,0,0);
+  } else {
+    lista.forEach((s,i)=>{
+      ensureSpace(20);
+      doc.setFont('times','bold');
+      doc.setFontSize(10.5);
+      doc.text(`${i+1}. ${s.nombre} — ${s.curso}`, marginL, y);
+      y += 5.5;
+      doc.setFont('times','normal');
+      doc.setFontSize(9.5);
+      doc.text(`Suspendido desde ${fmtDate(s.fecha)} hasta ${fmtDate(s.fecha_retorno)} (se reintegra ese día)`, marginL, y);
+      y += 5;
+      const motivo = doc.splitTextToSize(`Motivo: ${s.motivo || '—'}`, contentW);
+      doc.text(motivo, marginL, y);
+      y += motivo.length*4.6 + 5;
+    });
+  }
+
+  doc.setFontSize(8);
+  doc.setTextColor(140,140,140);
+  doc.text(`Documento generado por la plataforma interna de Inspectoría General · Emitido ${new Date().toLocaleString('es-CL')}`, pageW/2, 292, { align:'center' });
+
+  return doc;
+}
+document.getElementById('btn-susp-vigentes-pdf').addEventListener('click', ()=>{
+  try{
+    const doc = buildSuspendidosVigentesPDF();
+    doc.save(`suspendidos-actuales-${new Date().toISOString().slice(0,10)}.pdf`);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el informe de suspendidos.');
+  }
+});
 
 function renderSuspensionesHistorial(){
   const tbody = document.querySelector('#susp-hist-table tbody');
