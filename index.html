@@ -1978,13 +1978,22 @@
 
     <div class="subview" id="libro-sub-suspensiones">
       <div class="sub-tabs" id="susp-subtabs">
-        <button data-sub="historial" class="active">Historial</button>
+        <button data-sub="vigentes" class="active">Suspendidos actualmente</button>
+        <button data-sub="historial">Historial</button>
         <button data-sub="ranking">Alumnos con más suspensiones</button>
         <button data-sub="porsuspender">Por suspender (faltas graves)</button>
         <button data-sub="motivos">Motivos más frecuentes</button>
       </div>
 
-      <div class="subview active" id="susp-sub-historial">
+      <div class="subview active" id="susp-sub-vigentes">
+        <table class="data-table" id="susp-vigentes-table">
+          <thead><tr><th>Alumno</th><th>Curso</th><th>Suspendido desde</th><th>Hasta (se reintegra)</th><th>Motivo</th><th>Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="susp-vigentes-empty" style="display:none;">No hay ningún alumno suspendido actualmente.</div>
+      </div>
+
+      <div class="subview" id="susp-sub-historial">
         <table class="data-table" id="susp-hist-table">
           <thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Días</th><th>Motivo</th><th>Acciones</th></tr></thead>
           <tbody></tbody>
@@ -5953,11 +5962,63 @@ document.getElementById('susp-subtabs').addEventListener('click', (e)=>{
 
 function renderSuspensionesSeccion(){
   const activo = document.querySelector('#susp-subtabs button.active');
-  const sub = activo ? activo.dataset.sub : 'historial';
-  if(sub === 'historial') renderSuspensionesHistorial();
+  const sub = activo ? activo.dataset.sub : 'vigentes';
+  if(sub === 'vigentes') renderSuspensionesVigentes();
+  else if(sub === 'historial') renderSuspensionesHistorial();
   else if(sub === 'ranking') renderSuspensionesRanking();
   else if(sub === 'porsuspender') renderSuspensionesPorSuspender();
   else renderSuspensionesMotivos();
+}
+
+// Un alumno está "suspendido actualmente" si hoy cae entre la fecha de
+// inicio y la fecha de reintegro (fecha + días) de alguna de sus
+// suspensiones — el día del reintegro ya vuelve a clases, por eso el
+// límite de arriba es estrictamente antes de esa fecha.
+function suspensionesVigentesHoy(){
+  const hoy = new Date().toISOString().slice(0,10);
+  return suspensionesData
+    .map(s=>({ ...s, fecha_retorno: addDaysStr(s.fecha, s.dias) }))
+    .filter(s=> hoy >= s.fecha && hoy < s.fecha_retorno)
+    .sort((a,b)=> a.fecha_retorno.localeCompare(b.fecha_retorno));
+}
+
+function renderSuspensionesVigentes(){
+  const tbody = document.querySelector('#susp-vigentes-table tbody');
+  const empty = document.getElementById('susp-vigentes-empty');
+  const list = suspensionesVigentesHoy();
+  if(!list.length){
+    tbody.innerHTML = '';
+    document.getElementById('susp-vigentes-table').style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  document.getElementById('susp-vigentes-table').style.display = 'table';
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(s=>`
+    <tr>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${s.motivo}</td>
+      <td style="white-space:nowrap;">
+        <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--navy);">Descargar carta</button>
+        <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
+      </td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-susp-carta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const rec = suspensionesData.find(x=>x.id===btn.dataset.suspCarta);
+      const s = rec ? findStudent(rec.studentId) : null;
+      if(!rec || !s) return;
+      try{
+        const doc = buildCartaCitacionPDF(rec, s);
+        doc.save(`carta-citacion-${s.nombre.trim().replace(/\s+/g,'-').toLowerCase()}-${rec.fecha}.pdf`);
+      }catch(err){
+        console.error(err);
+        showToast('No se pudo generar el PDF.');
+      }
+    });
+  });
+  tbody.querySelectorAll('[data-susp-ficha]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openFicha(btn.dataset.suspFicha));
+  });
 }
 
 function renderSuspensionesHistorial(){
