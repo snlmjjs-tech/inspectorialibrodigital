@@ -1773,6 +1773,7 @@
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <input type="file" id="matricula-file-input" accept=".xls,.xlsx" style="display:none;">
+        <input type="file" id="matricula-apoderados-input" accept=".xls,.xlsx" style="display:none;">
         <button class="btn-ghost" id="btn-new-alta">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 5v14M5 12h14"/></svg>
           Nueva alta
@@ -1784,6 +1785,14 @@
         <button class="btn-ghost" id="btn-nomina-pdf">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
           Descargar nómina completa (PDF)
+        </button>
+        <button class="btn-ghost" id="btn-nomina-excel">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          Descargar Excel
+        </button>
+        <button class="btn-ghost" id="btn-import-apoderados" title="Sube el Excel que exporta el proyecto de Matrículas para completar datos de apoderado, dirección, salud y PIE de los alumnos que ya están en la nómina.">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="vertical-align:-2px;margin-right:5px;"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>
+          Importar datos de apoderados
         </button>
         <button class="btn-primary" id="btn-upload-matricula">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -3894,6 +3903,18 @@ document.getElementById('btn-nomina-pdf').addEventListener('click', ()=>{
     showToast('No se pudo generar el PDF de la nómina.');
   }
 });
+document.getElementById('btn-nomina-excel').addEventListener('click', ()=>{
+  if(!(matriculaData.roster||[]).length){
+    showToast('No hay alumnos cargados para este año.');
+    return;
+  }
+  try{
+    descargarNominaExcel();
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el Excel de la nómina.');
+  }
+});
 document.getElementById('matricula-file-input').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -3917,6 +3938,122 @@ document.getElementById('matricula-file-input').addEventListener('change', async
   }catch(err){
     console.error(err);
     showToast('No se pudo leer el archivo. Verifica que sea un Excel válido (.xls o .xlsx).');
+  }
+  e.target.value = '';
+});
+
+// Normaliza un RUN/RUT para comparar (quita puntos, guion y mayúscula el
+// dígito verificador), ya que Matrículas lo guarda como "23.652.521-K" y
+// acá se guarda como "23652521-K".
+function normalizarRun(r){
+  return String(r||'').toUpperCase().replace(/[^0-9K]/g,'');
+}
+
+// Columnas del Excel que exporta el proyecto de Matrículas (una sola hoja,
+// encabezados con nombre en vez de una hoja por curso) → campos internos
+// del alumno acá. No se toca `curso`: "Curso 2027" es la asignación del
+// año que viene, no el curso actual del alumno en este sistema.
+const APODERADOS_COLUMNAS = {
+  'RUT estudiante': 'run',
+  'Dirección': 'direccion',
+  'Fecha nacimiento': 'fecha_nacimiento',
+  'Nacionalidad': 'nacionalidad',
+  'Celular estudiante': 'celular',
+  'Correo estudiante': 'correo',
+  'Colegio procedencia': 'colegio_procedencia',
+  'Curso 2027': 'curso_proximo',
+  'Repitencia': 'repitencia',
+  'Curso repetido': 'curso_repetido',
+  'Año repetido': 'anio_repetido',
+  'PIE': 'pie',
+  'Diagnóstico PIE': 'pie_diagnostico',
+  'Documentación PIE': 'pie_documentacion',
+  'Problema de salud': 'salud',
+  'Detalle salud': 'salud_detalle',
+  'Observaciones': 'observaciones_matricula',
+  'Apoderado titular': 'apoderado_nombre',
+  'RUT apoderado': 'apoderado_run',
+  'Edad apoderado': 'apoderado_edad',
+  'Dirección apoderado': 'apoderado_direccion',
+  'Comuna apoderado': 'apoderado_comuna',
+  'Nacionalidad apoderado': 'apoderado_nacionalidad',
+  'Celular apoderado': 'apoderado_celular',
+  'Correo apoderado': 'apoderado_correo',
+  'Apoderado suplente': 'suplente_nombre',
+  'RUT suplente': 'suplente_run',
+  'Edad suplente': 'suplente_edad',
+  'Dirección suplente': 'suplente_direccion',
+  'Comuna suplente': 'suplente_comuna',
+  'Nacionalidad suplente': 'suplente_nacionalidad',
+  'Celular suplente': 'suplente_celular',
+  'Correo suplente': 'suplente_correo',
+  'Folio': 'folio_matricula',
+  'Fecha registro': 'fecha_registro_matricula'
+};
+
+function parseApoderadosWorkbook(workbook){
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const aoa = XLSX.utils.sheet_to_json(sheet, { header:1, raw:false, defval:'' });
+  if(!aoa.length) return [];
+  const headers = aoa[0].map(h=>String(h||'').trim());
+  const entries = [];
+  for(let r=1; r<aoa.length; r++){
+    const row = aoa[r];
+    if(!row || !row.length) continue;
+    const entry = {};
+    headers.forEach((h,i)=>{
+      const campo = APODERADOS_COLUMNAS[h];
+      if(campo) entry[campo] = String(row[i] ?? '').trim();
+    });
+    if(entry.run) entries.push(entry);
+  }
+  return entries;
+}
+
+document.getElementById('btn-import-apoderados').addEventListener('click', ()=>{
+  document.getElementById('matricula-apoderados-input').click();
+});
+document.getElementById('matricula-apoderados-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array', cellDates:true });
+    const entries = parseApoderadosWorkbook(wb);
+    if(!entries.length){
+      showToast('No se encontraron filas con RUT del estudiante en ese archivo.');
+      return;
+    }
+    const roster = matriculaData.roster || [];
+    const porRun = {};
+    roster.forEach(s=>{ porRun[normalizarRun(s.run)] = s; });
+
+    let actualizados = 0;
+    const sinEncontrar = [];
+    entries.forEach(entry=>{
+      const alumno = porRun[normalizarRun(entry.run)];
+      if(!alumno){
+        sinEncontrar.push(entry.run);
+        return;
+      }
+      Object.keys(entry).forEach(campo=>{
+        if(campo === 'run') return; // no se pisa el RUN ya guardado acá
+        if(entry[campo]) alumno[campo] = entry[campo];
+      });
+      actualizados++;
+    });
+
+    if(!(await saveMatricula())){
+      await loadMatricula();
+      return;
+    }
+    renderMatricula();
+    let msg = `${actualizados} alumno(s) actualizados con datos de apoderado.`;
+    if(sinEncontrar.length) msg += ` ${sinEncontrar.length} RUT del archivo no están en la nómina actual (revisa si faltan por cargar en "Subir base de datos").`;
+    showToast(msg);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo leer el archivo. Verifica que sea el Excel que exporta el proyecto de Matrículas.');
   }
   e.target.value = '';
 });
@@ -5238,6 +5375,31 @@ function buildNominaPDF(){
   doc.save(`nomina-alumnos-${currentYear}.pdf`);
 }
 
+// Descarga de la nómina como Excel real (a diferencia del PDF, que es
+// para leer/imprimir, esto sirve para volver a cargar los datos en otro
+// sistema o en una planilla). Incluye los campos de apoderado/salud/PIE
+// cuando el alumno los tiene (importados desde el proyecto de Matrículas).
+function descargarNominaExcel(){
+  const roster = (matriculaData.roster || []).slice().sort((a,b)=>cursoIndex(a.curso)-cursoIndex(b.curso)||a.nombre.localeCompare(b.nombre,'es'));
+  const filas = roster.map(s=>({
+    'N° Matrícula': s.n_matricula || '', 'Curso': s.curso || '', 'Nombre': s.nombre || '', 'RUN': s.run || '',
+    'Edad': s.edad || '', 'Comuna': s.comuna || '', 'Fecha ingreso': s.fecha_ingreso || '', 'Fecha retiro': s.fecha_retiro || '',
+    'Estado': s.fecha_retiro ? 'Retirado' : 'Activo',
+    'Dirección': s.direccion || '', 'Fecha nacimiento': s.fecha_nacimiento || '', 'Nacionalidad': s.nacionalidad || '',
+    'Celular': s.celular || '', 'Correo': s.correo || '', 'Colegio procedencia': s.colegio_procedencia || '',
+    'Curso próximo año': s.curso_proximo || '', 'Repitencia': s.repitencia || '',
+    'PIE': s.pie || '', 'Diagnóstico PIE': s.pie_diagnostico || '', 'Problema de salud': s.salud || '', 'Detalle salud': s.salud_detalle || '',
+    'Observaciones matrícula': s.observaciones_matricula || '',
+    'Apoderado titular': s.apoderado_nombre || '', 'RUT apoderado': s.apoderado_run || '', 'Dirección apoderado': s.apoderado_direccion || '',
+    'Comuna apoderado': s.apoderado_comuna || '', 'Celular apoderado': s.apoderado_celular || '', 'Correo apoderado': s.apoderado_correo || '',
+    'Apoderado suplente': s.suplente_nombre || '', 'RUT suplente': s.suplente_run || '', 'Celular suplente': s.suplente_celular || '', 'Correo suplente': s.suplente_correo || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(filas);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `Nómina ${currentYear}`);
+  XLSX.writeFile(wb, `nomina-alumnos-${currentYear}.xlsx`);
+}
+
 /* ----- Resumen mensual del alumno (PDF) ----- */
 function buildResumenMensualPDF(student){
   const { jsPDF } = window.jspdf;
@@ -5982,13 +6144,19 @@ async function openFicha(studentId){
   if(!s) return;
   fichaTargetId = studentId;
   document.getElementById('ficha-title').textContent = s.nombre;
-  document.getElementById('ficha-meta').innerHTML = `Curso ${s.curso} · Matrícula N° ${s.n_matricula} · RUN ${s.run}${s.fecha_retiro ? ' · <strong>Retirado</strong>' : ''}`;
+  document.getElementById('ficha-meta').innerHTML = `Curso ${s.curso} · Matrícula N° ${s.n_matricula} · RUN ${s.run}${s.fecha_retiro ? ' · <strong>Retirado</strong>' : ''}`
+    + (s.apoderado_nombre ? `<br>Apoderado: ${s.apoderado_nombre}${s.apoderado_run ? ' · '+s.apoderado_run : ''}${s.apoderado_celular ? ' · '+s.apoderado_celular : ''}` : '');
   document.getElementById('ficha-form').reset();
   document.getElementById('fi-gravedad-wrap').style.display = 'none';
   document.getElementById('fi-atencion-wrap').style.display = 'none';
+  // Si ya tenemos el apoderado desde la matrícula, se precarga para no
+  // tener que volver a escribirlo cada vez que se cita o se suspende.
+  document.getElementById('fi-ap-nombre').value = s.apoderado_nombre || '';
+  document.getElementById('fi-ap-run').value = s.apoderado_run || '';
   document.getElementById('suspension-form').reset();
   document.getElementById('sp-fecha').value = new Date().toISOString().slice(0,10);
   document.getElementById('sp-dias').value = 2;
+  document.getElementById('sp-apoderado').value = s.apoderado_nombre || '';
   // Se vuelve a cargar desde la base de datos compartida cada vez que se
   // abre una ficha: si la sesión llevaba tiempo abierta y otro funcionario
   // agregó una anotación mientras tanto, libroData en memoria podía estar
