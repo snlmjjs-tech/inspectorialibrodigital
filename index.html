@@ -1689,6 +1689,10 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
       Atrasos
     </button>
+    <button type="button" id="nav-controlatrasos" style="display:none;" title="Abre el Control de Atrasos en una pestaña nueva">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      Control de Atrasos <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:2px;"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </button>
     <button data-view="staff">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.3 4.5 2.5 4.5 5.8"/></svg>
       Funcionarios
@@ -3347,7 +3351,7 @@ function showToast(msg){
 }
 
 /* ---------------- NAV ---------------- */
-document.querySelectorAll('nav.primary button').forEach(btn=>{
+document.querySelectorAll('nav.primary button[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('nav.primary button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
@@ -3493,7 +3497,19 @@ function applyRoleVisibility(){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-home').classList.add('active');
   }
+
+  // Control de Atrasos (herramienta aparte, en otro sitio) — acceso solo
+  // para este grupo de funcionarios, a pedido explícito.
+  const CONTROL_ATRASOS_SLUGS = ['claudio-valenzuela-fuentes','luis-cadiz-fuenzalida','sandra-bravo-cornejo','alvaro-lisboa-roa','raul-lopez-ortega','cristian-barahona'];
+  const controlBtn = document.getElementById('nav-controlatrasos');
+  if(controlBtn){
+    const puedeVerControlAtrasos = currentUser && CONTROL_ATRASOS_SLUGS.includes(currentUser.slug);
+    controlBtn.style.display = puedeVerControlAtrasos ? 'flex' : 'none';
+  }
 }
+document.getElementById('nav-controlatrasos').addEventListener('click', ()=>{
+  window.open('https://snlmjjs-tech.github.io/CONTROLATRASOS/', '_blank', 'noopener');
+});
 
 document.getElementById('btn-logout').addEventListener('click', ()=>{
   currentUser = null;
