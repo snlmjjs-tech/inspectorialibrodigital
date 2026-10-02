@@ -794,24 +794,70 @@
   .control-asis-stats{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:14px;
-    margin-bottom:10px;
+    gap:16px;
+    margin-bottom:16px;
   }
   .control-asis-stats .control-asis-stat{
     background:var(--paper);
     border:1px solid var(--line);
-    padding:16px 18px;
+    padding:20px 22px;
+    box-shadow:0 1px 3px rgba(11,18,64,.05);
   }
-  .control-asis-stat .n{font-family:'Libre Caslon Display',serif;font-size:26px;color:var(--navy-deep);}
+  .control-asis-stat .n{font-family:'Libre Caslon Display',serif;font-size:32px;color:var(--navy-deep);line-height:1.1;}
   .control-asis-stat .n.sem-naranjo{color:var(--warn);}
   .control-asis-stat .n.sem-rojo{color:#A8462F;}
-  .control-asis-stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  .control-asis-stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.01em;}
   .control-asis-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
   .control-asis-note{font-size:12px;color:var(--ink-soft);margin:0 0 18px;}
+
+  /* Barra de acciones: dos filas de enlaces agrupadas, como un índice de documento */
+  .control-asis-toolbar-group{
+    background:var(--paper);
+    border:1px solid var(--line);
+    margin-bottom:22px;
+  }
+  .control-asis-toolbar-row{
+    display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+    padding:12px 18px;
+  }
+  .control-asis-toolbar-row + .control-asis-toolbar-row{border-top:1px dashed var(--line);}
+  .control-asis-toolbar-label{
+    font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);min-width:60px;
+  }
+  .ca-link{
+    all:unset;cursor:pointer;
+    font-size:12.5px;color:var(--navy);
+    white-space:nowrap;
+    padding:2px 0;
+  }
+  .ca-link:hover{color:var(--gold);text-decoration:underline;}
+  .ca-sep{color:var(--line);font-size:12px;}
+
+  /* Paneles desplegables: subir nómina, calendario, nuevo curso */
+  .control-asis-panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    padding:18px 20px;
+    margin-bottom:22px;
+  }
+  .control-asis-panel-actions{display:flex;gap:10px;margin-top:14px;}
+  .control-asis-calendario-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;
+  }
+  .control-asis-calendario-field{display:flex;flex-direction:column;gap:4px;}
+  .control-asis-calendario-field label{font-size:11px;color:var(--ink-soft);}
+  .control-asis-calendario-field input{border:1px solid var(--line);padding:7px 9px;font-size:13px;width:100%;font-family:'Inter',sans-serif;}
+  .control-asis-textarea{
+    width:100%;border:1px solid var(--line);padding:10px 12px;
+    font-family:'Inter',sans-serif;font-size:13px;resize:vertical;
+  }
+
   .control-asis-cards{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:16px;
   }
   .control-asis-card{
     all:unset;cursor:pointer;
@@ -819,20 +865,21 @@
     background:var(--paper);
     border:1px solid var(--line);
     border-top:4px solid var(--pending);
-    padding:16px 18px;
-    transition:box-shadow .15s;
+    padding:20px 20px 18px;
+    box-shadow:0 1px 3px rgba(11,18,64,.05);
+    transition:box-shadow .15s, transform .15s;
   }
-  .control-asis-card:hover{box-shadow:0 2px 10px rgba(11,18,64,.12);}
+  .control-asis-card:hover{box-shadow:0 6px 16px rgba(11,18,64,.14);transform:translateY(-1px);}
   .control-asis-card.sem-verde{border-top-color:var(--ok);}
   .control-asis-card.sem-naranjo{border-top-color:var(--warn);}
   .control-asis-card.sem-rojo{border-top-color:#A8462F;}
-  .control-asis-card h4{font-family:'Libre Caslon Text',serif;font-weight:400;font-size:16px;margin:0 0 2px;color:var(--navy-deep);}
-  .control-asis-card .meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;}
-  .control-asis-card .pct{font-family:'Libre Caslon Display',serif;font-size:24px;color:var(--ink);}
+  .control-asis-card h4{font-family:'Libre Caslon Text',serif;font-weight:400;font-size:17px;margin:0 0 3px;color:var(--navy-deep);}
+  .control-asis-card .meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;}
+  .control-asis-card .pct{font-family:'Libre Caslon Display',serif;font-size:30px;color:var(--ink);line-height:1;}
   .control-asis-card .pct.sem-verde{color:var(--ok);}
   .control-asis-card .pct.sem-naranjo{color:var(--warn);}
   .control-asis-card .pct.sem-rojo{color:#A8462F;}
-  .control-asis-card .dots{font-size:11px;color:var(--ink-soft);margin-top:8px;}
+  .control-asis-card .dots{font-size:11px;color:var(--ink-soft);margin-top:10px;}
   .control-asis-card .dots span{display:inline-flex;align-items:center;gap:4px;margin-right:12px;}
   .control-asis-card .dots i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--ok);}
   .control-asis-card .dots i.d-naranjo{background:var(--warn);}
@@ -2010,17 +2057,84 @@
       <div class="control-asis-stats" id="control-asis-stats"></div>
       <p class="control-asis-note" id="control-asis-retirados-note"></p>
 
-      <div class="control-asis-toolbar" id="control-asis-toolbar-cursos">
+      <div class="control-asis-toolbar-group" id="control-asis-toolbar-cursos">
         <input type="file" id="control-asis-file-input" accept=".xls,.xlsx" style="display:none;">
-        <button class="btn-ghost" id="control-asis-subir-btn">Subir base de datos (Excel)</button>
-        <button class="btn-ghost" id="control-asis-csv-btn">Exportar resumen CSV</button>
-        <button class="btn-ghost" id="control-asis-gerencial-btn">Descargar informe gerencial (PDF)</button>
+        <input type="file" id="control-asis-nomina-file-input" accept=".xls,.xlsx" style="display:none;">
+        <div class="control-asis-toolbar-row">
+          <span class="control-asis-toolbar-label">Datos</span>
+          <button class="ca-link" id="control-asis-subir-btn">Subir base de datos (Excel)</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-nomina-btn">Importar nómina a un curso</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-calendario-btn">Días hábiles (SIGE)</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-nuevo-curso-btn">+ Nuevo curso</button>
+        </div>
+        <div class="control-asis-toolbar-row">
+          <span class="control-asis-toolbar-label">Informes</span>
+          <button class="ca-link" id="control-asis-ranking-toggle-btn">Ver informe anual</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-csv-btn">Exportar resumen CSV</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-curso-pdf-btn-all">Informe por curso (PDF)</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-gerencial-btn">Informe gerencial (PDF)</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-alumnos-pdf-btn-all">Informes por alumno (PDF)</button>
+          <span class="ca-sep">·</span>
+          <button class="ca-link" id="control-asis-cartas-btn-all">Cartas de apelación (PDF)</button>
+        </div>
+      </div>
+
+      <!-- Panel: importar la nómina/planilla de un solo curso -->
+      <div class="control-asis-panel" id="control-asis-nomina-panel" style="display:none;">
+        <div class="picker-row" style="margin-bottom:0;">
+          <div class="picker-field">
+            <label for="control-asis-nomina-curso">Curso a actualizar</label>
+            <select id="control-asis-nomina-curso"></select>
+          </div>
+          <button class="btn-ghost" id="control-asis-nomina-elegir-btn">Elegir archivo…</button>
+          <span id="control-asis-nomina-filename" style="font-size:12px;color:var(--ink-soft);"></span>
+          <button class="btn-ghost" id="control-asis-nomina-cancelar-btn">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Panel: calendario de días hábiles institucionales (SIGE) -->
+      <div class="control-asis-panel" id="control-asis-calendario-panel" style="display:none;">
+        <p class="control-asis-note" style="margin-bottom:14px;">
+          Días hábiles oficiales del calendario escolar por mes. Se usan como referencia y para calcular por defecto
+          la asistencia de alumnos agregados manualmente (+ Nuevo curso) hasta que tengan datos reales importados desde Excel.
+        </p>
+        <div class="control-asis-calendario-grid" id="control-asis-calendario-grid"></div>
+        <div class="control-asis-panel-actions">
+          <button class="btn-primary" id="control-asis-calendario-guardar-btn">Guardar calendario</button>
+          <button class="btn-ghost" id="control-asis-calendario-cancelar-btn">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Panel: crear un curso nuevo a mano -->
+      <div class="control-asis-panel" id="control-asis-nuevo-curso-panel" style="display:none;">
+        <div class="picker-row">
+          <div class="picker-field">
+            <label for="control-asis-nuevo-curso-nombre">Curso</label>
+            <input type="text" id="control-asis-nuevo-curso-nombre" placeholder="Ej: 1°A">
+          </div>
+        </div>
+        <div class="picker-field">
+          <label for="control-asis-nuevo-curso-alumnos">Alumnos (uno por línea — "Nombre" o "Nombre, RUN")</label>
+          <textarea id="control-asis-nuevo-curso-alumnos" rows="8" class="control-asis-textarea"></textarea>
+        </div>
+        <div class="control-asis-panel-actions">
+          <button class="btn-primary" id="control-asis-nuevo-curso-crear-btn">Crear curso</button>
+          <button class="btn-ghost" id="control-asis-nuevo-curso-cancelar-btn">Cancelar</button>
+        </div>
       </div>
 
       <div class="control-asis-toolbar" id="control-asis-toolbar-detalle" style="display:none;">
         <button class="btn-ghost" id="control-asis-volver-btn">&larr; Volver a cursos</button>
         <span id="control-asis-curso-titulo" style="font-weight:600;color:var(--navy-deep);margin-right:8px;"></span>
         <button class="btn-ghost" id="control-asis-curso-pdf-btn">Descargar informe del curso (PDF)</button>
+        <button class="btn-ghost" id="control-asis-alumnos-pdf-btn">Informes por alumno (PDF)</button>
         <button class="btn-ghost" id="control-asis-cartas-btn">Generar cartas de apelación (PDF)</button>
       </div>
 
@@ -2030,6 +2144,11 @@
       </div>
 
       <div class="control-asis-cards" id="control-asis-cards"></div>
+
+      <table class="data-table" id="control-asis-ranking-table" style="display:none;margin-top:4px;">
+        <thead><tr><th>Curso</th><th>Alumnos</th><th>Retirados</th><th>% Anual</th><th>Al día</th><th>Alerta</th><th>Riesgo</th></tr></thead>
+        <tbody></tbody>
+      </table>
 
       <table class="data-table" id="control-asis-table" style="display:none;margin-top:14px;">
         <thead><tr><th>Alumno</th><th>RUN</th><th>Días hábiles</th><th>Ausentes</th><th>% Asistencia</th><th>Estado</th><th></th></tr></thead>
@@ -5265,6 +5384,7 @@ function renderAsistenciaAll(){
    ================================================================ */
 let controlAsistData = { cursos:{} };
 let controlAsistCursoSel = null;
+let controlAsistVistaRanking = false;
 const CA_UMBRAL_VERDE = 90;
 const CA_UMBRAL_NARANJO = 85;
 const CA_MES_A_CODIGO = {
@@ -5307,10 +5427,64 @@ function caEstadoLabel(pct){
   return 'Riesgo';
 }
 
-// Lee la planilla exportada desde SIGE: una hoja por curso con columnas
+// Lee los datos de un curso desde una hoja de la planilla SIGE: columnas
 // agrupadas de a 4 (Hábiles / Ausentes / Presente / %) por mes, y un
-// último grupo "ANUAL" con los totales del año. La hoja "Resumen" se
-// ignora porque se recalcula sola a partir de estos datos.
+// último grupo "ANUAL" con los totales del año. Se usa tanto para la
+// importación completa (una hoja por curso) como para "Importar nómina
+// a un curso" (un solo curso, en la primera hoja del archivo).
+function parseCursoSheetAoA(aoa){
+  if(!aoa || !aoa.length) return null;
+  const headerRow = aoa[0] || [];
+  const grupos = [];
+  for(let c=4; c<headerRow.length; c+=4){
+    const label = headerRow[c];
+    if(!label) break;
+    grupos.push({ label:String(label).trim(), col:c });
+  }
+  if(!grupos.length) return null;
+  const ultimoEsAnual = /anual/i.test(grupos[grupos.length-1].label);
+  const grupoAnual = ultimoEsAnual ? grupos[grupos.length-1] : null;
+  const gruposMeses = ultimoEsAnual ? grupos.slice(0,-1) : grupos;
+
+  const alumnos = [];
+  for(let r=3; r<aoa.length; r++){
+    const row = aoa[r];
+    if(!row || !row[0]) continue;
+    const nombre = String(row[0]).trim();
+    if(!nombre) continue;
+    const run = row[1] ? String(row[1]).trim() : '';
+    const retiradoRaw = row[2] ? String(row[2]).trim().toLowerCase() : 'no';
+    const retirado = retiradoRaw.startsWith('s');
+
+    const meses = {};
+    gruposMeses.forEach(g=>{
+      const codigo = CA_MES_A_CODIGO[g.label.toLowerCase()];
+      if(!codigo) return;
+      const habiles = Number(row[g.col]) || 0;
+      const ausentes = Number(row[g.col+1]) || 0;
+      const presente = row[g.col+2]!=null ? (Number(row[g.col+2])||0) : Math.max(0, habiles-ausentes);
+      const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
+      meses[codigo] = { habiles, ausentes, presente, pct };
+    });
+
+    let anual;
+    if(grupoAnual){
+      const habiles = Number(row[grupoAnual.col]) || 0;
+      const ausentes = Number(row[grupoAnual.col+1]) || 0;
+      const presente = row[grupoAnual.col+2]!=null ? (Number(row[grupoAnual.col+2])||0) : Math.max(0, habiles-ausentes);
+      const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
+      anual = { habiles, ausentes, presente, pct };
+    } else {
+      const tot = Object.values(meses).reduce((a,m)=>({habiles:a.habiles+m.habiles, ausentes:a.ausentes+m.ausentes, presente:a.presente+m.presente}), {habiles:0,ausentes:0,presente:0});
+      anual = { ...tot, pct: tot.habiles ? Math.round((tot.presente/tot.habiles)*1000)/10 : null };
+    }
+
+    alumnos.push({ nombre, run, retirado, meses, anual });
+  }
+  return alumnos.length ? { alumnos } : null;
+}
+
+// La hoja "Resumen" se ignora porque se recalcula sola a partir de estos datos.
 function parseControlAsistenciaWorkbook(wb){
   const cursos = {};
   let hojasLeidas = 0;
@@ -5318,56 +5492,9 @@ function parseControlAsistenciaWorkbook(wb){
     if(normCurso(sheetName) === 'RESUMEN') return;
     const sheet = wb.Sheets[sheetName];
     const aoa = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
-    if(!aoa.length) return;
-    const headerRow = aoa[0] || [];
-    const grupos = [];
-    for(let c=4; c<headerRow.length; c+=4){
-      const label = headerRow[c];
-      if(!label) break;
-      grupos.push({ label:String(label).trim(), col:c });
-    }
-    if(!grupos.length) return;
-    const ultimoEsAnual = /anual/i.test(grupos[grupos.length-1].label);
-    const grupoAnual = ultimoEsAnual ? grupos[grupos.length-1] : null;
-    const gruposMeses = ultimoEsAnual ? grupos.slice(0,-1) : grupos;
-
-    const alumnos = [];
-    for(let r=3; r<aoa.length; r++){
-      const row = aoa[r];
-      if(!row || !row[0]) continue;
-      const nombre = String(row[0]).trim();
-      if(!nombre) continue;
-      const run = row[1] ? String(row[1]).trim() : '';
-      const retiradoRaw = row[2] ? String(row[2]).trim().toLowerCase() : 'no';
-      const retirado = retiradoRaw.startsWith('s');
-
-      const meses = {};
-      gruposMeses.forEach(g=>{
-        const codigo = CA_MES_A_CODIGO[g.label.toLowerCase()];
-        if(!codigo) return;
-        const habiles = Number(row[g.col]) || 0;
-        const ausentes = Number(row[g.col+1]) || 0;
-        const presente = row[g.col+2]!=null ? (Number(row[g.col+2])||0) : Math.max(0, habiles-ausentes);
-        const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
-        meses[codigo] = { habiles, ausentes, presente, pct };
-      });
-
-      let anual;
-      if(grupoAnual){
-        const habiles = Number(row[grupoAnual.col]) || 0;
-        const ausentes = Number(row[grupoAnual.col+1]) || 0;
-        const presente = row[grupoAnual.col+2]!=null ? (Number(row[grupoAnual.col+2])||0) : Math.max(0, habiles-ausentes);
-        const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
-        anual = { habiles, ausentes, presente, pct };
-      } else {
-        const tot = Object.values(meses).reduce((a,m)=>({habiles:a.habiles+m.habiles, ausentes:a.ausentes+m.ausentes, presente:a.presente+m.presente}), {habiles:0,ausentes:0,presente:0});
-        anual = { ...tot, pct: tot.habiles ? Math.round((tot.presente/tot.habiles)*1000)/10 : null };
-      }
-
-      alumnos.push({ nombre, run, retirado, meses, anual });
-    }
-    if(alumnos.length){
-      cursos[sheetName] = { alumnos };
+    const parsed = parseCursoSheetAoA(aoa);
+    if(parsed){
+      cursos[sheetName] = parsed;
       hojasLeidas++;
     }
   });
@@ -5411,12 +5538,20 @@ function caCursoResumen(curso){
   return { curso, nAlumnos: activos.length, retirados, pct, verde, naranjo, rojo };
 }
 
+function caOcultarPaneles(){
+  ['control-asis-nomina-panel','control-asis-calendario-panel','control-asis-nuevo-curso-panel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+}
+
 function renderControlAsistencia(){
   controlAsistCursoSel = null;
+  caOcultarPaneles();
   const cursos = controlAsistData.cursos || {};
   const cursoNames = Object.keys(cursos).sort((a,b)=>cursoIndex(a)-cursoIndex(b) || a.localeCompare(b,'es'));
 
-  document.getElementById('control-asis-toolbar-cursos').style.display = 'flex';
+  document.getElementById('control-asis-toolbar-cursos').style.display = '';
   document.getElementById('control-asis-toolbar-detalle').style.display = 'none';
   document.getElementById('control-asis-table').style.display = 'none';
 
@@ -5433,12 +5568,38 @@ function renderControlAsistencia(){
 
   const cardsEl = document.getElementById('control-asis-cards');
   const emptyEl = document.getElementById('control-asis-empty');
+  const rankingTable = document.getElementById('control-asis-ranking-table');
+  const toggleBtn = document.getElementById('control-asis-ranking-toggle-btn');
   if(!cursoNames.length){
     cardsEl.innerHTML = '';
+    cardsEl.style.display = 'none';
+    rankingTable.style.display = 'none';
     emptyEl.style.display = 'block';
     return;
   }
   emptyEl.style.display = 'none';
+
+  toggleBtn.textContent = controlAsistVistaRanking ? 'Ver tarjetas' : 'Ver informe anual';
+  if(controlAsistVistaRanking){
+    cardsEl.style.display = 'none';
+    rankingTable.style.display = 'table';
+    const filas = cursoNames.map(c=>caCursoResumen(c)).sort((a,b)=>(a.pct??999)-(b.pct??999));
+    rankingTable.querySelector('tbody').innerHTML = filas.map(r=>{
+      const color = caColor(r.pct);
+      return `
+      <tr data-curso="${caEsc(r.curso)}" style="cursor:pointer;">
+        <td>${caEsc(r.curso)}</td><td>${r.nAlumnos}</td><td>${r.retirados}</td>
+        <td class="pct-cell ${color}">${r.pct!=null?r.pct+'%':'—'}</td>
+        <td>${r.verde}</td><td>${r.naranjo}</td><td>${r.rojo}</td>
+      </tr>`;
+    }).join('');
+    rankingTable.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=>renderControlAsistCursoDetalle(tr.dataset.curso));
+    });
+    return;
+  }
+  rankingTable.style.display = 'none';
+  cardsEl.style.display = '';
   cardsEl.innerHTML = cursoNames.map(curso=>{
     const r = caCursoResumen(curso);
     const color = caColor(r.pct);
@@ -5461,12 +5622,15 @@ function renderControlAsistencia(){
 
 function renderControlAsistCursoDetalle(curso){
   controlAsistCursoSel = curso;
+  caOcultarPaneles();
   const c = (controlAsistData.cursos||{})[curso];
   if(!c) return;
 
   document.getElementById('control-asis-toolbar-cursos').style.display = 'none';
   document.getElementById('control-asis-toolbar-detalle').style.display = 'flex';
   document.getElementById('control-asis-cards').innerHTML = '';
+  document.getElementById('control-asis-cards').style.display = 'none';
+  document.getElementById('control-asis-ranking-table').style.display = 'none';
   document.getElementById('control-asis-empty').style.display = 'none';
   document.getElementById('control-asis-curso-titulo').textContent = curso;
 
@@ -5503,7 +5667,150 @@ function renderControlAsistCursoDetalle(curso){
 
 document.getElementById('control-asis-volver-btn').addEventListener('click', renderControlAsistencia);
 
+document.getElementById('control-asis-ranking-toggle-btn').addEventListener('click', ()=>{
+  controlAsistVistaRanking = !controlAsistVistaRanking;
+  renderControlAsistencia();
+});
+
+/* ---- Importar nómina a un solo curso (mismo formato de columnas que una hoja del Excel SIGE) ---- */
+document.getElementById('control-asis-nomina-btn').addEventListener('click', ()=>{
+  caOcultarPaneles();
+  const sel = document.getElementById('control-asis-nomina-curso');
+  const nombres = Array.from(new Set([...(activeCourses()||[]), ...Object.keys(controlAsistData.cursos||{})]))
+    .sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+  sel.innerHTML = nombres.length ? nombres.map(c=>`<option value="${caEsc(c)}">${caEsc(c)}</option>`).join('') : '<option value="">Sin cursos</option>';
+  document.getElementById('control-asis-nomina-filename').textContent = '';
+  document.getElementById('control-asis-nomina-panel').style.display = 'block';
+});
+document.getElementById('control-asis-nomina-cancelar-btn').addEventListener('click', ()=>{
+  document.getElementById('control-asis-nomina-panel').style.display = 'none';
+});
+document.getElementById('control-asis-nomina-elegir-btn').addEventListener('click', ()=>{
+  document.getElementById('control-asis-nomina-file-input').click();
+});
+document.getElementById('control-asis-nomina-file-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('control-asis-nomina-filename').textContent = file.name;
+  const curso = document.getElementById('control-asis-nomina-curso').value;
+  if(!curso){ showToast('Elige el curso que quieres actualizar.'); e.target.value=''; return; }
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array', cellDates:true });
+    const sheetName = wb.SheetNames.find(n=>normCurso(n)!=='RESUMEN') || wb.SheetNames[0];
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header:1, raw:true, defval:null });
+    const parsed = parseCursoSheetAoA(aoa);
+    if(!parsed){
+      showToast('No se pudo leer ese archivo con el formato esperado (Hábiles/Ausentes/Presente/% por mes).');
+      e.target.value = '';
+      return;
+    }
+    const previo = (controlAsistData.cursos||{})[curso];
+    const msg = previo
+      ? `Se leyeron ${parsed.alumnos.length} alumnos para ${curso}.\n\nEsto REEMPLAZARÁ los ${previo.alumnos.length} alumnos que ya estaban guardados para ${curso}.\n\n¿Confirmas?`
+      : `Se leyeron ${parsed.alumnos.length} alumnos para ${curso}. ¿Confirmas que quieres guardarlos?`;
+    if(!confirm(msg)){ e.target.value = ''; return; }
+
+    controlAsistData.cursos = controlAsistData.cursos || {};
+    const backup = controlAsistData.cursos[curso];
+    controlAsistData.cursos[curso] = parsed;
+    const ok = await saveControlAsistencia();
+    if(!ok){
+      if(backup) controlAsistData.cursos[curso] = backup; else delete controlAsistData.cursos[curso];
+      e.target.value = '';
+      return;
+    }
+    showToast(`Nómina de ${curso} actualizada: ${parsed.alumnos.length} alumnos ✓`);
+    e.target.value = '';
+    renderControlAsistencia();
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo leer ese archivo.');
+    e.target.value = '';
+  }
+});
+
+/* ---- Días hábiles institucionales (SIGE): calendario de referencia por mes ---- */
+document.getElementById('control-asis-calendario-btn').addEventListener('click', ()=>{
+  caOcultarPaneles();
+  const grid = document.getElementById('control-asis-calendario-grid');
+  const cal = controlAsistData.calendario || {};
+  grid.innerHTML = Object.keys(CA_MES_A_CODIGO).map(mesLower=>{
+    const codigo = CA_MES_A_CODIGO[mesLower];
+    const label = mesLower.charAt(0).toUpperCase()+mesLower.slice(1);
+    return `<div class="control-asis-calendario-field">
+      <label>${label}</label>
+      <input type="number" min="0" max="31" data-mes="${codigo}" value="${cal[codigo]!=null?cal[codigo]:''}">
+    </div>`;
+  }).join('');
+  document.getElementById('control-asis-calendario-panel').style.display = 'block';
+});
+document.getElementById('control-asis-calendario-cancelar-btn').addEventListener('click', ()=>{
+  document.getElementById('control-asis-calendario-panel').style.display = 'none';
+});
+document.getElementById('control-asis-calendario-guardar-btn').addEventListener('click', async ()=>{
+  const cal = {};
+  document.querySelectorAll('#control-asis-calendario-grid input[data-mes]').forEach(inp=>{
+    const v = Number(inp.value);
+    if(inp.value!=='' && v>0) cal[inp.dataset.mes] = v;
+  });
+  const backup = controlAsistData.calendario;
+  controlAsistData.calendario = cal;
+  const ok = await saveControlAsistencia();
+  if(!ok){ controlAsistData.calendario = backup; return; }
+  showToast('Calendario de días hábiles guardado ✓');
+  document.getElementById('control-asis-calendario-panel').style.display = 'none';
+});
+
+/* ---- + Nuevo curso: alta manual con nómina escrita a mano ---- */
+document.getElementById('control-asis-nuevo-curso-btn').addEventListener('click', ()=>{
+  caOcultarPaneles();
+  document.getElementById('control-asis-nuevo-curso-nombre').value = '';
+  document.getElementById('control-asis-nuevo-curso-alumnos').value = '';
+  document.getElementById('control-asis-nuevo-curso-panel').style.display = 'block';
+});
+document.getElementById('control-asis-nuevo-curso-cancelar-btn').addEventListener('click', ()=>{
+  document.getElementById('control-asis-nuevo-curso-panel').style.display = 'none';
+});
+document.getElementById('control-asis-nuevo-curso-crear-btn').addEventListener('click', async ()=>{
+  const curso = document.getElementById('control-asis-nuevo-curso-nombre').value.trim();
+  const raw = document.getElementById('control-asis-nuevo-curso-alumnos').value;
+  if(!curso){ showToast('Ingresa el nombre del curso (ej: 1°A).'); return; }
+  const lineas = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lineas.length){ showToast('Ingresa al menos un alumno, uno por línea.'); return; }
+  if((controlAsistData.cursos||{})[curso] && !confirm(`Ya existe el curso ${curso} en Control de Asistencia. ¿Reemplazar sus alumnos?`)) return;
+
+  const cal = controlAsistData.calendario || {};
+  const mesesCal = Object.keys(cal);
+  const totHabiles = mesesCal.reduce((s,c)=>s+(cal[c]||0),0);
+  const alumnos = lineas.map(linea=>{
+    const [nombreRaw, runRaw] = linea.split(',');
+    const nombre = (nombreRaw||'').trim();
+    const run = (runRaw||'').trim();
+    const meses = {};
+    mesesCal.forEach(codigo=>{
+      const habiles = cal[codigo];
+      meses[codigo] = { habiles, ausentes:0, presente:habiles, pct: habiles?100:null };
+    });
+    const anual = { habiles: totHabiles, ausentes:0, presente: totHabiles, pct: totHabiles?100:null };
+    return { nombre, run, retirado:false, meses, anual };
+  }).filter(a=>a.nombre);
+
+  controlAsistData.cursos = controlAsistData.cursos || {};
+  const backup = controlAsistData.cursos[curso];
+  controlAsistData.cursos[curso] = { alumnos };
+  const ok = await saveControlAsistencia();
+  if(!ok){
+    if(backup) controlAsistData.cursos[curso] = backup; else delete controlAsistData.cursos[curso];
+    return;
+  }
+  showToast(`Curso ${curso} creado con ${alumnos.length} alumno(s) ✓`);
+  document.getElementById('control-asis-nuevo-curso-panel').style.display = 'none';
+  renderControlAsistencia();
+});
+
 document.getElementById('control-asis-subir-btn').addEventListener('click', ()=>{
+  caOcultarPaneles();
   document.getElementById('control-asis-file-input').click();
 });
 document.getElementById('control-asis-file-input').addEventListener('change', async (e)=>{
@@ -5636,49 +5943,134 @@ document.getElementById('control-asis-gerencial-btn').addEventListener('click', 
   }
 });
 
-document.getElementById('control-asis-curso-pdf-btn').addEventListener('click', ()=>{
-  if(!controlAsistCursoSel) return;
+// Un informe con la tabla de alumnos de cada curso en cursoNames, una página
+// por curso (se usa tanto para "el curso que estoy viendo" como para "Informe
+// por curso (PDF)" del menú principal, que junta TODOS los cursos en un solo archivo).
+function generarInformeCursosPDF(cursoNames){
   try{
-    const curso = controlAsistCursoSel;
-    const c = (controlAsistData.cursos||{})[curso];
-    if(!c) return;
-    const alumnos = [...(c.alumnos||[])].sort((a,b)=>{
-      if(a.retirado !== b.retirado) return a.retirado?1:-1;
-      const pa=a.anual.pct==null?999:a.anual.pct, pb=b.anual.pct==null?999:b.anual.pct;
-      return pa-pb || a.nombre.localeCompare(b.nombre,'es');
-    });
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a4' });
     const pageW = 210, marginL = 16;
-    let y = caPdfLetterhead(doc, `Informe de asistencia anual — ${curso} (${currentYear})`);
+    cursoNames.forEach((curso, idx)=>{
+      const c = (controlAsistData.cursos||{})[curso];
+      if(!c) return;
+      if(idx>0) doc.addPage();
+      const alumnos = [...(c.alumnos||[])].sort((a,b)=>{
+        if(a.retirado !== b.retirado) return a.retirado?1:-1;
+        const pa=a.anual.pct==null?999:a.anual.pct, pb=b.anual.pct==null?999:b.anual.pct;
+        return pa-pb || a.nombre.localeCompare(b.nombre,'es');
+      });
+      let y = caPdfLetterhead(doc, `Informe de asistencia anual — ${curso} (${currentYear})`);
 
-    const cabecera = ['Alumno','RUN','Días hábiles','Ausentes','% Anual','Estado'];
-    const anchos = [68, 30, 24, 22, 20, 24];
-    doc.setFont('times','bold'); doc.setFontSize(9);
-    let x = marginL;
-    cabecera.forEach((h,i)=>{ doc.text(h, x, y); x += anchos[i]; });
-    y += 5;
-    doc.setDrawColor(200,200,200);
-    doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
-    doc.setFont('times','normal');
-    alumnos.forEach(a=>{
-      if(y>278){ doc.addPage(); y=18; }
-      const estado = a.retirado ? 'Retirado' : caEstadoLabel(a.anual.pct);
-      const vals = [a.nombre, a.run, String(a.anual.habiles), String(a.anual.ausentes), a.anual.pct!=null?a.anual.pct+'%':'—', estado];
-      let xx = marginL;
-      vals.forEach((v,i)=>{ doc.text(String(v), xx, y, {maxWidth:anchos[i]-2}); xx += anchos[i]; });
-      y += 6;
+      const cabecera = ['Alumno','RUN','Días hábiles','Ausentes','% Anual','Estado'];
+      const anchos = [68, 30, 24, 22, 20, 24];
+      doc.setFont('times','bold'); doc.setFontSize(9);
+      let x = marginL;
+      cabecera.forEach((h,i)=>{ doc.text(h, x, y); x += anchos[i]; });
+      y += 5;
+      doc.setDrawColor(200,200,200);
+      doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
+      doc.setFont('times','normal');
+      alumnos.forEach(a=>{
+        if(y>278){ doc.addPage(); y=18; }
+        const estado = a.retirado ? 'Retirado' : caEstadoLabel(a.anual.pct);
+        const vals = [a.nombre, a.run, String(a.anual.habiles), String(a.anual.ausentes), a.anual.pct!=null?a.anual.pct+'%':'—', estado];
+        let xx = marginL;
+        vals.forEach((v,i)=>{ doc.text(String(v), xx, y, {maxWidth:anchos[i]-2}); xx += anchos[i]; });
+        y += 6;
+      });
+      caPdfFooter(doc);
     });
-
-    caPdfFooter(doc);
-    doc.save(`informe-asistencia-${normCurso(curso)}-${currentYear}.pdf`);
+    const nombreArchivo = cursoNames.length===1
+      ? `informe-asistencia-${normCurso(cursoNames[0])}-${currentYear}.pdf`
+      : `informe-asistencia-todos-los-cursos-${currentYear}.pdf`;
+    doc.save(nombreArchivo);
   }catch(err){
     console.error(err);
     showToast('No se pudo generar el informe del curso.');
   }
+}
+
+document.getElementById('control-asis-curso-pdf-btn').addEventListener('click', ()=>{
+  if(!controlAsistCursoSel) return;
+  generarInformeCursosPDF([controlAsistCursoSel]);
+});
+document.getElementById('control-asis-curso-pdf-btn-all').addEventListener('click', ()=>{
+  const cursoNames = Object.keys(controlAsistData.cursos||{}).sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+  if(!cursoNames.length){ showToast('No hay datos de Control de Asistencia para generar el informe.'); return; }
+  generarInformeCursosPDF(cursoNames);
 });
 
-function generarCartaApelacionPDF(curso, alumnosList){
+// Informe individual por alumno: una página por alumno con su detalle mes a mes.
+function generarInformesPorAlumnoPDF(alumnosList, sufijoArchivo){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageW = 210, marginL = 18;
+    const nombresMeses = Object.keys(CA_MES_A_CODIGO);
+    alumnosList.forEach((a, idx)=>{
+      if(idx>0) doc.addPage();
+      let y = caPdfLetterhead(doc, `Informe individual de asistencia — ${a.nombre}`);
+      doc.setFont('times','normal'); doc.setFontSize(10.5);
+      doc.text(`Curso: ${a.curso||'—'}` + (a.run?`   ·   RUN: ${a.run}`:'') + `   ·   Año ${currentYear}`, pageW/2, y, { align:'center' });
+      y += 12;
+
+      const cabecera = ['Mes','Días hábiles','Ausentes','Presente','% Asistencia'];
+      const colW = (pageW-2*marginL)/cabecera.length;
+      doc.setFont('times','bold'); doc.setFontSize(9.5);
+      cabecera.forEach((h,i)=>doc.text(h, marginL+i*colW, y));
+      y += 5;
+      doc.setDrawColor(200,200,200);
+      doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
+      doc.setFont('times','normal');
+      nombresMeses.forEach(mesLower=>{
+        const codigo = CA_MES_A_CODIGO[mesLower];
+        const m = (a.meses||{})[codigo];
+        if(!m) return;
+        const label = mesLower.charAt(0).toUpperCase()+mesLower.slice(1);
+        const vals = [label, String(m.habiles), String(m.ausentes), String(m.presente), m.pct!=null?m.pct+'%':'—'];
+        vals.forEach((v,i)=>doc.text(v, marginL+i*colW, y));
+        y += 6;
+      });
+      y += 5;
+      doc.setDrawColor(150,120,40);
+      doc.line(marginL, y-3, pageW-marginL, y-3);
+      doc.setFont('times','bold'); doc.setFontSize(10.5);
+      doc.text(`Total anual: ${a.anual.habiles} días hábiles · ${a.anual.ausentes} ausentes · ${a.anual.pct!=null?a.anual.pct+'%':'—'} de asistencia (${caEstadoLabel(a.anual.pct)})`, marginL, y+5);
+
+      caPdfFooter(doc);
+    });
+    doc.save(`informes-individuales-asistencia${sufijoArchivo?'-'+sufijoArchivo:''}-${currentYear}.pdf`);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar los informes individuales.');
+  }
+}
+
+document.getElementById('control-asis-alumnos-pdf-btn').addEventListener('click', ()=>{
+  if(!controlAsistCursoSel) return;
+  const c = (controlAsistData.cursos||{})[controlAsistCursoSel];
+  if(!c) return;
+  const activos = (c.alumnos||[]).filter(a=>!a.retirado).map(a=>({...a, curso:controlAsistCursoSel}));
+  if(!activos.length){ showToast('No hay alumnos activos en este curso.'); return; }
+  generarInformesPorAlumnoPDF(activos, normCurso(controlAsistCursoSel));
+});
+document.getElementById('control-asis-alumnos-pdf-btn-all').addEventListener('click', ()=>{
+  const cursos = controlAsistData.cursos || {};
+  const cursoNames = Object.keys(cursos).sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+  if(!cursoNames.length){ showToast('No hay datos de Control de Asistencia.'); return; }
+  const todos = [];
+  cursoNames.forEach(curso=>{
+    (cursos[curso].alumnos||[]).filter(a=>!a.retirado).forEach(a=>todos.push({...a, curso}));
+  });
+  if(!todos.length){ showToast('No hay alumnos activos.'); return; }
+  if(!confirm(`Esto generará un PDF con un informe individual por cada uno de los ${todos.length} alumnos activos de todos los cursos (un archivo de ${todos.length} páginas). Puede tardar unos segundos. ¿Continuar?`)) return;
+  generarInformesPorAlumnoPDF(todos, 'todos-los-cursos');
+});
+
+// cursoFijo: nombre de curso a usar en todas las cartas, o null para tomar
+// el curso de cada alumno desde a.cursoCarta (cartas de todo el colegio).
+function generarCartaApelacionPDF(cursoFijo, alumnosList){
   try{
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'mm', format:'a4' });
@@ -5705,6 +6097,7 @@ function generarCartaApelacionPDF(curso, alumnosList){
       doc.text(`Señor(a) Apoderado(a) de ${a.nombre}`, marginL, y);
       y += 6;
       doc.setFont('times','normal');
+      const curso = cursoFijo || a.cursoCarta || '';
       doc.text(`Curso: ${curso}` + (a.run?` · RUN alumno(a): ${a.run}`:''), marginL, y);
       y += 14;
 
@@ -5735,7 +6128,7 @@ function generarCartaApelacionPDF(curso, alumnosList){
     });
     const nombreArchivo = alumnosList.length===1
       ? `carta-apelacion-${alumnosList[0].nombre.replace(/\s+/g,'-')}.pdf`
-      : `cartas-apelacion-${normCurso(curso)}-${currentYear}.pdf`;
+      : `cartas-apelacion-${cursoFijo?normCurso(cursoFijo):'todos-los-cursos'}-${currentYear}.pdf`;
     doc.save(nombreArchivo);
   }catch(err){
     console.error(err);
@@ -5753,6 +6146,19 @@ document.getElementById('control-asis-cartas-btn').addEventListener('click', ()=
     return;
   }
   generarCartaApelacionPDF(controlAsistCursoSel, enRiesgo);
+});
+document.getElementById('control-asis-cartas-btn-all').addEventListener('click', ()=>{
+  const cursos = controlAsistData.cursos || {};
+  const enRiesgo = [];
+  Object.keys(cursos).forEach(curso=>{
+    (cursos[curso].alumnos||[]).filter(a=>!a.retirado && caColor(a.anual.pct)==='sem-rojo')
+      .forEach(a=>enRiesgo.push({...a, cursoCarta:curso}));
+  });
+  if(!enRiesgo.length){
+    showToast('No hay alumnos en riesgo (<85%) en ningún curso.');
+    return;
+  }
+  generarCartaApelacionPDF(null, enRiesgo);
 });
 
 /* ================================================================
