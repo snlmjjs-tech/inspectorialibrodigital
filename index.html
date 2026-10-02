@@ -790,6 +790,61 @@
   }
   .attend-summary-bar .n{font-family:'Libre Caslon Display',serif;font-size:20px;color:var(--navy-deep);margin-right:6px;}
 
+  /* ---------- ASISTENCIA: Control de Asistencia (semáforo anual) ---------- */
+  .control-asis-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:10px;
+  }
+  .control-asis-stats .control-asis-stat{
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:16px 18px;
+  }
+  .control-asis-stat .n{font-family:'Libre Caslon Display',serif;font-size:26px;color:var(--navy-deep);}
+  .control-asis-stat .n.sem-naranjo{color:var(--warn);}
+  .control-asis-stat .n.sem-rojo{color:#A8462F;}
+  .control-asis-stat .l{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  .control-asis-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+  .control-asis-note{font-size:12px;color:var(--ink-soft);margin:0 0 18px;}
+  .control-asis-cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+    gap:14px;
+  }
+  .control-asis-card{
+    all:unset;cursor:pointer;
+    display:block;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-top:4px solid var(--pending);
+    padding:16px 18px;
+    transition:box-shadow .15s;
+  }
+  .control-asis-card:hover{box-shadow:0 2px 10px rgba(11,18,64,.12);}
+  .control-asis-card.sem-verde{border-top-color:var(--ok);}
+  .control-asis-card.sem-naranjo{border-top-color:var(--warn);}
+  .control-asis-card.sem-rojo{border-top-color:#A8462F;}
+  .control-asis-card h4{font-family:'Libre Caslon Text',serif;font-weight:400;font-size:16px;margin:0 0 2px;color:var(--navy-deep);}
+  .control-asis-card .meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;}
+  .control-asis-card .pct{font-family:'Libre Caslon Display',serif;font-size:24px;color:var(--ink);}
+  .control-asis-card .pct.sem-verde{color:var(--ok);}
+  .control-asis-card .pct.sem-naranjo{color:var(--warn);}
+  .control-asis-card .pct.sem-rojo{color:#A8462F;}
+  .control-asis-card .dots{font-size:11px;color:var(--ink-soft);margin-top:8px;}
+  .control-asis-card .dots span{display:inline-flex;align-items:center;gap:4px;margin-right:12px;}
+  .control-asis-card .dots i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--ok);}
+  .control-asis-card .dots i.d-naranjo{background:var(--warn);}
+  .control-asis-card .dots i.d-rojo{background:#A8462F;}
+  .sem-pill{font-size:10.5px;padding:2px 8px;border-radius:2px;color:#fff;white-space:nowrap;}
+  .sem-pill.sem-verde{background:var(--ok);}
+  .sem-pill.sem-naranjo{background:var(--warn);}
+  .sem-pill.sem-rojo{background:#A8462F;}
+  .pct-cell.sem-verde{color:var(--ok);font-weight:600;}
+  .pct-cell.sem-naranjo{color:var(--warn);font-weight:600;}
+  .pct-cell.sem-rojo{color:#A8462F;font-weight:600;}
+
   .student-pick-list{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);}
   .student-pick-row{
     background:var(--paper);
@@ -1868,6 +1923,7 @@
       <button data-sub="historial">Historial</button>
       <button data-sub="resumen-alumno">Resumen por alumno</button>
       <button data-sub="reporte">Ver reporte</button>
+      <button data-sub="control">Control de Asistencia</button>
     </div>
 
     <!-- Tomar asistencia -->
@@ -1947,6 +2003,38 @@
         <tbody></tbody>
       </table>
       <div class="empty-state" id="asis-rep-empty" style="display:none;">No hay registros de asistencia para este período.</div>
+    </div>
+
+    <!-- Control de Asistencia (semáforo anual por alumno, carga desde Excel/SIGE) -->
+    <div class="subview" id="asis-sub-control">
+      <div class="control-asis-stats" id="control-asis-stats"></div>
+      <p class="control-asis-note" id="control-asis-retirados-note"></p>
+
+      <div class="control-asis-toolbar" id="control-asis-toolbar-cursos">
+        <input type="file" id="control-asis-file-input" accept=".xls,.xlsx" style="display:none;">
+        <button class="btn-ghost" id="control-asis-subir-btn">Subir base de datos (Excel)</button>
+        <button class="btn-ghost" id="control-asis-csv-btn">Exportar resumen CSV</button>
+        <button class="btn-ghost" id="control-asis-gerencial-btn">Descargar informe gerencial (PDF)</button>
+      </div>
+
+      <div class="control-asis-toolbar" id="control-asis-toolbar-detalle" style="display:none;">
+        <button class="btn-ghost" id="control-asis-volver-btn">&larr; Volver a cursos</button>
+        <span id="control-asis-curso-titulo" style="font-weight:600;color:var(--navy-deep);margin-right:8px;"></span>
+        <button class="btn-ghost" id="control-asis-curso-pdf-btn">Descargar informe del curso (PDF)</button>
+        <button class="btn-ghost" id="control-asis-cartas-btn">Generar cartas de apelación (PDF)</button>
+      </div>
+
+      <div class="empty-state" id="control-asis-empty" style="display:none;">
+        Aún no se ha importado la base de datos de asistencia (días hábiles/ausentes por alumno).<br>
+        Usa "Subir base de datos (Excel)" para cargar la planilla exportada desde SIGE.
+      </div>
+
+      <div class="control-asis-cards" id="control-asis-cards"></div>
+
+      <table class="data-table" id="control-asis-table" style="display:none;margin-top:14px;">
+        <thead><tr><th>Alumno</th><th>RUN</th><th>Días hábiles</th><th>Ausentes</th><th>% Asistencia</th><th>Estado</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
   </section>
 
@@ -4109,6 +4197,7 @@ document.getElementById('year-tabs').addEventListener('click', async (e)=>{
   });
   await loadMatricula();
   await loadAsistencia();
+  await loadControlAsistencia();
   await loadLibro();
   await loadAtrasos();
   await loadFichas();
@@ -4819,6 +4908,7 @@ document.getElementById('asis-subtabs').addEventListener('click', (e)=>{
   if(btn.dataset.sub === 'historial') renderAsisHistorial();
   if(btn.dataset.sub === 'resumen-alumno') renderAsisResumenAlumno();
   if(btn.dataset.sub === 'reporte') renderAsisReporte();
+  if(btn.dataset.sub === 'control') renderControlAsistencia();
 });
 
 // Un registro de asistencia normalmente es solo un texto ('presente',
@@ -5164,6 +5254,506 @@ function renderAsistenciaAll(){
   renderAsisHistorial();
   renderAsisResumenAlumno();
 }
+
+/* ================================================================
+   ASISTENCIA — CONTROL DE ASISTENCIA (semáforo anual por alumno)
+   Base de datos propia de días hábiles/ausentes por mes y por alumno,
+   importada desde la planilla que exporta SIGE (una hoja "Resumen" +
+   una hoja por curso). No se deriva de "Tomar asistencia": son los
+   números oficiales que usa el colegio para evaluar la asistencia
+   anual, así que se guardan tal como llegan del Excel.
+   ================================================================ */
+let controlAsistData = { cursos:{} };
+let controlAsistCursoSel = null;
+const CA_UMBRAL_VERDE = 90;
+const CA_UMBRAL_NARANJO = 85;
+const CA_MES_A_CODIGO = {
+  'enero':'01','febrero':'02','marzo':'03','abril':'04','mayo':'05','junio':'06',
+  'julio':'07','agosto':'08','septiembre':'09','octubre':'10','noviembre':'11','diciembre':'12'
+};
+
+async function loadControlAsistencia(){
+  try{
+    const result = await window.storage.get('control-asistencia-'+currentYear, true);
+    controlAsistData = result && result.value ? JSON.parse(result.value) : { cursos:{} };
+  }catch(err){
+    controlAsistData = { cursos:{} };
+  }
+}
+async function saveControlAsistencia(){
+  try{
+    await window.storage.set('control-asistencia-'+currentYear, JSON.stringify(controlAsistData), true);
+    return true;
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo guardar la base de datos de Control de Asistencia. Intenta nuevamente.');
+    return false;
+  }
+}
+
+function caEsc(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function caColor(pct){
+  if(pct === null || pct === undefined) return '';
+  if(pct >= CA_UMBRAL_VERDE) return 'sem-verde';
+  if(pct >= CA_UMBRAL_NARANJO) return 'sem-naranjo';
+  return 'sem-rojo';
+}
+function caEstadoLabel(pct){
+  if(pct === null || pct === undefined) return 'Sin datos';
+  if(pct >= CA_UMBRAL_VERDE) return 'Al día';
+  if(pct >= CA_UMBRAL_NARANJO) return 'Alerta';
+  return 'Riesgo';
+}
+
+// Lee la planilla exportada desde SIGE: una hoja por curso con columnas
+// agrupadas de a 4 (Hábiles / Ausentes / Presente / %) por mes, y un
+// último grupo "ANUAL" con los totales del año. La hoja "Resumen" se
+// ignora porque se recalcula sola a partir de estos datos.
+function parseControlAsistenciaWorkbook(wb){
+  const cursos = {};
+  let hojasLeidas = 0;
+  wb.SheetNames.forEach(sheetName=>{
+    if(normCurso(sheetName) === 'RESUMEN') return;
+    const sheet = wb.Sheets[sheetName];
+    const aoa = XLSX.utils.sheet_to_json(sheet, { header:1, raw:true, defval:null });
+    if(!aoa.length) return;
+    const headerRow = aoa[0] || [];
+    const grupos = [];
+    for(let c=4; c<headerRow.length; c+=4){
+      const label = headerRow[c];
+      if(!label) break;
+      grupos.push({ label:String(label).trim(), col:c });
+    }
+    if(!grupos.length) return;
+    const ultimoEsAnual = /anual/i.test(grupos[grupos.length-1].label);
+    const grupoAnual = ultimoEsAnual ? grupos[grupos.length-1] : null;
+    const gruposMeses = ultimoEsAnual ? grupos.slice(0,-1) : grupos;
+
+    const alumnos = [];
+    for(let r=3; r<aoa.length; r++){
+      const row = aoa[r];
+      if(!row || !row[0]) continue;
+      const nombre = String(row[0]).trim();
+      if(!nombre) continue;
+      const run = row[1] ? String(row[1]).trim() : '';
+      const retiradoRaw = row[2] ? String(row[2]).trim().toLowerCase() : 'no';
+      const retirado = retiradoRaw.startsWith('s');
+
+      const meses = {};
+      gruposMeses.forEach(g=>{
+        const codigo = CA_MES_A_CODIGO[g.label.toLowerCase()];
+        if(!codigo) return;
+        const habiles = Number(row[g.col]) || 0;
+        const ausentes = Number(row[g.col+1]) || 0;
+        const presente = row[g.col+2]!=null ? (Number(row[g.col+2])||0) : Math.max(0, habiles-ausentes);
+        const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
+        meses[codigo] = { habiles, ausentes, presente, pct };
+      });
+
+      let anual;
+      if(grupoAnual){
+        const habiles = Number(row[grupoAnual.col]) || 0;
+        const ausentes = Number(row[grupoAnual.col+1]) || 0;
+        const presente = row[grupoAnual.col+2]!=null ? (Number(row[grupoAnual.col+2])||0) : Math.max(0, habiles-ausentes);
+        const pct = habiles ? Math.round((presente/habiles)*1000)/10 : null;
+        anual = { habiles, ausentes, presente, pct };
+      } else {
+        const tot = Object.values(meses).reduce((a,m)=>({habiles:a.habiles+m.habiles, ausentes:a.ausentes+m.ausentes, presente:a.presente+m.presente}), {habiles:0,ausentes:0,presente:0});
+        anual = { ...tot, pct: tot.habiles ? Math.round((tot.presente/tot.habiles)*1000)/10 : null };
+      }
+
+      alumnos.push({ nombre, run, retirado, meses, anual });
+    }
+    if(alumnos.length){
+      cursos[sheetName] = { alumnos };
+      hojasLeidas++;
+    }
+  });
+  return { cursos, hojasLeidas };
+}
+
+function caResumenGeneral(){
+  const cursos = controlAsistData.cursos || {};
+  let totalAlumnos=0, totalRetirados=0, sumHabiles=0, sumPresente=0, alerta=0, riesgo=0;
+  Object.values(cursos).forEach(c=>{
+    (c.alumnos||[]).forEach(a=>{
+      if(a.retirado){ totalRetirados++; return; }
+      totalAlumnos++;
+      sumHabiles += a.anual.habiles||0;
+      sumPresente += a.anual.presente||0;
+      if(a.anual.pct!=null){
+        if(a.anual.pct>=CA_UMBRAL_NARANJO && a.anual.pct<CA_UMBRAL_VERDE) alerta++;
+        else if(a.anual.pct<CA_UMBRAL_NARANJO) riesgo++;
+      }
+    });
+  });
+  const promedio = sumHabiles ? Math.round((sumPresente/sumHabiles)*1000)/10 : null;
+  return { totalAlumnos, totalRetirados, promedio, alerta, riesgo };
+}
+
+function caCursoResumen(curso){
+  const c = (controlAsistData.cursos||{})[curso];
+  if(!c) return null;
+  const activos = (c.alumnos||[]).filter(a=>!a.retirado);
+  const retirados = (c.alumnos||[]).length - activos.length;
+  let sumHabiles=0, sumPresente=0, verde=0, naranjo=0, rojo=0;
+  activos.forEach(a=>{
+    sumHabiles += a.anual.habiles||0;
+    sumPresente += a.anual.presente||0;
+    const col = caColor(a.anual.pct);
+    if(col==='sem-verde') verde++;
+    else if(col==='sem-naranjo') naranjo++;
+    else if(col==='sem-rojo') rojo++;
+  });
+  const pct = sumHabiles ? Math.round((sumPresente/sumHabiles)*1000)/10 : null;
+  return { curso, nAlumnos: activos.length, retirados, pct, verde, naranjo, rojo };
+}
+
+function renderControlAsistencia(){
+  controlAsistCursoSel = null;
+  const cursos = controlAsistData.cursos || {};
+  const cursoNames = Object.keys(cursos).sort((a,b)=>cursoIndex(a)-cursoIndex(b) || a.localeCompare(b,'es'));
+
+  document.getElementById('control-asis-toolbar-cursos').style.display = 'flex';
+  document.getElementById('control-asis-toolbar-detalle').style.display = 'none';
+  document.getElementById('control-asis-table').style.display = 'none';
+
+  const resumen = caResumenGeneral();
+  document.getElementById('control-asis-stats').innerHTML = `
+    <div class="control-asis-stat"><div class="n">${resumen.totalAlumnos}</div><div class="l">Alumnos en ${currentYear}</div></div>
+    <div class="control-asis-stat"><div class="n ${caColor(resumen.promedio)}">${resumen.promedio!=null?resumen.promedio+'%':'—'}</div><div class="l">Promedio general</div></div>
+    <div class="control-asis-stat"><div class="n sem-naranjo">${resumen.alerta}</div><div class="l">En alerta (85–89,9%)</div></div>
+    <div class="control-asis-stat"><div class="n sem-rojo">${resumen.riesgo}</div><div class="l">En riesgo (&lt;85%)</div></div>
+  `;
+  document.getElementById('control-asis-retirados-note').textContent = resumen.totalRetirados
+    ? `${resumen.totalRetirados} alumno(s) retirado(s) durante el año (no se incluyen en los promedios).`
+    : '';
+
+  const cardsEl = document.getElementById('control-asis-cards');
+  const emptyEl = document.getElementById('control-asis-empty');
+  if(!cursoNames.length){
+    cardsEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  cardsEl.innerHTML = cursoNames.map(curso=>{
+    const r = caCursoResumen(curso);
+    const color = caColor(r.pct);
+    return `
+    <button type="button" class="control-asis-card ${color}" data-curso="${caEsc(curso)}">
+      <h4>${caEsc(curso)}</h4>
+      <div class="meta">${r.nAlumnos} alumnos${r.retirados?` · ${r.retirados} retirado(s)`:''}</div>
+      <div class="pct ${color}">${r.pct!=null?r.pct+'%':'—'}</div>
+      <div class="dots">
+        <span class="d-verde"><i></i>${r.verde}</span>
+        <span class="d-naranjo"><i class="d-naranjo"></i>${r.naranjo}</span>
+        <span class="d-rojo"><i class="d-rojo"></i>${r.rojo}</span>
+      </div>
+    </button>`;
+  }).join('');
+  cardsEl.querySelectorAll('.control-asis-card').forEach(card=>{
+    card.addEventListener('click', ()=>renderControlAsistCursoDetalle(card.dataset.curso));
+  });
+}
+
+function renderControlAsistCursoDetalle(curso){
+  controlAsistCursoSel = curso;
+  const c = (controlAsistData.cursos||{})[curso];
+  if(!c) return;
+
+  document.getElementById('control-asis-toolbar-cursos').style.display = 'none';
+  document.getElementById('control-asis-toolbar-detalle').style.display = 'flex';
+  document.getElementById('control-asis-cards').innerHTML = '';
+  document.getElementById('control-asis-empty').style.display = 'none';
+  document.getElementById('control-asis-curso-titulo').textContent = curso;
+
+  const alumnos = [...(c.alumnos||[])].sort((a,b)=>{
+    if(a.retirado !== b.retirado) return a.retirado ? 1 : -1;
+    const pa = a.anual.pct==null ? 999 : a.anual.pct;
+    const pb = b.anual.pct==null ? 999 : b.anual.pct;
+    return pa - pb || a.nombre.localeCompare(b.nombre,'es');
+  });
+
+  const table = document.getElementById('control-asis-table');
+  table.style.display = 'table';
+  table.querySelector('tbody').innerHTML = alumnos.map(a=>{
+    const color = caColor(a.anual.pct);
+    return `
+    <tr class="${a.retirado?'retirado':''}">
+      <td>${caEsc(a.nombre)}</td>
+      <td>${caEsc(a.run)}</td>
+      <td>${a.anual.habiles}</td>
+      <td>${a.anual.ausentes}</td>
+      <td class="pct-cell ${color}">${a.anual.pct!=null?a.anual.pct+'%':'—'}</td>
+      <td>${a.retirado?'<span class="badge retirado">Retirado</span>':`<span class="sem-pill ${color}">${caEstadoLabel(a.anual.pct)}</span>`}</td>
+      <td>${(!a.retirado && color==='sem-rojo') ? `<button class="task-del" data-carta="${caEsc(a.nombre)}" style="color:var(--navy);">Carta</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+
+  table.querySelectorAll('[data-carta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const alumno = alumnos.find(a=>a.nombre===btn.dataset.carta);
+      if(alumno) generarCartaApelacionPDF(curso, [alumno]);
+    });
+  });
+}
+
+document.getElementById('control-asis-volver-btn').addEventListener('click', renderControlAsistencia);
+
+document.getElementById('control-asis-subir-btn').addEventListener('click', ()=>{
+  document.getElementById('control-asis-file-input').click();
+});
+document.getElementById('control-asis-file-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type:'array', cellDates:true });
+    const parsed = parseControlAsistenciaWorkbook(wb);
+    if(!parsed.hojasLeidas){
+      showToast('No se encontraron hojas de curso reconocibles (ej. 1°A, 2°C...) con el formato esperado en ese archivo.');
+      return;
+    }
+    const nAlumnos = Object.values(parsed.cursos).reduce((n,c)=>n+c.alumnos.length,0);
+    const nCursosPrevios = Object.keys(controlAsistData.cursos||{}).length;
+    const msg = nCursosPrevios
+      ? `Se leyeron ${parsed.hojasLeidas} cursos con ${nAlumnos} alumnos.\n\nEsto REEMPLAZARÁ la base de datos de Control de Asistencia del año ${currentYear} que ya está guardada (${nCursosPrevios} cursos).\n\n¿Confirmas que quieres reemplazarla con este archivo?`
+      : `Se leyeron ${parsed.hojasLeidas} cursos con ${nAlumnos} alumnos. ¿Confirmas que quieres guardar esta base de datos para el año ${currentYear}?`;
+    if(!confirm(msg)) return;
+
+    const backup = controlAsistData;
+    controlAsistData = { cursos: parsed.cursos };
+    const ok = await saveControlAsistencia();
+    if(!ok){
+      controlAsistData = backup;
+      return;
+    }
+    showToast(`Base de datos importada: ${parsed.hojasLeidas} cursos, ${nAlumnos} alumnos ✓`);
+    renderControlAsistencia();
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo leer ese archivo. Verifica que sea la planilla exportada desde SIGE.');
+  }
+});
+
+document.getElementById('control-asis-csv-btn').addEventListener('click', ()=>{
+  const cursos = controlAsistData.cursos || {};
+  const cursoNames = Object.keys(cursos).sort((a,b)=>cursoIndex(a)-cursoIndex(b));
+  if(!cursoNames.length){ showToast('No hay datos de Control de Asistencia para exportar.'); return; }
+  const rows = [['Curso','Alumnos activos','Retirados','Promedio anual %','Al día (>=90%)','Alerta (85-89,9%)','Riesgo (<85%)']];
+  cursoNames.forEach(curso=>{
+    const r = caCursoResumen(curso);
+    rows.push([curso, r.nAlumnos, r.retirados, r.pct!=null?r.pct:'', r.verde, r.naranjo, r.rojo]);
+  });
+  const csv = rows.map(row=>row.map(v=>{
+    const s = String(v);
+    return /[",;\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(';')).join('\n');
+  const blob = new Blob(['﻿'+csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `control-asistencia-resumen-${currentYear}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+function caPdfLetterhead(doc, titulo){
+  const pageW = 210;
+  let y = 18;
+  try{
+    const logoImg = document.querySelector('.sidebar-head img');
+    if(logoImg && logoImg.src) doc.addImage(logoImg.src, 'PNG', 16, y-6, 20, 27);
+  }catch(err){ /* si falla el logo, se genera igual sin imagen */ }
+  doc.setFont('times','bold');
+  doc.setFontSize(13);
+  doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+  y += 6;
+  doc.setFont('times','normal');
+  doc.setFontSize(10.5);
+  doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+  y += 12;
+  doc.setDrawColor(180,150,60);
+  doc.setLineWidth(0.6);
+  doc.line(16, y, pageW-16, y);
+  y += 9;
+  doc.setFont('times','bold');
+  doc.setFontSize(14);
+  const contentW = pageW - 32;
+  const lineas = doc.splitTextToSize(titulo, contentW);
+  doc.text(lineas, pageW/2, y, { align:'center' });
+  y += lineas.length*6 + 8;
+  return y;
+}
+function caPdfFooter(doc){
+  doc.setFontSize(8);
+  doc.setTextColor(140,140,140);
+  doc.text(`Documento generado por la plataforma interna de Inspectoría General · Emitido ${new Date().toLocaleString('es-CL')}`, 105, 292, { align:'center' });
+  doc.setTextColor(0,0,0);
+}
+
+document.getElementById('control-asis-gerencial-btn').addEventListener('click', ()=>{
+  try{
+    const cursos = controlAsistData.cursos || {};
+    const cursoNames = Object.keys(cursos);
+    if(!cursoNames.length){ showToast('No hay datos de Control de Asistencia para generar el informe.'); return; }
+    const filas = cursoNames.map(c=>caCursoResumen(c)).sort((a,b)=>(a.pct??999)-(b.pct??999));
+    const resumen = caResumenGeneral();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageW = 210, marginL = 16;
+    let y = caPdfLetterhead(doc, `Informe gerencial de asistencia — año ${currentYear}`);
+
+    doc.setFont('times','normal');
+    doc.setFontSize(10.5);
+    doc.text(`Promedio general: ${resumen.promedio!=null?resumen.promedio+'%':'—'}   ·   En alerta: ${resumen.alerta}   ·   En riesgo: ${resumen.riesgo}   ·   Alumnos: ${resumen.totalAlumnos}`, pageW/2, y, { align:'center' });
+    y += 12;
+
+    const cabecera = ['Curso','Alumnos','Retirados','% Anual','Al día','Alerta','Riesgo'];
+    const colW = (pageW-32)/cabecera.length;
+    doc.setFont('times','bold'); doc.setFontSize(9.5);
+    cabecera.forEach((h,i)=>doc.text(h, marginL+i*colW, y));
+    y += 5;
+    doc.setDrawColor(200,200,200);
+    doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
+    doc.setFont('times','normal');
+    filas.forEach(r=>{
+      if(y>278){ doc.addPage(); y=18; }
+      const vals = [r.curso, r.nAlumnos, r.retirados, r.pct!=null?r.pct+'%':'—', r.verde, r.naranjo, r.rojo];
+      vals.forEach((v,i)=>doc.text(String(v), marginL+i*colW, y));
+      y += 6;
+    });
+
+    caPdfFooter(doc);
+    doc.save(`informe-gerencial-asistencia-${currentYear}.pdf`);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el informe gerencial.');
+  }
+});
+
+document.getElementById('control-asis-curso-pdf-btn').addEventListener('click', ()=>{
+  if(!controlAsistCursoSel) return;
+  try{
+    const curso = controlAsistCursoSel;
+    const c = (controlAsistData.cursos||{})[curso];
+    if(!c) return;
+    const alumnos = [...(c.alumnos||[])].sort((a,b)=>{
+      if(a.retirado !== b.retirado) return a.retirado?1:-1;
+      const pa=a.anual.pct==null?999:a.anual.pct, pb=b.anual.pct==null?999:b.anual.pct;
+      return pa-pb || a.nombre.localeCompare(b.nombre,'es');
+    });
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageW = 210, marginL = 16;
+    let y = caPdfLetterhead(doc, `Informe de asistencia anual — ${curso} (${currentYear})`);
+
+    const cabecera = ['Alumno','RUN','Días hábiles','Ausentes','% Anual','Estado'];
+    const anchos = [68, 30, 24, 22, 20, 24];
+    doc.setFont('times','bold'); doc.setFontSize(9);
+    let x = marginL;
+    cabecera.forEach((h,i)=>{ doc.text(h, x, y); x += anchos[i]; });
+    y += 5;
+    doc.setDrawColor(200,200,200);
+    doc.line(marginL, y-3.5, pageW-marginL, y-3.5);
+    doc.setFont('times','normal');
+    alumnos.forEach(a=>{
+      if(y>278){ doc.addPage(); y=18; }
+      const estado = a.retirado ? 'Retirado' : caEstadoLabel(a.anual.pct);
+      const vals = [a.nombre, a.run, String(a.anual.habiles), String(a.anual.ausentes), a.anual.pct!=null?a.anual.pct+'%':'—', estado];
+      let xx = marginL;
+      vals.forEach((v,i)=>{ doc.text(String(v), xx, y, {maxWidth:anchos[i]-2}); xx += anchos[i]; });
+      y += 6;
+    });
+
+    caPdfFooter(doc);
+    doc.save(`informe-asistencia-${normCurso(curso)}-${currentYear}.pdf`);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar el informe del curso.');
+  }
+});
+
+function generarCartaApelacionPDF(curso, alumnosList){
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    const pageW = 210, marginL = 25, marginR = 25, contentW = pageW - marginL - marginR;
+    alumnosList.forEach((a, idx)=>{
+      if(idx>0) doc.addPage();
+      let y = 20;
+      try{
+        const logoImg = document.querySelector('.sidebar-head img');
+        if(logoImg && logoImg.src) doc.addImage(logoImg.src, 'PNG', marginL, y-4, 18, 24);
+      }catch(err){}
+      doc.setFont('times','bold'); doc.setFontSize(12);
+      doc.text('INSTITUTO COMERCIAL ALBERTO VALENZUELA LLANOS', pageW/2, y, { align:'center' });
+      y += 6;
+      doc.setFont('times','normal'); doc.setFontSize(10);
+      doc.text('San Fernando — Inspectoría General', pageW/2, y, { align:'center' });
+      y += 16;
+
+      doc.setFont('times','normal'); doc.setFontSize(11);
+      doc.text(`San Fernando, ${new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}`, pageW-marginR, y, { align:'right' });
+      y += 14;
+
+      doc.setFont('times','bold'); doc.setFontSize(11);
+      doc.text(`Señor(a) Apoderado(a) de ${a.nombre}`, marginL, y);
+      y += 6;
+      doc.setFont('times','normal');
+      doc.text(`Curso: ${curso}` + (a.run?` · RUN alumno(a): ${a.run}`:''), marginL, y);
+      y += 14;
+
+      doc.setFont('times','bold');
+      doc.text('Carta de notificación y apelación por inasistencia', pageW/2, y, { align:'center' });
+      y += 12;
+
+      const texto = `Junto con saludar, Inspectoría General de nuestro establecimiento informa a usted que, de acuerdo al registro oficial de asistencia del año escolar ${currentYear}, su pupilo(a) ${a.nombre} presenta un porcentaje de asistencia anual de ${a.anual.pct!=null?a.anual.pct+'%':'—'} (${a.anual.ausentes} día(s) ausente(s) de ${a.anual.habiles} día(s) hábiles registrados), encontrándose por debajo del 85% de asistencia mínima exigido por la normativa vigente del Ministerio de Educación.\n\nEsta situación pone en riesgo la promoción de curso del alumno(a), según lo establecido en el reglamento de evaluación del establecimiento.\n\nSe solicita a usted presentarse en Inspectoría General dentro de los próximos 10 días hábiles para justificar las inasistencias registradas (con certificados médicos u otros documentos que correspondan) o, en su defecto, presentar una apelación formal por escrito exponiendo los motivos de la inasistencia, de manera de evaluar en conjunto con el equipo directivo la situación académica del alumno(a).\n\nAgradecemos su oportuna gestión, quedando a su disposición para cualquier consulta.`;
+      doc.setFont('times','normal'); doc.setFontSize(10.5);
+      const lineas = doc.splitTextToSize(texto, contentW);
+      doc.text(lineas, marginL, y);
+      y += lineas.length*5.5 + 20;
+
+      if(y > 250){ doc.addPage(); y = 30; }
+      doc.setFont('times','normal'); doc.setFontSize(10.5);
+      doc.text('_________________________________', marginL, y);
+      y += 5;
+      doc.text('Inspectoría General', marginL, y);
+      y += 14;
+      doc.text('_________________________________', marginL, y);
+      y += 5;
+      doc.text('Firma Apoderado(a) — Toma de conocimiento', marginL, y);
+
+      doc.setFontSize(8);
+      doc.setTextColor(140,140,140);
+      doc.text(`Documento generado por la plataforma interna de Inspectoría General · Emitido ${new Date().toLocaleString('es-CL')}`, pageW/2, 292, { align:'center' });
+      doc.setTextColor(0,0,0);
+    });
+    const nombreArchivo = alumnosList.length===1
+      ? `carta-apelacion-${alumnosList[0].nombre.replace(/\s+/g,'-')}.pdf`
+      : `cartas-apelacion-${normCurso(curso)}-${currentYear}.pdf`;
+    doc.save(nombreArchivo);
+  }catch(err){
+    console.error(err);
+    showToast('No se pudo generar la(s) carta(s) de apelación.');
+  }
+}
+
+document.getElementById('control-asis-cartas-btn').addEventListener('click', ()=>{
+  if(!controlAsistCursoSel) return;
+  const c = (controlAsistData.cursos||{})[controlAsistCursoSel];
+  if(!c) return;
+  const enRiesgo = (c.alumnos||[]).filter(a=>!a.retirado && caColor(a.anual.pct)==='sem-rojo');
+  if(!enRiesgo.length){
+    showToast('No hay alumnos en riesgo (<85%) en este curso.');
+    return;
+  }
+  generarCartaApelacionPDF(controlAsistCursoSel, enRiesgo);
+});
 
 /* ================================================================
    LIBRO DIGITAL DEL ALUMNO
@@ -7476,6 +8066,7 @@ async function init(){
   await loadAuth();
   await loadMatricula();
   await loadAsistencia();
+  await loadControlAsistencia();
   await loadLibro();
   await loadAtrasos();
   await loadFichas();
