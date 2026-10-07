@@ -1812,6 +1812,10 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-4z"/><path d="M12 8v5"/><circle cx="12" cy="16.2" r="0.6" fill="currentColor" stroke="none"/></svg>
       Accidente Escolar
     </button>
+    <button data-view="director" id="nav-director" style="display:none;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19h16"/><path d="M7 19v-6M12 19V9M17 19v-9"/></svg>
+      Resumen general
+    </button>
   </nav>
   <div class="sidebar-foot" style="border-bottom:1px solid rgba(255,255,255,0.14);">
     Plataforma de control interno para uso exclusivo del equipo de Inspectoría General.
@@ -1855,6 +1859,47 @@
           <p id="welcome-text-p">Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando.</p>
           <p>Lo que se ingrese queda guardado en esta plataforma y es visible para todo el equipo que la utilice.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RESUMEN GENERAL (acceso restringido — Dirección) ================= -->
+  <section id="view-director" class="view">
+    <div class="topbar">
+      <div>
+        <h1>Resumen general</h1>
+        <div class="sub">Visión general de atrasos y suspensiones — año <span id="director-year-label">2026</span></div>
+      </div>
+    </div>
+
+    <div class="resumen-total" id="director-stats"></div>
+
+    <div class="home-grid" style="margin-top:22px;">
+      <div class="panel">
+        <h2>Atrasos por mes</h2>
+        <div class="body">
+          <canvas id="director-atrasos-canvas" style="width:100%;height:220px;display:block;"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Cursos con más atrasos</h2>
+        <div class="body" style="padding:0;">
+          <table class="data-table" id="director-top-cursos">
+            <thead><tr><th>Curso</th><th>Atrasos</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:22px;">
+      <h2>Control de Atrasos</h2>
+      <div class="body">
+        <p style="margin:0 0 16px;font-size:13.5px;color:var(--ink-soft);">Abre la herramienta de Control de Atrasos en una pestaña nueva.</p>
+        <button class="btn-primary" id="director-control-atrasos-btn">
+          Abrir Control de Atrasos
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </button>
       </div>
     </div>
   </section>
@@ -3695,28 +3740,104 @@ function enterApp(){
   document.getElementById('welcome-text-p').textContent =
     'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando.';
   applyRoleVisibility();
+
+  // Saludo de voz al entrar, solo para el acceso de Dirección (pedido explícito).
+  if(currentUser.cargo === 'Director' && 'speechSynthesis' in window){
+    try{
+      const saludo = new SpeechSynthesisUtterance('Hola ' + currentUser.nombre.split(' ')[0]);
+      saludo.lang = 'es-CL';
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(saludo);
+    }catch(err){
+      console.error('No se pudo reproducir el saludo de voz.', err);
+    }
+  }
+}
+
+function irAVista(view){
+  document.querySelectorAll('nav.primary button').forEach(b=>b.classList.remove('active'));
+  const btn = document.querySelector(`nav.primary button[data-view="${view}"]`);
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
 }
 
 function applyRoleVisibility(){
   const hojaBtn = document.getElementById('nav-hoja');
   if(!hojaBtn) return;
   const isIG = currentUser && currentUser.cargo === 'Inspector General';
+  const isDirector = currentUser && currentUser.cargo === 'Director';
   hojaBtn.style.display = isIG ? 'flex' : 'none';
-  // Si la Hoja de trabajo estaba activa y el usuario no es Inspector General, redirige a Inicio.
-  if(!isIG && document.getElementById('view-hoja').classList.contains('active')){
-    document.querySelectorAll('nav.primary button').forEach(b=>b.classList.remove('active'));
-    document.querySelector('nav.primary button[data-view="home"]').classList.add('active');
-    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    document.getElementById('view-home').classList.add('active');
+
+  // Acceso de Dirección: ve solamente su "Resumen general" — nada de matrícula,
+  // libro digital (anotaciones), ni el resto de la gestión operativa. Pedido
+  // explícito: que el director vea únicamente un informe general.
+  const VISTAS_OPERATIVAS = ['home','matricula','asistencia','libro','atrasos','staff','retiro','accidente'];
+  VISTAS_OPERATIVAS.forEach(v=>{
+    const btn = document.querySelector(`nav.primary button[data-view="${v}"]`);
+    if(btn) btn.style.display = isDirector ? 'none' : 'flex';
+  });
+  const directorBtn = document.getElementById('nav-director');
+  if(directorBtn) directorBtn.style.display = isDirector ? 'flex' : 'none';
+
+  if(isDirector){
+    if(!document.getElementById('view-director').classList.contains('active')) irAVista('director');
+    renderDirectorResumen();
+  } else if(!isIG && document.getElementById('view-hoja').classList.contains('active')){
+    // Si la Hoja de trabajo estaba activa y el usuario no es Inspector General, redirige a Inicio.
+    irAVista('home');
+  } else if(document.getElementById('view-director').classList.contains('active')){
+    // Si quien entra ahora no es Dirección pero la vista activa quedó en Resumen general, vuelve a Inicio.
+    irAVista('home');
   }
 
   // Control de Atrasos (herramienta aparte, en otro sitio) — acceso solo
-  // para este grupo de funcionarios, a pedido explícito.
+  // para este grupo de funcionarios, a pedido explícito. Dirección ya tiene
+  // su propio botón hacia la misma herramienta dentro de "Resumen general".
   const CONTROL_ATRASOS_SLUGS = ['claudio-valenzuela-fuentes','luis-cadiz-fuenzalida','sandra-bravo-cornejo','alvaro-lisboa-roa','raul-lopez-ortega','cristian-barahona'];
   const controlBtn = document.getElementById('nav-controlatrasos');
   if(controlBtn){
     const puedeVerControlAtrasos = currentUser && CONTROL_ATRASOS_SLUGS.includes(currentUser.slug);
-    controlBtn.style.display = puedeVerControlAtrasos ? 'flex' : 'none';
+    controlBtn.style.display = (puedeVerControlAtrasos && !isDirector) ? 'flex' : 'none';
+  }
+}
+document.getElementById('director-control-atrasos-btn').addEventListener('click', ()=>{
+  window.open('https://snlmjjs-tech.github.io/CONTROLATRASOS/', '_blank', 'noopener');
+});
+function renderDirectorResumen(){
+  const atrasos = atrasosData || [];
+  const susp = suspensionesData || [];
+  const yearLabel = document.getElementById('director-year-label');
+  if(yearLabel) yearLabel.textContent = currentYear;
+
+  const alumnosConAtraso = new Set(atrasos.map(a=>a.studentId)).size;
+  const alumnosSuspendidos = new Set(susp.map(s=>s.studentId)).size;
+  document.getElementById('director-stats').innerHTML = `
+    <div class="item"><div class="n">${atrasos.length}</div><div class="l">Atrasos registrados</div></div>
+    <div class="item"><div class="n">${alumnosConAtraso}</div><div class="l">Alumnos con atrasos</div></div>
+    <div class="item"><div class="n">${susp.length}</div><div class="l">Suspensiones registradas</div></div>
+    <div class="item"><div class="n">${alumnosSuspendidos}</div><div class="l">Alumnos suspendidos</div></div>
+  `;
+
+  const porMes = Array(12).fill(0);
+  atrasos.forEach(a=>{
+    if(!a.fecha) return;
+    const m = parseInt(a.fecha.slice(5,7),10) - 1;
+    if(m>=0 && m<12) porMes[m]++;
+  });
+  const canvas = document.getElementById('director-atrasos-canvas');
+  if(canvas && typeof window.drawBarChart === 'function'){
+    window.drawBarChart(canvas, MESES_LABEL.map((l,i)=>[l, porMes[i]]));
+  }
+
+  const porCurso = {};
+  atrasos.forEach(a=>{ if(a.curso) porCurso[a.curso] = (porCurso[a.curso]||0)+1; });
+  const topCursos = Object.entries(porCurso).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const tbody = document.querySelector('#director-top-cursos tbody');
+  if(tbody){
+    tbody.innerHTML = topCursos.length
+      ? topCursos.map(([curso,n])=>`<tr><td>${curso}</td><td>${n}</td></tr>`).join('')
+      : '<tr><td colspan="2" style="color:var(--ink-soft);">Sin registros este año.</td></tr>';
   }
 }
 document.getElementById('nav-controlatrasos').addEventListener('click', ()=>{
@@ -4336,6 +4457,7 @@ document.getElementById('year-tabs').addEventListener('click', async (e)=>{
   renderAtrasos();
   renderFichas();
   renderHoja();
+  renderDirectorResumen();
 });
 
 document.getElementById('matricula-subtabs').addEventListener('click', (e)=>{
@@ -8491,6 +8613,7 @@ async function init(){
   renderLibro();
   renderAtrasos();
   renderHoja();
+  renderDirectorResumen();
 }
 init();
 </script>
