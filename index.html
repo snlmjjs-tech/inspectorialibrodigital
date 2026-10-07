@@ -3731,6 +3731,13 @@ document.getElementById('login-form').addEventListener('submit', async (e)=>{
   enterApp();
 });
 
+// Compara el cargo de un funcionario sin importar mayúsculas/minúsculas ni
+// espacios de más (el cargo es texto libre al crear el funcionario, así que
+// "Director", "DIRECTOR" o "director " deben tratarse todos como el mismo).
+function esCargo(cargo, objetivo){
+  return (cargo||'').trim().toLowerCase() === objetivo.toLowerCase();
+}
+
 function enterApp(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').classList.add('active');
@@ -3742,7 +3749,7 @@ function enterApp(){
   applyRoleVisibility();
 
   // Saludo de voz al entrar, solo para el acceso de Dirección (pedido explícito).
-  if(currentUser.cargo === 'Director' && 'speechSynthesis' in window){
+  if(currentUser && esCargo(currentUser.cargo, 'Director') && 'speechSynthesis' in window){
     try{
       const saludo = new SpeechSynthesisUtterance('Hola ' + currentUser.nombre.split(' ')[0]);
       saludo.lang = 'es-CL';
@@ -3765,8 +3772,8 @@ function irAVista(view){
 function applyRoleVisibility(){
   const hojaBtn = document.getElementById('nav-hoja');
   if(!hojaBtn) return;
-  const isIG = currentUser && currentUser.cargo === 'Inspector General';
-  const isDirector = currentUser && currentUser.cargo === 'Director';
+  const isIG = currentUser && esCargo(currentUser.cargo, 'Inspector General');
+  const isDirector = currentUser && esCargo(currentUser.cargo, 'Director');
   hojaBtn.style.display = isIG ? 'flex' : 'none';
 
   // Acceso de Dirección: ve solamente su "Resumen general" — nada de matrícula,
@@ -6991,7 +6998,7 @@ function buildCartaCitacionPDF(susp, student){
   y += 5;
   doc.setFontSize(8.5);
   doc.setTextColor(110,110,110);
-  const nombreIG = (currentUser && currentUser.cargo === 'Inspector General') ? currentUser.nombre : '';
+  const nombreIG = (currentUser && esCargo(currentUser.cargo, 'Inspector General')) ? currentUser.nombre : '';
   if(nombreIG) doc.text(nombreIG, 154, y, { align:'center' });
   doc.setTextColor(0,0,0);
 
@@ -8308,7 +8315,7 @@ function buildActaBajaPDF(record){
   y += 5;
   doc.setFontSize(8.5);
   doc.setTextColor(110,110,110);
-  const nombreIG = (currentUser && currentUser.cargo === 'Inspector General') ? currentUser.nombre : '';
+  const nombreIG = (currentUser && esCargo(currentUser.cargo, 'Inspector General')) ? currentUser.nombre : '';
   if(nombreIG) doc.text(nombreIG, pageW-marginL-40, y, { align:'center' });
   doc.setTextColor(0,0,0);
 
