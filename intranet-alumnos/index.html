@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INCOSAF · intranet alumnos</title>
+<meta name="theme-color" content="#fdfbf9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Geist:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#fdfbf9; --charcoal:#171717; --cocoa:#2b1a07; --dew:#f7efe9;
+  --orange:#ff6f1e; --sienna:#ce500a;
+  --sky:#3b82f6; --pink:#ff66cf; --sprout:#22c55e;
+  --font-display:'Fraunces',ui-serif,Georgia,serif;
+  --font-ui:'Geist',ui-sans-serif,system-ui,sans-serif;
+  --shadow-card:rgba(0,0,0,.06) 0 2px 20px 0;
+  --shadow-btn:rgba(0,0,0,.25) 0 1px 2px 0;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--charcoal);font-family:var(--font-display);font-size:18px;line-height:1.5;overflow-x:hidden}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--cocoa);text-transform:lowercase;margin:0;letter-spacing:normal}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+button,input,select{font:inherit;color:inherit}
+
+/* header */
+header.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;max-width:1200px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--charcoal)}
+.brand span{font-family:var(--font-ui);font-weight:500;font-size:16px;letter-spacing:.02em}
+.pill{display:inline-block;background:var(--cream);border:1.5px solid var(--charcoal);border-radius:20px;padding:10px 28px;font-size:16px;font-weight:500;color:var(--charcoal);cursor:pointer;box-shadow:var(--shadow-btn);text-decoration:none;text-transform:lowercase}
+.pill:hover{background:var(--cream);transform:translateY(-1px)}
+.pill.sm{padding:6px 16px;font-size:15px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:32px 24px 24px;max-width:1200px;margin:0 auto}
+.display{font-size:clamp(48px,9vw,104px);line-height:1.08;word-break:break-word}
+.hand{font-size:24px;color:var(--orange);font-weight:400;transform:rotate(-2deg);display:inline-block;margin:20px 0 4px}
+.hero p{font-size:20px;color:var(--cocoa);max-width:30em;margin:8px 0 24px}
+mark.marker{background:none;color:var(--orange);position:relative;white-space:nowrap}
+mark.marker::after{content:'';position:absolute;left:-2px;right:-2px;bottom:-4px;height:6px;background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5 C 15 1, 25 7, 40 4 S 70 2, 99 5' fill='none' stroke='%23ff6f1e' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E")}
+.note{font-size:16px;color:var(--cocoa);margin-top:8px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap}
+
+/* notebook */
+.stage{position:relative;min-height:420px;display:flex;align-items:center;justify-content:center}
+.notebook{width:min(300px,70vw);aspect-ratio:3/4;background:#7a4a24;border-radius:14px 22px 22px 14px;transform:rotate(6deg);position:relative;box-shadow:var(--shadow-card);border:2px solid #4a2a10}
+.notebook::before{content:'';position:absolute;left:0;top:0;bottom:0;width:22px;background:#5e3516;border-radius:14px 0 0 14px}
+.notebook::after{content:'';position:absolute;right:34px;top:-2px;bottom:-2px;width:14px;background:#2b1a07;opacity:.85}
+.label{position:absolute;left:52px;top:30%;width:170px;background:#fff;border:1px solid var(--charcoal);border-radius:8px;padding:10px 12px;font-size:16px;line-height:1.7;transform:rotate(-3deg)}
+.label b{font-weight:600;display:block;font-size:11px;font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.06em;color:#777;line-height:1.2;margin-top:4px}
+.label b:first-child{margin-top:0}
+.label span{display:block;font-size:19px;border-bottom:1px dashed #bbb;min-height:26px}
+.pencil{position:absolute;bottom:34px;right:-14px;width:150px;height:14px;background:var(--sky);border:2px solid var(--charcoal);border-radius:3px 8px 8px 3px;transform:rotate(-14deg)}
+.pencil::after{content:'';position:absolute;right:-16px;top:-2px;border-left:16px solid #f2d3a5;border-top:7px solid transparent;border-bottom:7px solid transparent}
+.sticker{position:absolute;width:76px;height:76px}
+.hand-arrow{position:absolute;left:-20px;bottom:30px;width:90px}
+.hand-cap{position:absolute;left:-30px;bottom:-4px;color:var(--orange);font-size:20px;transform:rotate(-4deg)}
+
+/* nav */
+nav.tabs{position:sticky;top:0;z-index:5;background:var(--cream);border-top:1.5px solid var(--charcoal);border-bottom:1.5px solid var(--charcoal);margin-top:24px}
+nav.tabs .wrap{display:flex;gap:8px;overflow-x:auto;padding:12px 24px}
+.tab{flex:none;background:var(--cream);border:1.5px solid var(--charcoal);border-radius:20px;padding:6px 20px;font-size:16px;cursor:pointer;text-transform:lowercase}
+.tab[aria-current=true]{background:var(--charcoal);color:var(--cream)}
+
+/* content */
+main{max-width:1200px;margin:0 auto;padding:64px 24px}
+section.view{display:none}
+section.view.on{display:block}
+section.view>h2{font-size:clamp(36px,5vw,46px);line-height:1.2;margin-bottom:8px}
+.sub{font-size:20px;color:var(--cocoa);margin:0 0 32px}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{background:var(--dew);border:1.5px solid var(--charcoal);border-radius:12px;padding:32px;box-shadow:var(--shadow-card)}
+.card.plain{background:var(--cream)}
+.card h3{font-size:28px;line-height:1.4;margin-bottom:8px}
+.card p{margin:0;font-size:18px}
+.tag{display:inline-block;border:1.5px solid var(--sprout);border-radius:20px;padding:2px 14px;font-size:14px;font-family:var(--font-ui);margin-bottom:12px;background:var(--cream)}
+.tag.o{border-color:var(--charcoal)}
+.meta{font-family:var(--font-ui);font-size:14px;color:#555;margin-bottom:6px}
+.card a{color:var(--charcoal)}
+input,select{background:var(--cream);border:1.5px solid var(--charcoal);border-radius:8px;padding:10px 12px;font-size:16px;min-width:0}
+input:focus,select:focus,.pill:focus-visible,.tab:focus-visible{outline:2px solid var(--sprout);outline-offset:2px}
+form.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+form.row input[type=text]{flex:1 1 220px}
+.empty{font-size:22px;color:var(--orange);transform:rotate(-1deg);display:inline-block}
+
+/* tareas */
+.todo{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.todo li{display:flex;gap:16px;align-items:center;background:var(--cream);border:1.5px solid var(--charcoal);border-radius:12px;padding:14px 20px}
+.todo li.done .t{text-decoration:line-through;opacity:.5}
+.todo input[type=checkbox]{width:22px;height:22px;accent-color:var(--charcoal);flex:none}
+.todo .t{flex:1}
+.x{background:none;border:0;font-size:22px;cursor:pointer;line-height:1}
+
+/* horario */
+.scroll{overflow-x:auto;border:1.5px solid var(--charcoal);border-radius:12px;background:var(--cream)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{border:1px solid var(--charcoal);padding:0;text-align:center}
+th{background:var(--dew);padding:10px;font-weight:600;text-transform:lowercase}
+td.h{background:var(--dew);font-family:var(--font-ui);font-size:13px;padding:8px;white-space:nowrap}
+td input{width:100%;border:0;border-radius:0;background:transparent;text-align:center;padding:14px 6px}
+td.rec{background:var(--orange);color:var(--cream);padding:6px;font-size:14px;font-family:var(--font-ui)}
+
+/* notas */
+.subj{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.subj .name{font-size:24px;font-weight:600;color:var(--cocoa);flex:1 1 160px}
+.grades{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.g{border:1.5px solid var(--charcoal);border-radius:20px;padding:2px 14px;background:var(--cream);cursor:pointer}
+.g.low{border-style:dashed;color:var(--sienna)}
+.avg{font-size:46px;font-weight:600;line-height:1.2;color:var(--cocoa)}
+.avg.low{color:var(--sienna)}
+.addg{display:flex;gap:8px}
+.addg input{width:90px}
+
+/* footer */
+footer{background:var(--orange);border-radius:56px 56px 0 0;margin-top:64px;padding:48px 24px 40px;color:var(--charcoal);position:relative}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-end}
+footer h2{font-size:clamp(36px,6vw,64px);color:var(--cream);line-height:1.1}
+footer p{margin:8px 0 0;font-size:16px}
+
+/* dialog */
+dialog{border:1.5px solid var(--charcoal);border-radius:12px;background:var(--cream);padding:32px;max-width:420px;width:calc(100% - 32px);box-shadow:var(--shadow-card);color:var(--charcoal)}
+dialog::backdrop{background:rgba(43,26,7,.35)}
+dialog h2{font-size:36px;margin-bottom:4px}
+dialog label{display:block;font-family:var(--font-ui);font-size:14px;margin:16px 0 4px}
+dialog input{width:100%}
+.dlg-actions{display:flex;gap:12px;margin-top:24px;justify-content:flex-end}
+
+@media(max-width:820px){
+  .hero{grid-template-columns:1fr;padding-top:8px}
+  .stage{min-height:360px}
+  main{padding:40px 16px}
+  .wrap,header.top{padding-left:16px;padding-right:16px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#inicio" aria-label="INCOSAF inicio">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="#171717" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V6a2 2 0 0 1 4 0v8"/><path d="M16 12a2 2 0 0 1 4 0v3"/><path d="M20 14a2 2 0 0 1 4 0v6c0 5-3 8-8 8h-1c-3 0-5-1-7-4l-3-5a2 2 0 0 1 3-2l3 3"/></svg>
+    <span>INCOSAF</span>
+  </a>
+  <button class="pill" id="btnPerfil" type="button">mi perfil</button>
+</header>
+
+<div class="hero" id="inicio">
+  <div>
+    <h1 class="display" id="saludo">hola,<br>alumno</h1>
+    <span class="hand">bienvenido a tu intranet,</span>
+    <p>aquí está todo lo del colegio en un solo lugar: tu horario, tus tareas, tus notas y los avisos. <mark class="marker">fácil</mark> y sin perderse.</p>
+    <div class="cta-row">
+      <a class="pill" href="#tareas" data-go="tareas">ver mis tareas</a>
+      <a class="pill" href="#avisos" data-go="avisos">últimos avisos</a>
+    </div>
+    <div class="note" id="notaHoy"></div>
+  </div>
+  <div class="stage" aria-hidden="true">
+    <div class="notebook">
+      <div class="label"><b>nombre</b><span id="lblNombre"></span><b>curso</b><span id="lblCurso"></span><b>roll no.</b><span id="lblRoll"></span></div>
+      <div class="pencil"></div>
+    </div>
+    <!-- stickers -->
+    <svg class="sticker" style="left:6%;top:4%;transform:rotate(-12deg)" viewBox="0 0 80 80"><path d="M46 6 18 44h20l-6 30 30-40H42z" fill="#3b82f6" stroke="#171717" stroke-width="2.5" stroke-linejoin="round"/></svg>
+    <svg class="sticker" style="right:2%;top:2%;transform:rotate(11deg)" viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="#ff66cf" stroke="#171717" stroke-width="2.5"/><circle cx="14" cy="22" r="10" fill="#ff66cf" stroke="#171717" stroke-width="2.5"/><circle cx="66" cy="22" r="10" fill="#ff66cf" stroke="#171717" stroke-width="2.5"/><circle cx="31" cy="38" r="3.5" fill="#171717"/><circle cx="49" cy="38" r="3.5" fill="#171717"/><path d="M33 50q7 6 14 0" fill="none" stroke="#171717" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <svg class="sticker" style="right:8%;bottom:0;transform:rotate(-8deg)" viewBox="0 0 80 80"><path d="M40 70C8 48 10 20 28 16c8-2 12 4 12 8 0-4 4-10 12-8 18 4 20 32-12 54z" fill="#ff6f1e" stroke="#171717" stroke-width="2.5" stroke-linejoin="round"/><circle cx="32" cy="34" r="3" fill="#171717"/><circle cx="48" cy="34" r="3" fill="#171717"/></svg>
+    <svg class="sticker" style="left:2%;bottom:6%;transform:rotate(14deg);width:60px;height:60px" viewBox="0 0 80 80"><path d="M40 6l8 26 26 8-26 8-8 26-8-26-26-8 26-8z" fill="#22c55e" stroke="#171717" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="secciones">
+  <div class="wrap" id="tabs"></div>
+</nav>
+
+<main>
+  <section class="view" id="v-inicio">
+    <h2>qué hay para hoy</h2>
+    <p class="sub" id="hoySub"></p>
+    <div class="grid" id="resumen"></div>
+  </section>
+
+  <section class="view" id="v-horario">
+    <h2>mi horario</h2>
+    <p class="sub">toca cualquier casilla para escribir tu ramo. se guarda solo en este dispositivo.</p>
+    <div class="scroll"><table id="tablaHorario"></table></div>
+  </section>
+
+  <section class="view" id="v-tareas">
+    <h2>mis tareas</h2>
+    <p class="sub">anota lo que tienes pendiente y márcalo cuando esté listo.</p>
+    <form class="row" id="formTarea">
+      <input type="text" id="tTexto" placeholder="ej: guía de matemática pág. 42" required aria-label="tarea">
+      <input type="text" id="tRamo" placeholder="ramo" style="flex:0 1 160px" aria-label="ramo">
+      <input type="date" id="tFecha" aria-label="fecha de entrega">
+      <button class="pill" type="submit">agregar</button>
+    </form>
+    <ul class="todo" id="listaTareas"></ul>
+  </section>
+
+  <section class="view" id="v-notas">
+    <h2>mis notas</h2>
+    <p class="sub">escala 1,0 a 7,0 · aprobación 4,0. agrega tus notas y mira tu promedio al tiro.</p>
+    <form class="row" id="formRamo">
+      <input type="text" id="nRamo" placeholder="nuevo ramo (ej: lenguaje)" required aria-label="nuevo ramo">
+      <button class="pill" type="submit">agregar ramo</button>
+    </form>
+    <div class="grid" id="listaNotas"></div>
+    <p class="sub" style="margin-top:32px">promedio general: <mark class="marker" id="promGen">—</mark></p>
+  </section>
+
+  <section class="view" id="v-avisos">
+    <h2>avisos del colegio</h2>
+    <p class="sub">lo importante que tienes que saber.</p>
+    <div class="grid" id="listaAvisos"></div>
+  </section>
+
+  <section class="view" id="v-recursos">
+    <h2>recursos y enlaces</h2>
+    <p class="sub">atajos útiles. el colegio puede cambiarlos editando la lista RECURSOS en este archivo.</p>
+    <div class="grid" id="listaRecursos"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <h2>incosaf, juntos.</h2>
+      <p>intranet de alumnos · cualquier duda, consulta en inspectoría.</p>
+    </div>
+    <p id="anio"></p>
+  </div>
+</footer>
+
+<dialog id="dlgPerfil">
+  <form method="dialog" id="formPerfil">
+    <h2>mi perfil</h2>
+    <span class="hand" style="margin:0;font-size:20px">para personalizar tu intranet</span>
+    <label for="pNombre">nombre</label><input id="pNombre" required maxlength="40" autocomplete="given-name">
+    <label for="pCurso">curso</label><input id="pCurso" placeholder="ej: 2° medio A" maxlength="20">
+    <label for="pRoll">n° de lista</label><input id="pRoll" inputmode="numeric" maxlength="3">
+    <div class="dlg-actions">
+      <button class="pill sm" type="button" id="pCancel">cancelar</button>
+      <button class="pill" type="submit">guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ===== contenido que el colegio puede editar ===== */
+const AVISOS = [
+  { fecha:'2026-10-12', tag:'general', titulo:'bienvenidos a la intranet INCOSAF', texto:'aquí publicaremos avisos, fechas importantes y material para ti.' },
+  { fecha:'2026-10-15', tag:'evaluaciones', titulo:'semana de evaluaciones', texto:'revisa tu horario y organiza tus tareas con anticipación.' },
+  { fecha:'2026-10-20', tag:'inspectoría', titulo:'recuerda tu uniforme y puntualidad', texto:'llegar a la hora es parte de tu compromiso como estudiante.' }
+];
+const RECURSOS = [
+  { titulo:'biblioteca', texto:'pide libros y material de estudio.', url:'#' },
+  { titulo:'correo institucional', texto:'tu cuenta del colegio para trabajos y clases.', url:'#' },
+  { titulo:'aula virtual', texto:'material y actividades de tus profesores.', url:'#' },
+  { titulo:'inspectoría', texto:'justificativos, atrasos y consultas.', url:'#' }
+];
+const DIAS = ['lunes','martes','miércoles','jueves','viernes'];
+const BLOQUES = ['08:00','08:45','09:45','10:30','11:30','12:15','13:00','14:30','15:15','16:00'];
+const RECREOS = { 2:'recreo', 4:'recreo', 7:'almuerzo' }; // antes del bloque n
+
+/* ===== utilidades ===== */
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('incosaf:'+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('incosaf:'+k, JSON.stringify(v)); }catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtFecha = iso => { if(!iso) return ''; const [y,m,d] = iso.split('-'); return new Date(y, m-1, d).toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}); };
+
+/* ===== perfil ===== */
+let perfil = store.get('perfil', null);
+const dlg = $('#dlgPerfil');
+function pintarPerfil(){
+  const n = perfil ? perfil.nombre : 'alumno';
+  $('#saludo').innerHTML = 'hola,<br>' + esc(n.toLowerCase());
+  $('#lblNombre').textContent = perfil ? perfil.nombre : '';
+  $('#lblCurso').textContent = perfil ? perfil.curso : '';
+  $('#lblRoll').textContent = perfil ? perfil.roll : '';
+}
+function abrirPerfil(){
+  $('#pNombre').value = perfil?.nombre || ''; $('#pCurso').value = perfil?.curso || ''; $('#pRoll').value = perfil?.roll || '';
+  dlg.showModal();
+}
+$('#btnPerfil').onclick = abrirPerfil;
+$('#pCancel').onclick = () => dlg.close();
+$('#formPerfil').addEventListener('submit', () => {
+  perfil = { nombre:$('#pNombre').value.trim(), curso:$('#pCurso').value.trim(), roll:$('#pRoll').value.trim() };
+  store.set('perfil', perfil); pintarPerfil();
+});
+
+/* ===== navegación ===== */
+const VISTAS = [['inicio','inicio'],['horario','horario'],['tareas','tareas'],['notas','notas'],['avisos','avisos'],['recursos','recursos']];
+$('#tabs').innerHTML = VISTAS.map(([id,n]) => `<button class="tab" data-v="${id}">${n}</button>`).join('');
+function ir(id){
+  if(!VISTAS.some(v => v[0] === id)) id = 'inicio';
+  document.querySelectorAll('section.view').forEach(s => s.classList.toggle('on', s.id === 'v-'+id));
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-current', t.dataset.v === id));
+  if(id === 'inicio') pintarResumen();
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if(b){ history.replaceState(null,'','#'+b.dataset.v); ir(b.dataset.v); } });
+document.querySelectorAll('[data-go]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); history.replaceState(null,'','#'+a.dataset.go); ir(a.dataset.go); $('nav.tabs').scrollIntoView(); }));
+window.addEventListener('hashchange', () => ir(location.hash.slice(1)));
+
+/* ===== horario ===== */
+let horario = store.get('horario', {});
+function pintarHorario(){
+  let h = '<tr><th></th>' + DIAS.map(d => `<th>${d}</th>`).join('') + '</tr>';
+  BLOQUES.forEach((b, i) => {
+    if(RECREOS[i]) h += `<tr><td colspan="6" class="rec">${RECREOS[i]}</td></tr>`;
+    h += `<tr><td class="h">${b}</td>` + DIAS.map((d, j) => `<td><input data-k="${j}-${i}" value="${esc(horario[j+'-'+i]||'')}" aria-label="${d} ${b}"></td>`).join('') + '</tr>';
+  });
+  $('#tablaHorario').innerHTML = h;
+}
+$('#tablaHorario').addEventListener('input', e => { if(e.target.dataset.k){ horario[e.target.dataset.k] = e.target.value; store.set('horario', horario); } });
+
+/* ===== tareas ===== */
+let tareas = store.get('tareas', []);
+function pintarTareas(){
+  const ord = [...tareas].sort((a,b) => (a.hecha - b.hecha) || (a.fecha||'9').localeCompare(b.fecha||'9'));
+  $('#listaTareas').innerHTML = ord.length ? ord.map(t => `
+    <li class="${t.hecha?'done':''}"><input type="checkbox" data-id="${t.id}" ${t.hecha?'checked':''} aria-label="hecha">
+    <div class="t">${esc(t.texto)}<div class="meta">${esc(t.ramo||'')}${t.ramo&&t.fecha?' · ':''}${fmtFecha(t.fecha)}</div></div>
+    <button class="x" data-del="${t.id}" aria-label="borrar">×</button></li>`).join('')
+    : '<li style="border:0;padding:0"><span class="empty">¡nada pendiente! disfruta 🎉</span></li>';
+}
+$('#formTarea').addEventListener('submit', e => {
+  e.preventDefault();
+  tareas.push({ id:Date.now(), texto:$('#tTexto').value.trim(), ramo:$('#tRamo').value.trim(), fecha:$('#tFecha').value, hecha:false });
+  store.set('tareas', tareas); e.target.reset(); pintarTareas();
+});
+$('#listaTareas').addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if(del){ tareas = tareas.filter(t => t.id != del.dataset.del); }
+  else if(e.target.dataset.id){ const t = tareas.find(t => t.id == e.target.dataset.id); t.hecha = e.target.checked; }
+  else return;
+  store.set('tareas', tareas); pintarTareas();
+});
+
+/* ===== notas ===== */
+let notas = store.get('notas', []); // [{id, ramo, notas:[...]}]
+const prom = a => a.length ? a.reduce((x,y) => x+y, 0) / a.length : null;
+const f1 = n => n == null ? '—' : n.toFixed(1).replace('.', ',');
+function pintarNotas(){
+  $('#listaNotas').innerHTML = notas.length ? notas.map(r => {
+    const p = prom(r.notas);
+    return `<div class="card plain"><div class="subj"><span class="name">${esc(r.ramo)}</span><button class="x" data-delr="${r.id}" aria-label="borrar ramo">×</button></div>
+      <div class="avg ${p!=null&&p<4?'low':''}">${f1(p)}</div>
+      <div class="grades">${r.notas.map((n,i) => `<button class="g ${n<4?'low':''}" data-r="${r.id}" data-i="${i}" title="toca para borrar">${f1(n)}</button>`).join('') || '<span class="meta">sin notas aún</span>'}</div>
+      <form class="addg" data-r="${r.id}"><input type="text" inputmode="decimal" placeholder="1,0 – 7,0" aria-label="nueva nota"><button class="pill sm" type="submit">+ nota</button></form></div>`;
+  }).join('') : '<span class="empty">agrega tu primer ramo para empezar ✏️</span>';
+  const ps = notas.map(r => prom(r.notas)).filter(x => x != null);
+  $('#promGen').textContent = f1(prom(ps));
+}
+$('#formRamo').addEventListener('submit', e => {
+  e.preventDefault(); notas.push({ id:Date.now(), ramo:$('#nRamo').value.trim(), notas:[] });
+  store.set('notas', notas); e.target.reset(); pintarNotas();
+});
+$('#listaNotas').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = parseFloat(e.target.querySelector('input').value.replace(',', '.'));
+  if(!(v >= 1 && v <= 7)){ e.target.querySelector('input').setCustomValidity('nota entre 1,0 y 7,0'); e.target.querySelector('input').reportValidity(); e.target.querySelector('input').setCustomValidity(''); return; }
+  notas.find(r => r.id == e.target.dataset.r).notas.push(Math.round(v*10)/10);
+  store.set('notas', notas); pintarNotas();
+});
+$('#listaNotas').addEventListener('click', e => {
+  const g = e.target.closest('.g'), d = e.target.closest('[data-delr]');
+  if(g){ notas.find(r => r.id == g.dataset.r).notas.splice(+g.dataset.i, 1); }
+  else if(d){ notas = notas.filter(r => r.id != d.dataset.delr); }
+  else return;
+  store.set('notas', notas); pintarNotas();
+});
+
+/* ===== avisos y recursos ===== */
+$('#listaAvisos').innerHTML = AVISOS.map(a => `<article class="card"><span class="tag">${esc(a.tag)}</span><div class="meta">${fmtFecha(a.fecha)}</div><h3>${esc(a.titulo)}</h3><p>${esc(a.texto)}</p></article>`).join('');
+$('#listaRecursos').innerHTML = RECURSOS.map(r => `<a class="card" style="text-decoration:none;display:block" href="${esc(r.url)}" target="_blank" rel="noopener"><h3>${esc(r.titulo)} ↗</h3><p>${esc(r.texto)}</p></a>`).join('');
+
+/* ===== resumen de inicio ===== */
+function pintarResumen(){
+  const hoy = new Date(), dia = hoy.getDay() - 1; // lunes = 0
+  const pend = tareas.filter(t => !t.hecha);
+  const proxima = [...pend].filter(t => t.fecha).sort((a,b) => a.fecha.localeCompare(b.fecha))[0];
+  const clases = dia >= 0 && dia < 5 ? BLOQUES.map((b,i) => [b, horario[dia+'-'+i]]).filter(x => x[1]) : [];
+  const ps = notas.map(r => prom(r.notas)).filter(x => x != null);
+  $('#hoySub').textContent = hoy.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
+  $('#resumen').innerHTML = `
+    <div class="card"><span class="tag o">hoy</span><h3>clases</h3><p>${clases.length ? clases.map(c => `${c[0]} · ${esc(c[1])}`).join('<br>') : 'sin clases anotadas para hoy'}</p></div>
+    <div class="card"><span class="tag o">pendientes</span><h3>${pend.length} tarea${pend.length===1?'':'s'}</h3><p>${proxima ? 'próxima: '+esc(proxima.texto)+' ('+fmtFecha(proxima.fecha)+')' : 'nada con fecha por ahora'}</p></div>
+    <div class="card"><span class="tag o">notas</span><h3>promedio ${f1(prom(ps))}</h3><p>${ps.length ? ps.length+' ramo(s) con notas' : 'aún no agregas notas'}</p></div>
+    <div class="card"><span class="tag">aviso</span><h3>${esc(AVISOS[0].titulo)}</h3><p>${esc(AVISOS[0].texto)}</p></div>`;
+}
+
+/* ===== arranque ===== */
+$('#anio').textContent = '© ' + new Date().getFullYear() + ' INCOSAF';
+pintarPerfil(); pintarHorario(); pintarTareas(); pintarNotas();
+ir(location.hash.slice(1) || 'inicio');
+if(!perfil) setTimeout(abrirPerfil, 300);
+</script>
+</body>
+</html>
