@@ -2229,6 +2229,24 @@
         </div>
         <button class="btn-ghost" id="asis-rep-pdf">Descargar PDF</button>
       </div>
+      <p class="control-asis-note" style="margin-top:-14px;">
+        Este reporte descuenta automáticamente sábados, domingos y los feriados nacionales de Chile.
+        <button class="ca-link" id="asis-rep-feriados-btn" style="display:inline;">Días no lectivos adicionales</button>
+      </p>
+
+      <div class="control-asis-panel" id="asis-rep-feriados-panel" style="display:none;">
+        <p class="control-asis-note" style="margin-bottom:10px;">
+          Agrega aquí fechas extra en que no hubo clases (feriado regional, suspensión de actividades, etc.) para que el reporte tampoco las cuente.
+        </p>
+        <div class="picker-row" style="margin-bottom:10px;">
+          <div class="picker-field">
+            <label for="asis-rep-feriado-nuevo">Nueva fecha sin clases</label>
+            <input type="date" id="asis-rep-feriado-nuevo">
+          </div>
+          <button class="btn-ghost" id="asis-rep-feriado-agregar-btn">Agregar</button>
+        </div>
+        <div id="asis-rep-feriados-lista" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
 
       <div class="panel" style="margin-top:6px;">
         <h2 id="asis-rep-title">Reporte de asistencia</h2>
@@ -2328,6 +2346,7 @@
         <button class="btn-ghost" id="control-asis-curso-pdf-btn">Descargar informe del curso (PDF)</button>
         <button class="btn-ghost" id="control-asis-alumnos-pdf-btn">Informes por alumno (PDF)</button>
         <button class="btn-ghost" id="control-asis-cartas-btn">Generar cartas de apelación (PDF)</button>
+        <button class="btn-ghost" id="control-asis-admin-btn">🔒 Administrar</button>
       </div>
 
       <div class="empty-state" id="control-asis-empty" style="display:none;">
@@ -4594,6 +4613,7 @@ document.getElementById('year-tabs').addEventListener('click', async (e)=>{
   await loadControlAsistencia();
   await loadLibro();
   await loadAtrasos();
+  await loadFeriadosExtra();
   await loadFichas();
   await loadSuspensiones();
   await loadGestiones();
@@ -5460,12 +5480,141 @@ function pctAsistencia(c){
   return total ? Math.round(((c.presente + c.atrasado) / total) * 1000) / 10 : 0;
 }
 
+/* ---------- Feriados chilenos: se descuentan del reporte de asistencia ---------- */
+function esFinDeSemana(fechaStr){
+  const d = new Date(fechaStr+'T12:00:00');
+  const dow = d.getDay();
+  return dow === 0 || dow === 6;
+}
+// Domingo de Pascua (algoritmo gregoriano anónimo) — de ahí salen Viernes y Sábado Santo.
+function pascuaDomingo(anio){
+  const a = anio % 19, b = Math.floor(anio/100), c = anio % 100;
+  const d = Math.floor(b/4), e = b % 4;
+  const f = Math.floor((b+8)/25), g = Math.floor((b-f+1)/3);
+  const h = (19*a+b-d-g+15) % 30;
+  const i = Math.floor(c/4), k = c % 4;
+  const l = (32+2*e+2*i-h-k) % 7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const mes = Math.floor((h+l-7*m+114)/31);
+  const dia = ((h+l-7*m+114) % 31) + 1;
+  return new Date(Date.UTC(anio, mes-1, dia));
+}
+// Ley 19.668: si San Pedro y San Pablo (29 jun) o el Encuentro de Dos Mundos (12 oct)
+// caen martes, miércoles o jueves, se trasladan al lunes de esa misma semana.
+function feriadoConTrasladoALunes(anio, mes, dia){
+  const d = new Date(Date.UTC(anio, mes-1, dia));
+  const dow = d.getUTCDay();
+  if(dow===2) d.setUTCDate(d.getUTCDate()-1);
+  else if(dow===3) d.setUTCDate(d.getUTCDate()-2);
+  else if(dow===4) d.setUTCDate(d.getUTCDate()-3);
+  return d;
+}
+function fechaAISO(d){ return d.toISOString().slice(0,10); }
+const feriadosChileCache = {};
+function feriadosChileFijos(anio){
+  if(feriadosChileCache[anio]) return feriadosChileCache[anio];
+  const pascua = pascuaDomingo(anio);
+  const viernesSanto = new Date(pascua); viernesSanto.setUTCDate(pascua.getUTCDate()-2);
+  const sabadoSanto = new Date(pascua); sabadoSanto.setUTCDate(pascua.getUTCDate()-1);
+  const set = new Set([
+    `${anio}-01-01`,                       // Año Nuevo
+    fechaAISO(viernesSanto),
+    fechaAISO(sabadoSanto),
+    `${anio}-05-01`,                       // Día del Trabajo
+    `${anio}-05-21`,                       // Glorias Navales
+    fechaAISO(feriadoConTrasladoALunes(anio,6,29)),  // San Pedro y San Pablo
+    `${anio}-07-16`,                       // Virgen del Carmen
+    `${anio}-08-15`,                       // Asunción de la Virgen
+    `${anio}-09-18`,                       // Independencia Nacional
+    `${anio}-09-19`,                       // Glorias del Ejército
+    fechaAISO(feriadoConTrasladoALunes(anio,10,12)), // Encuentro de Dos Mundos
+    `${anio}-10-31`,                       // Día de las Iglesias Evangélicas
+    `${anio}-11-01`,                       // Todos los Santos
+    `${anio}-12-08`,                       // Inmaculada Concepción
+    `${anio}-12-25`,                       // Navidad
+  ]);
+  feriadosChileCache[anio] = set;
+  return set;
+}
+// Fechas extra sin clases que el propio colegio puede agregar (feriados regionales,
+// suspensiones de actividades, etc.) — no todas están cubiertas por la lista nacional.
+let feriadosExtra = [];
+async function loadFeriadosExtra(){
+  try{
+    const result = await window.storage.get('feriados-extra-'+currentYear, true);
+    feriadosExtra = result && result.value ? JSON.parse(result.value) : [];
+  }catch(err){
+    feriadosExtra = [];
+  }
+}
+async function saveFeriadosExtra(){
+  try{
+    await window.storage.set('feriados-extra-'+currentYear, JSON.stringify(feriadosExtra), true);
+    return true;
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo guardar el día no lectivo. Intenta nuevamente.');
+    return false;
+  }
+}
+function esDiaNoLectivo(fechaStr){
+  if(!fechaStr) return false;
+  if(esFinDeSemana(fechaStr)) return true;
+  const anio = parseInt(fechaStr.slice(0,4),10);
+  if(feriadosChileFijos(anio).has(fechaStr)) return true;
+  if(feriadosExtra.includes(fechaStr)) return true;
+  return false;
+}
+function renderFeriadosExtraLista(){
+  const cont = document.getElementById('asis-rep-feriados-lista');
+  if(!cont) return;
+  if(!feriadosExtra.length){
+    cont.innerHTML = '<span style="font-size:12.5px;color:var(--ink-soft);">No hay fechas adicionales agregadas.</span>';
+    return;
+  }
+  const ordenadas = [...feriadosExtra].sort();
+  cont.innerHTML = ordenadas.map(f=>`
+    <span class="sem-pill" style="background:var(--glass-fill);color:var(--ink);box-shadow:0 0 0 1px var(--glass-edge) inset;">
+      ${fmtDate(f)} <button type="button" data-quitar-feriado="${f}" style="all:unset;cursor:pointer;margin-left:6px;color:var(--danger);">✕</button>
+    </span>`).join('');
+  cont.querySelectorAll('[data-quitar-feriado]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const backup = feriadosExtra;
+      feriadosExtra = feriadosExtra.filter(f=>f!==btn.dataset.quitarFeriado);
+      if(!(await saveFeriadosExtra())){ feriadosExtra = backup; return; }
+      renderFeriadosExtraLista();
+      renderAsisReporte();
+    });
+  });
+}
+document.getElementById('asis-rep-feriados-btn').addEventListener('click', ()=>{
+  const panel = document.getElementById('asis-rep-feriados-panel');
+  const abrir = panel.style.display === 'none';
+  panel.style.display = abrir ? 'block' : 'none';
+  if(abrir) renderFeriadosExtraLista();
+});
+document.getElementById('asis-rep-feriado-agregar-btn').addEventListener('click', async ()=>{
+  const input = document.getElementById('asis-rep-feriado-nuevo');
+  const fecha = input.value;
+  if(!fecha){ showToast('Elige una fecha primero.'); return; }
+  if(feriadosExtra.includes(fecha)){ showToast('Esa fecha ya estaba agregada.'); return; }
+  const backup = feriadosExtra;
+  feriadosExtra = [...feriadosExtra, fecha];
+  if(!(await saveFeriadosExtra())){ feriadosExtra = backup; return; }
+  input.value = '';
+  renderFeriadosExtraLista();
+  renderAsisReporte();
+  showToast('Día no lectivo agregado — el reporte ya no lo cuenta');
+});
+
 function asisReporteDatos(){
   const periodo = document.getElementById('asis-rep-periodo').value;
   const cursoFiltro = document.getElementById('asis-rep-curso').value;
   const records = asistenciaData.records || {};
   let keys = Object.keys(records);
   if(cursoFiltro) keys = keys.filter(k=>k.split('|')[1]===cursoFiltro);
+  // Sábados, domingos y feriados (chilenos + extra del colegio) no cuentan en el reporte.
+  keys = keys.filter(k=>!esDiaNoLectivo(k.split('|')[0]));
 
   if(periodo === 'dia'){
     const fecha = document.getElementById('asis-rep-fecha').value;
@@ -5481,7 +5630,8 @@ function asisReporteDatos(){
     return {
       titulo: `Asistencia del ${fmtDate(fecha)}${cursoFiltro ? ' — '+cursoFiltro : ''}`,
       chart, cabecera: ['Curso','Presentes','Ausentes','Atrasados','Justificados','% Asistencia'],
-      filas, sinDatos: !keysDia.length
+      filas, sinDatos: !keysDia.length,
+      mensajeVacio: (fecha && esDiaNoLectivo(fecha)) ? 'Ese día no es un día hábil (fin de semana o feriado), por eso no se cuenta en el reporte.' : null
     };
   }
 
@@ -5538,6 +5688,7 @@ function renderAsisReporte(){
   if(datos.sinDatos){
     tbody.innerHTML = '';
     document.getElementById('asis-rep-table').style.display = 'none';
+    empty.textContent = datos.mensajeVacio || 'No hay registros de asistencia para este período.';
     empty.style.display = 'block';
     return;
   }
@@ -5919,8 +6070,10 @@ function renderControlAsistCursoDetalle(curso){
 
   const table = document.getElementById('control-asis-table');
   table.style.display = 'table';
-  table.querySelector('tbody').innerHTML = alumnos.map(a=>{
+  table.querySelector('tbody').innerHTML = alumnos.map((a,idx)=>{
     const color = caColor(a.anual.pct);
+    const cartaBtn = (!a.retirado && color==='sem-rojo') ? `<button class="task-del" data-carta="${caEsc(a.nombre)}" style="color:var(--gold-bright);">Carta</button>` : '';
+    const borrarBtn = controlAsisAdminUnlocked ? `<button class="task-del" data-borrar-alumno="${idx}" style="color:var(--danger);margin-left:8px;">Borrar</button>` : '';
     return `
     <tr class="${a.retirado?'retirado':''}">
       <td>${caEsc(a.nombre)}</td>
@@ -5929,7 +6082,7 @@ function renderControlAsistCursoDetalle(curso){
       <td>${a.anual.ausentes}</td>
       <td class="pct-cell ${color}">${a.anual.pct!=null?a.anual.pct+'%':'—'}</td>
       <td>${a.retirado?'<span class="badge retirado">Retirado</span>':`<span class="sem-pill ${color}">${caEstadoLabel(a.anual.pct)}</span>`}</td>
-      <td>${(!a.retirado && color==='sem-rojo') ? `<button class="task-del" data-carta="${caEsc(a.nombre)}" style="color:var(--gold-bright);">Carta</button>` : ''}</td>
+      <td>${cartaBtn}${borrarBtn}</td>
     </tr>`;
   }).join('');
 
@@ -5939,7 +6092,46 @@ function renderControlAsistCursoDetalle(curso){
       if(alumno) generarCartaApelacionPDF(curso, [alumno]);
     });
   });
+  table.querySelectorAll('[data-borrar-alumno]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const alumno = alumnos[Number(btn.dataset.borrarAlumno)];
+      if(!alumno) return;
+      if(!confirm(`¿Borrar a "${alumno.nombre}" del listado de ${curso}?\n\nEsto no se puede deshacer (salvo que lo vuelvas a importar desde el Excel).`)) return;
+      const realIdx = c.alumnos.indexOf(alumno);
+      if(realIdx === -1) return;
+      const backup = c.alumnos.splice(realIdx, 1)[0];
+      const ok = await saveControlAsistencia();
+      if(!ok){
+        c.alumnos.splice(realIdx, 0, backup);
+        return;
+      }
+      showToast(`${backup.nombre} fue borrado(a) del listado`);
+      renderControlAsistCursoDetalle(curso);
+    });
+  });
 }
+
+let controlAsisAdminUnlocked = false;
+const CONTROL_ASIS_ADMIN_HASH = "a440271cecec7a0c14582539fbc0d3fbf544425fdac9ab943c05640d35304e08";
+document.getElementById('control-asis-admin-btn').addEventListener('click', async ()=>{
+  if(controlAsisAdminUnlocked){
+    controlAsisAdminUnlocked = false;
+    document.getElementById('control-asis-admin-btn').textContent = '🔒 Administrar';
+    if(controlAsistCursoSel) renderControlAsistCursoDetalle(controlAsistCursoSel);
+    showToast('Modo administrar bloqueado');
+    return;
+  }
+  const clave = prompt('Clave de administrador para poder borrar alumnos del listado:');
+  if(clave === null) return;
+  if((await sha256(clave)) !== CONTROL_ASIS_ADMIN_HASH){
+    alert('Clave incorrecta.');
+    return;
+  }
+  controlAsisAdminUnlocked = true;
+  document.getElementById('control-asis-admin-btn').textContent = '🔓 Administrar (activo)';
+  if(controlAsistCursoSel) renderControlAsistCursoDetalle(controlAsistCursoSel);
+  showToast('Modo administrar desbloqueado: ya puedes borrar alumnos del listado');
+});
 
 document.getElementById('control-asis-volver-btn').addEventListener('click', renderControlAsistencia);
 
@@ -8751,6 +8943,7 @@ async function init(){
   await loadControlAsistencia();
   await loadLibro();
   await loadAtrasos();
+  await loadFeriadosExtra();
   await loadFichas();
   await loadSuspensiones();
   await loadGestiones();
