@@ -1934,7 +1934,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3h6l1 3H8l1-3z"/><rect x="5" y="6" width="14" height="15" rx="1"/><path d="M8.5 12h7M8.5 15.5h5"/></svg>
       Hoja de trabajo
     </button>
-    <button data-view="atrasos">
+    <button data-view="atrasos" style="display:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
       Atrasos
     </button>
@@ -3944,11 +3944,15 @@ function applyRoleVisibility(){
   // Acceso de Dirección: ve solamente su "Resumen general" — nada de matrícula,
   // libro digital (anotaciones), ni el resto de la gestión operativa. Pedido
   // explícito: que el director vea únicamente un informe general.
-  const VISTAS_OPERATIVAS = ['home','matricula','asistencia','libro','atrasos','staff','retiro','accidente'];
+  const VISTAS_OPERATIVAS = ['home','matricula','asistencia','libro','staff','retiro','accidente'];
   VISTAS_OPERATIVAS.forEach(v=>{
     const btn = document.querySelector(`nav.primary button[data-view="${v}"]`);
     if(btn) btn.style.display = isDirector ? 'none' : 'flex';
   });
+  // El módulo interno "Atrasos" quedó obsoleto: Control de Atrasos (herramienta
+  // aparte) es ahora el registro oficial. El botón se mantiene siempre oculto.
+  const atrasosBtn = document.querySelector('nav.primary button[data-view="atrasos"]');
+  if(atrasosBtn) atrasosBtn.style.display = 'none';
   const directorBtn = document.getElementById('nav-director');
   if(directorBtn) directorBtn.style.display = isDirector ? 'flex' : 'none';
 
