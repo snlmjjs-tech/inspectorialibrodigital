@@ -9145,7 +9145,11 @@ init();
   }
 
   let currentUserName = null;
-  // [dato real de alumnos removido del historial por motivos de privacidad - 2026-10-23]
+  // La nómina real de alumnos NO va hardcodeada en el código público (era un
+  // riesgo de privacidad grave: nombres reales de ~630 estudiantes quedaban
+  // visibles en el repositorio de GitHub, que es público). Se carga en tiempo
+  // de ejecución desde Firestore (mismo mecanismo window.storage que usa el
+  // resto de la app), una vez que el usuario inicia sesión.
   let ASIS_ROSTER = {};
   function asisCursos(){ return Object.keys(ASIS_ROSTER); }
   async function cargarAsisRosterBase(){
@@ -9153,7 +9157,7 @@ init();
       const result = await window.storage.get('asis-roster-baseline', true);
       ASIS_ROSTER = result && result.value ? JSON.parse(result.value) : {};
     }catch(err){
-      console.error('No se pudo cargar la nomina base de Retiro de estudiantes.', err);
+      console.error('No se pudo cargar la nómina base de Retiro de estudiantes.', err);
       ASIS_ROSTER = {};
     }
   }
@@ -9273,7 +9277,7 @@ init();
   // ---------- Nómina de matrícula compartida con la intranet ----------
   function asisGetRoster(){
     const roster = {};
-    ASIS_CURSOS.forEach(c=>{ roster[c] = ASIS_ROSTER[c].slice(); });
+    asisCursos().forEach(c=>{ roster[c] = ASIS_ROSTER[c].slice(); });
     asisRosterEventos.slice().sort((a,b)=>{
       const ta = a.creadoEn && a.creadoEn.toDate ? a.creadoEn.toDate().getTime() : 0;
       const tb = b.creadoEn && b.creadoEn.toDate ? b.creadoEn.toDate().getTime() : 0;
@@ -9463,7 +9467,7 @@ init();
     const grado = RETIRO_GRADO_PALABRAS[m[1].toLowerCase()];
     if(!grado) return null;
     const curso = grado+'°'+m[2].toUpperCase();
-    return ASIS_CURSOS.includes(curso) ? curso : null;
+    return asisCursos().includes(curso) ? curso : null;
   }
   function asisCursoATextoRetiro(curso){
     const m = curso.match(/^(\d)°(.+)$/);
@@ -9478,7 +9482,7 @@ init();
     const cursoAsis = retiroCursoTextoAAsis(cursoInput.value);
     retiroNombreCursoMap = {};
     const nombres = [];
-    (cursoAsis ? [cursoAsis] : ASIS_CURSOS).forEach(c=>{
+    (cursoAsis ? [cursoAsis] : asisCursos()).forEach(c=>{
       (roster[c]||[]).forEach(n=>{
         retiroNombreCursoMap[n] = c;
         nombres.push(n);
@@ -10001,7 +10005,7 @@ init();
         const wb = XLSX.read(data, {type:'array'});
         const rosterActual = asisGetRoster();
         const altas = [], bajas = [];
-        ASIS_CURSOS.forEach(curso=>{
+        asisCursos().forEach(curso=>{
           const sheetName = wb.SheetNames.find(sn=>sn.trim()===curso);
           if(!sheetName) return;
           const sheet = wb.Sheets[sheetName];
@@ -10199,7 +10203,7 @@ init();
 
   rtLogoutBtn.addEventListener('click', ()=>{ signOut(auth); });
 
-  onAuthStateChanged(auth, user=>{
+  onAuthStateChanged(auth, async user=>{
     // Solo cuentas del directorio de Retiro pueden desbloquear este módulo
     // (otras cuentas válidas de la intranet, si alguna vez inician sesión
     // aquí por error, no tienen nada que hacer en este módulo).
@@ -10211,6 +10215,7 @@ init();
       rtSessionUser.textContent = currentUserName;
       rtPinInput.value = '';
       rtGateError.classList.remove('show');
+      await cargarAsisRosterBase();
       rtStartWatchers();
     }else{
       if(user && !usuario){
@@ -10285,7 +10290,7 @@ init();
     const cursoAsis = retiroCursoTextoAAsis(cursoInput.value);
     accNombreCursoMap = {};
     const nombres = [];
-    (cursoAsis ? [cursoAsis] : ASIS_CURSOS).forEach(c=>{
+    (cursoAsis ? [cursoAsis] : asisCursos()).forEach(c=>{
       (roster[c]||[]).forEach(n=>{
         accNombreCursoMap[n] = c;
         nombres.push(n);
@@ -10891,7 +10896,7 @@ init();
 
   acLogoutBtn.addEventListener('click', ()=>{ signOut(auth); });
 
-  onAuthStateChanged(auth, user=>{
+  onAuthStateChanged(auth, async user=>{
     // Mismo directorio de cuentas que Retiro de estudiantes.
     const usuario = user ? RT_USER_DIRECTORY.find(u=>u.email===user.email) : null;
     if(user && usuario){
@@ -10901,6 +10906,7 @@ init();
       acSessionUser.textContent = currentUserName;
       acPinInput.value = '';
       acGateError.classList.remove('show');
+      await cargarAsisRosterBase();
       acStartWatchers();
     }else{
       if(user && !usuario){
