@@ -1,0 +1,149 @@
+rules_version = '2';
+
+// Reglas de seguridad para el proyecto Firebase "inspectoria-libro-digital".
+//
+// IMPORTANTE — NO PUBLICAR TODAVÍA. Publicar esto antes de que existan las
+// cuentas de Firebase Authentication y los documentos en "staff_roles" deja
+// a TODO el personal sin acceso (incluido el administrador), porque exige
+// sesión real + rol asignado para cualquier lectura o escritura.
+//
+// Orden correcto (ver guía de publicación paso a paso):
+//   1. Crear las 12 cuentas en Authentication (ya en curso).
+//   2. Crear los 12 documentos en staff_roles (clave = email de cada cuenta).
+//   3. Publicar el código nuevo (login real) en la página.
+//   4. RECIÉN AHÍ publicar este archivo de reglas.
+//   5. Probar que cada rol puede/no puede hacer lo que corresponde.
+//
+// Roles (guardados en staff_roles/{email}.rol):
+//   admin  -> Inspector General: todo, incluido borrar.
+//   editor -> Asistente Administrativo / de la Educación: crear y editar,
+//             NUNCA borrar.
+//   lector -> Director: solo lectura (resumen general).
+//
+// Cualquier colección no contemplada abajo queda denegada por defecto
+// (regla "catch-all" al final) — así un documento nuevo nunca queda
+// accidentalmente abierto solo por no haberlo agregado aquí a tiempo.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers de rol ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function staffDoc() {
+      return get(/databases/$(database)/documents/staff_roles/$(request.auth.token.email));
+    }
+    function staffActive() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/staff_roles/$(request.auth.token.email))
+        && staffDoc().data.activo == true;
+    }
+    function rol() {
+      return staffActive() ? staffDoc().data.rol : null;
+    }
+    function isAdmin()  { return rol() == 'admin'; }
+    function isEditor() { return rol() == 'admin' || rol() == 'editor'; }
+    // Cualquier cuenta activa con rol reconocido (admin, editor o lector)
+    // puede LEER — el Director, por ejemplo, necesita leer el resumen.
+    function isStaff()  { return rol() != null; }
+
+    // ---------- staff_roles: define quién es quién y con qué permisos ----------
+    // Cada funcionario puede leer SU PROPIO documento (para que la app sepa su
+    // rol al iniciar sesión). Solo un admin puede leer la lista completa o
+    // crear/editar/borrar asignaciones de rol — así nadie puede auto-asignarse
+    // un rol mayor.
+    match /staff_roles/{email} {
+      allow get: if signedIn() && (request.auth.token.email == email || isAdmin());
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---------- store: colección genérica clave→valor que ya usa la app ----------
+    // (matricula-AÑO, asistencia-AÑO, control-asistencia-AÑO, feriados-extra-AÑO,
+    // asis-roster-baseline, staff-roster, y el histórico "auth-inspectoria" que
+    // queda obsoleto con este cambio pero se deja protegido por si acaso).
+    match /store/{docId} {
+      allow read: if isStaff();
+      allow write: if (docId == 'staff-roster' || docId == 'auth-inspectoria')
+        ? isAdmin()
+        : isEditor();
+    }
+
+    // ---------- Registros operativos del Libro Digital ----------
+    // Crear/editar: cualquier editor o admin. Borrar: solo admin (regla 3:
+    // "que borrar o modificar anotaciones exija un permiso mayor").
+    match /atrasos-registros/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor()
+        && request.resource.data.studentId is string
+        && request.resource.data.fecha is string;
+      allow delete: if isAdmin();
+    }
+
+    match /suspensiones-registros/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor()
+        && request.resource.data.studentId is string;
+      allow delete: if isAdmin();
+    }
+
+    match /libro-anotaciones/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor()
+        && request.resource.data.studentId is string
+        && request.resource.data.anio is number
+        && (!('observacion' in request.resource.data)
+            || (request.resource.data.observacion is string
+                && request.resource.data.observacion.size() < 8000));
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Retiro de estudiantes / Accidente Escolar ----------
+    // (comparten esta misma base de datos; con el login unificado, usan las
+    // mismas cuentas/roles de arriba — ya no dependen de otro proyecto).
+    match /retiros/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+    match /retiroAsistencia/{id} {
+      allow read: if isStaff();
+      allow write: if isEditor();
+    }
+    match /retiroConfig/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+    match /asistenciaRosterEventos/{id} {
+      allow read: if isStaff();
+      allow create: if isEditor();
+      allow update, delete: if isAdmin();
+    }
+    match /accidentesEscolares/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Auditoría: se puede AGREGAR, nunca editar ni borrar ----------
+    // Cualquier cuenta activa deja su propio rastro; nadie (ni admin) puede
+    // alterar un registro ya escrito, para que el historial sea confiable.
+    // Solo un admin puede LEER el historial completo.
+    match /auditoria/{id} {
+      allow read: if isAdmin();
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+    match /retiroInspLog/{id} {
+      allow read: if isAdmin();
+      allow create: if isStaff();
+      allow update, delete: if false;
+    }
+
+    // ---------- Todo lo demás: denegado por defecto ----------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
