@@ -1,0 +1,17 @@
+# Datos sensibles: nunca deben subirse al repositorio (es público).
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.env
+.env
+.env.*
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+*credentials*.json
+*.bak
+*.backup
+*.bundle
+RESPALDO_*
+respaldo_*

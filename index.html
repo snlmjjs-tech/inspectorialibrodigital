@@ -6,6 +6,16 @@
 <title>Inspectoría General — I. Comercial Alberto Valenzuela Llanos</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0B1240">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://*.firebaseio.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
+<!--
+  Nota honesta sobre esta CSP: 'unsafe-inline' en script-src sigue siendo
+  necesario porque toda la lógica de la página está en <script> inline (no
+  separados en archivos .js), así que no bloquea un script inyectado DENTRO
+  de esta misma página (vía innerHTML sin escapar, por ejemplo). Lo que SÍ
+  bloquea: que el navegador cargue un script, iframe, formulario o conexión
+  hacia cualquier dominio que no esté en esta lista blanca. La defensa real
+  contra scripts inyectados es escapar el HTML (ver AUDITORIA-SEGURIDAD.md).
+-->
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -15,6 +25,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <style>
   :root{
     --navy-deep:#05060f;
@@ -656,6 +667,14 @@
     all:unset;cursor:pointer;
     font-size:11.5px;
     color:var(--ink-soft);
+  }
+  /* Solo un admin (Inspector General) puede borrar atrasos, suspensiones o
+     anotaciones -- ver applyRoleVisibility(). La protección real vive en la
+     regla de Firestore; esto es solo para no mostrar un botón inútil. */
+  body:not(.es-admin) [data-del-atraso],
+  body:not(.es-admin) [data-del-susp],
+  body:not(.es-admin) [data-del-entry]{
+    display:none !important;
   }
   .task-del:hover{color:var(--danger);}
 
@@ -1843,66 +1862,21 @@
     <div class="login-error" id="login-error"></div>
     <form id="login-form">
       <div class="field">
-        <label for="login-pin-0">Ingresa tus 4 dígitos</label>
-        <div class="pin-boxes" id="login-pin-boxes">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-0" autocomplete="off">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-1" autocomplete="off">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-2" autocomplete="off">
-          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="pin-box" id="login-pin-3" autocomplete="off">
-        </div>
+        <label for="login-user">Correo de tu cuenta</label>
+        <input type="email" id="login-user" required autocomplete="username" placeholder="tu-nombre@inspectoria-libro-digital.firebaseapp.com">
+      </div>
+      <div class="field">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" required autocomplete="current-password">
       </div>
       <button type="submit" class="btn-primary full-btn">Ingresar</button>
     </form>
-    <button class="link-btn" id="go-recover">¿Olvidaste tu contraseña?</button>
-    <div class="login-note">Ingresa tu PIN de 4 dígitos. Si aún no te han asignado uno, usa <strong>0000</strong> y luego cámbialo desde tu cuenta.</div>
+    <div class="login-note">Si olvidaste tu contraseña, pídele a un Inspector General que te ayude a restablecerla desde Firebase.</div>
   </div>
 
-  <!-- Paso: recuperar - elegir usuario -->
-  <div class="login-card" id="card-recover-select" style="display:none;">
-    <button class="step-back" id="back-to-login-1">&larr; Volver a iniciar sesión</button>
-    <h1>Recuperar contraseña</h1>
-    <div class="login-sub">Selecciona tu nombre para continuar</div>
-    <div class="field">
-      <label for="recover-user">Funcionario</label>
-      <select id="recover-user"></select>
-    </div>
-    <button class="btn-primary full-btn" id="recover-continue">Continuar</button>
-  </div>
-
-  <!-- Paso: sin pregunta configurada -->
-  <div class="login-card" id="card-recover-none" style="display:none;">
-    <button class="step-back" id="back-to-login-2">&larr; Volver a iniciar sesión</button>
-    <h1>Sin pregunta de recuperación</h1>
-    <div class="login-sub">Este funcionario aún no ha configurado una pregunta de recuperación.</div>
-    <div class="recover-answer-box">Si nunca has cambiado tu PIN, intenta ingresar con <strong>0000</strong>. Si ya tienes un PIN propio y lo olvidaste, pide a alguien con acceso a «Funcionarios» que te lo restablezca con el botón «Asignar PIN» o «Restablecer contraseña».</div>
-  </div>
-
-  <!-- Paso: responder pregunta -->
-  <div class="login-card" id="card-recover-answer" style="display:none;">
-    <button class="step-back" id="back-to-login-3">&larr; Volver a iniciar sesión</button>
-    <h1>Verifica tu identidad</h1>
-    <div class="login-error" id="recover-error"></div>
-    <div class="field">
-      <label id="recover-question-label">Pregunta de seguridad</label>
-      <input type="text" id="recover-answer" placeholder="Tu respuesta">
-    </div>
-    <button class="btn-primary full-btn" id="recover-verify">Verificar</button>
-  </div>
-
-  <!-- Paso: nueva contraseña -->
-  <div class="login-card" id="card-recover-reset" style="display:none;">
-    <h1>Crea un nuevo PIN</h1>
-    <div class="login-error" id="reset-error"></div>
-    <div class="field">
-      <label for="reset-pass1">Nuevo PIN</label>
-      <input type="password" id="reset-pass1" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 dígitos">
-    </div>
-    <div class="field">
-      <label for="reset-pass2">Confirmar PIN</label>
-      <input type="password" id="reset-pass2" inputmode="numeric" pattern="[0-9]*" maxlength="4">
-    </div>
-    <button class="btn-primary full-btn" id="reset-save">Guardar y volver a iniciar sesión</button>
-  </div>
+  <!-- Las tarjetas de recuperación por PIN quedaron obsoletas: el login ahora
+       usa Firebase Authentication (correo + contraseña real), que ya trae su
+       propio límite de intentos fallidos en el servidor. -->
 
 </div>
 
@@ -2350,7 +2324,7 @@
         <button class="btn-ghost" id="control-asis-curso-pdf-btn">Descargar informe del curso (PDF)</button>
         <button class="btn-ghost" id="control-asis-alumnos-pdf-btn">Informes por alumno (PDF)</button>
         <button class="btn-ghost" id="control-asis-cartas-btn">Generar cartas de apelación (PDF)</button>
-        <button class="btn-ghost" id="control-asis-admin-btn">🔒 Administrar</button>
+        <button class="btn-ghost" id="control-asis-admin-btn" style="display:none;">🔒 Administrar</button>
       </div>
 
       <div class="empty-state" id="control-asis-empty" style="display:none;">
@@ -2552,7 +2526,6 @@
       </div>
       <div style="display:flex;align-items:center;gap:16px;">
         <div class="date" id="staff-count"></div>
-        <button class="btn-ghost" id="btn-gestion-panel">🔒 Panel de gestión</button>
         <button class="btn-primary" id="btn-new-staff" style="display:none;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
           Agregar funcionario
@@ -3196,7 +3169,19 @@
             <option value="Portería">
           </datalist>
         </div>
-        <div class="recover-answer-box" id="staff-edit-note" style="display:none;">Editar el nombre no afecta la contraseña ni el acceso ya configurado de este funcionario.</div>
+        <div class="field">
+          <label for="st-email">Correo de la cuenta (ya creada en Firebase Authentication)</label>
+          <input type="email" id="st-email" required placeholder="nombre-apellido@inspectoria-libro-digital.firebaseapp.com">
+        </div>
+        <div class="field">
+          <label for="st-rol">Permiso</label>
+          <select id="st-rol" required>
+            <option value="editor">Editor — crea y edita, no puede borrar</option>
+            <option value="admin">Administrador — todo, incluido borrar</option>
+            <option value="lector">Solo lectura (Dirección)</option>
+          </select>
+        </div>
+        <div class="recover-answer-box" id="staff-edit-note" style="display:none;">Esto solo guarda su nombre/cargo/permiso. La cuenta de acceso (correo y contraseña) se crea aparte, en Firebase Authentication.</div>
         <div class="modal-actions">
           <button type="button" class="btn-ghost" id="staff-modal-cancel">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar</button>
@@ -3217,32 +3202,18 @@
       <div class="login-error" id="pass-error"></div>
       <form id="pass-form">
         <div class="field">
-          <label for="p-actual">PIN actual</label>
-          <input type="password" id="p-actual" required inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="Usa 0000 si nunca lo has cambiado">
+          <label for="p-actual">Contraseña actual</label>
+          <input type="password" id="p-actual" required autocomplete="current-password">
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="p-nueva">Nuevo PIN</label>
-            <input type="password" id="p-nueva" required inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 dígitos">
+            <label for="p-nueva">Nueva contraseña</label>
+            <input type="password" id="p-nueva" required minlength="10" autocomplete="new-password" placeholder="Mínimo 10 caracteres, con letras y números">
           </div>
           <div class="field">
-            <label for="p-confirma">Confirmar PIN</label>
-            <input type="password" id="p-confirma" required inputmode="numeric" pattern="[0-9]*" maxlength="4">
+            <label for="p-confirma">Confirmar contraseña</label>
+            <input type="password" id="p-confirma" required minlength="10" autocomplete="new-password">
           </div>
-        </div>
-        <div class="field">
-          <label for="p-pregunta">Pregunta de recuperación</label>
-          <select id="p-pregunta">
-            <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
-            <option value="¿En qué comuna naciste?">¿En qué comuna naciste?</option>
-            <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
-            <option value="¿Cómo se llama tu mejor amigo/a de infancia?">¿Cómo se llama tu mejor amigo/a de infancia?</option>
-            <option value="¿Cuál es el segundo nombre de tu madre?">¿Cuál es el segundo nombre de tu madre?</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="p-respuesta">Respuesta</label>
-          <input type="text" id="p-respuesta" required placeholder="La usarás si olvidas tu contraseña">
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-ghost" id="pass-modal-cancel">Cancelar</button>
@@ -3660,44 +3631,44 @@ window.storage = {
 };
 
 /* ---------------- DATA: NÓMINA ---------------- */
-const STAFF_RAW = [
-  { nombre:"Claudio Valenzuela Fuentes", cargo:"Inspector General" },
-  { nombre:"Luis Cadiz Fuenzalida",       cargo:"Inspector General" },
-  { nombre:"Sandra Bravo Cornejo",        cargo:"Asistente Administrativo" },
-  { nombre:"Alvaro Lisboa Roa",           cargo:"Asistente Administrativo" },
-  { nombre:"Raul Lopez Ortega",           cargo:"Asistente Administrativo" },
-  { nombre:"Maritza Toledo Santibañez",   cargo:"Asistente de la Educación" },
-  { nombre:"Nery Marin Ringler",          cargo:"Asistente de la Educación" },
-  { nombre:"Maria Quiroz Navarro",        cargo:"Asistente de la Educación" },
-  { nombre:"Edison Valenzuela Ortiz",     cargo:"Asistente de la Educación" },
-  { nombre:"Silvia Faundez Herrera",      cargo:"Asistente de la Educación" },
-  { nombre:"Jaqueline Poblete Sanchez",   cargo:"Asistente de la Educación" },
-  { nombre:"Cristian Barahona",           cargo:"Portería" },
-];
 function slugify(name){
   return name.trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
-let STAFF = STAFF_RAW.map(s=>({ ...s, slug: slugify(s.nombre) }));
-const CARGO_ORDER = ["Inspector General","Asistente Administrativo","Asistente de la Educación","Portería"];
+// La nómina de funcionarios (nombre, cargo, correo, rol, activo) vive en la
+// colección Firestore "staff_roles" (clave = correo de su cuenta real de
+// Firebase Authentication). Ya no se guardan PIN ni contraseñas acá: eso lo
+// maneja Firebase Auth directamente. "rol" define el permiso real:
+//   admin  -> todo, incluido borrar.
+//   editor -> crea/edita, nunca borra.
+//   lector -> solo lectura (Dirección).
+let STAFF = [];
+const CARGO_ORDER = ["Inspector General","Asistente Administrativo","Asistente de la Educación","Director","Portería"];
 
 async function loadStaffRoster(){
   try{
-    const result = await window.storage.get('staff-roster', true);
-    if(result && result.value){
-      STAFF = JSON.parse(result.value);
-    } else {
-      // Primera vez que corre la plataforma: deja guardada la nómina inicial.
-      await saveStaffRoster();
-    }
+    const snap = await firestoreDb.collection('staff_roles').get();
+    STAFF = snap.docs.map(d=>({ email: d.id, ...d.data() }));
   }catch(err){
-    console.error('No se pudo cargar la nómina de funcionarios, se usa la lista por defecto.', err);
+    console.error('No se pudo cargar la nómina de funcionarios.', err);
+    STAFF = [];
   }
 }
+// Guarda TODA la nómina en Firestore (un documento por correo). No borra a
+// nadie que ya no esté en el arreglo STAFF -- eso lo hace deleteStaffMember()
+// explícitamente, para no borrar una cuenta por accidente.
 async function saveStaffRoster(){
   try{
-    await window.storage.set('staff-roster', JSON.stringify(STAFF), true);
+    const batch = firestoreDb.batch();
+    STAFF.forEach(s=>{
+      if(!s.email) return;
+      batch.set(firestoreDb.collection('staff_roles').doc(s.email), {
+        nombre: s.nombre, cargo: s.cargo, rol: s.rol || 'editor',
+        slug: s.slug || slugify(s.nombre), activo: s.activo !== false
+      });
+    });
+    await batch.commit();
     return true;
   }catch(err){
     console.error('Storage error:', err);
@@ -3705,45 +3676,14 @@ async function saveStaffRoster(){
     return false;
   }
 }
-function uniqueStaffSlug(nombre){
-  const base = slugify(nombre) || 'funcionario';
-  let candidate = base;
-  let i = 2;
-  while(STAFF.some(s=>s.slug===candidate)){
-    candidate = `${base}-${i}`;
-    i++;
-  }
-  return candidate;
-}
 function cargoGroupsPresentes(){
   const present = [...new Set(STAFF.map(s=>s.cargo))];
   const extra = present.filter(c=>!CARGO_ORDER.includes(c)).sort((a,b)=>a.localeCompare(b,'es'));
   return [...CARGO_ORDER, ...extra];
 }
 // Refresca los selectores de la plataforma que dependen de la nómina de
-// funcionarios (login, recuperación de contraseña).
-function refreshStaffDependentSelects(){
-  populateStaffSelects();
-}
-
-const AUTH_KEY = "auth-inspectoria";
-const DEFAULT_PASSWORD = "0000";
-
-let AUTH = {};
-let currentUser = null; // { nombre, cargo, slug }
-let recoverSlug = null;
-
-/* ---------------- PANEL DE GESTIÓN (Funcionarios) ---------------- */
-// Hash SHA-256 del código de gestión. No se guarda en texto plano.
-const GESTION_CODE_HASH = "9e6296be2bb963df7daa2b230a2a1f34b1bcd655c10fa6c1f6c05782fee95791";
-let gestionUnlocked = false;
-function updateGestionUI(){
-  const btn = document.getElementById('btn-gestion-panel');
-  const addBtn = document.getElementById('btn-new-staff');
-  if(!btn || !addBtn) return;
-  btn.textContent = gestionUnlocked ? '🔓 Panel de gestión (activo)' : '🔒 Panel de gestión';
-  addBtn.style.display = gestionUnlocked ? 'inline-flex' : 'none';
-}
+// funcionarios (el selector de usuario del login).
+let currentUser = null; // { nombre, cargo, slug, email, rol }
 
 /* ---------------- UTIL ---------------- */
 function initials(name){
@@ -3755,8 +3695,23 @@ async function sha256(text){
   const buf = await crypto.subtle.digest('SHA-256', enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-function normalizeAnswer(a){
-  return a.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+// Deja un registro en la colección "auditoria" cada vez que se borra algo
+// sensible (quién, qué, cuándo). La regla de Firestore impide editar o
+// borrar un registro de auditoría una vez creado.
+async function logAuditoria(accion, detalle){
+  try{
+    await firestoreDb.collection('auditoria').add({
+      accion,
+      alumno: (detalle && detalle.nombre) || '—',
+      curso: (detalle && detalle.curso) || '—',
+      anio: (detalle && detalle.anio) || currentYear || null,
+      usuario: currentUser ? currentUser.nombre : '—',
+      usuarioEmail: currentUser ? currentUser.email : '—',
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(err){
+    console.error('No se pudo registrar en la auditoría.', err);
+  }
 }
 function fmtDate(d){
   if(!d) return "Sin fecha";
@@ -3783,34 +3738,6 @@ document.querySelectorAll('nav.primary button[data-view]').forEach(btn=>{
 });
 
 /* ================= AUTENTICACIÓN ================= */
-function populateStaffSelects(){
-  const opts = STAFF.map(s=>`<option value="${s.slug}">${s.nombre}</option>`).join('');
-  document.getElementById('recover-user').innerHTML = opts;
-}
-
-async function loadAuth(){
-  try{
-    const result = await window.storage.get(AUTH_KEY, true);
-    AUTH = result && result.value ? JSON.parse(result.value) : {};
-  }catch(err){
-    AUTH = {};
-  }
-}
-async function saveAuth(){
-  try{
-    await window.storage.set(AUTH_KEY, JSON.stringify(AUTH), true);
-    return true;
-  }catch(err){
-    console.error('Storage error:', err);
-    showToast('No se pudo guardar el cambio de contraseña. Intenta nuevamente.');
-    return false;
-  }
-}
-
-function showLoginCard(id){
-  ['card-login','card-recover-select','card-recover-none','card-recover-answer','card-recover-reset']
-    .forEach(c=>document.getElementById(c).style.display = (c===id ? 'block' : 'none'));
-}
 function loginError(msg){
   const el = document.getElementById('login-error');
   el.textContent = msg;
@@ -3820,79 +3747,59 @@ function clearLoginError(){
   document.getElementById('login-error').classList.remove('show');
 }
 
-/* ----- Cuadritos de PIN (login) ----- */
-const PIN_LENGTH = 4;
-function pinBoxes(){
-  return Array.from({length: PIN_LENGTH}, (_,i)=>document.getElementById('login-pin-'+i));
-}
-function getPinValue(){
-  return pinBoxes().map(b=>b.value).join('');
-}
-function clearPinBoxes(){
-  pinBoxes().forEach(b=>b.value = '');
-}
-pinBoxes().forEach((box, i)=>{
-  box.addEventListener('input', ()=>{
-    box.value = box.value.replace(/[^0-9]/g, '').slice(0,1);
-    if(box.value && i < PIN_LENGTH-1) pinBoxes()[i+1].focus();
-  });
-  box.addEventListener('keydown', (e)=>{
-    if(e.key === 'Backspace' && !box.value && i > 0) pinBoxes()[i-1].focus();
-  });
-  box.addEventListener('paste', (e)=>{
-    e.preventDefault();
-    const digits = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g,'').slice(0, PIN_LENGTH);
-    pinBoxes().forEach((b,idx)=> b.value = digits[idx] || '');
-    (pinBoxes()[Math.min(digits.length, PIN_LENGTH-1)] || box).focus();
-  });
-});
-
-// Ingreso solo con PIN, sin elegir primero el nombre (igual que en la
-// intranet Incosaf): se prueba el PIN contra cada funcionario, empezando
-// por el último que inició sesión en este navegador para que sea
-// instantáneo en el uso normal del día a día.
-const LOGIN_ULTIMO_SLUG_KEY = 'libro:ultimoLoginSlug';
-async function staffPinMatches(slug, pass){
-  const rec = AUTH[slug];
-  if(rec && rec.passwordHash){
-    return (await sha256(pass)) === rec.passwordHash;
-  }
-  return pass === DEFAULT_PASSWORD;
-}
-
+// Login real con Firebase Authentication (correo + contraseña).
 document.getElementById('login-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   clearLoginError();
-  const pass = getPinValue();
+  const email = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    // enterApp() lo dispara onAuthStateChanged una vez confirmada la sesión.
+  }catch(err){
+    console.error('Error de login:', err);
+    loginError('Correo o contraseña incorrectos.');
+  }finally{
+    submitBtn.disabled = false;
+  }
+});
 
-  if(pass.length < PIN_LENGTH){
-    loginError('Ingresa los 4 dígitos de tu PIN.');
+// Se dispara cada vez que cambia el estado de sesión de Firebase Auth
+// (login, logout, token expirado). Es la única fuente de verdad de quién
+// está conectado — reemplaza por completo al antiguo sistema de PIN.
+firebase.auth().onAuthStateChanged(async (user)=>{
+  if(!user){
+    currentUser = null;
+    window.currentUser = null;
+    if(window.actualizarAccesoRetiroAccidente) window.actualizarAccesoRetiroAccidente();
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('app-shell').classList.remove('active');
     return;
   }
-
-  const ultimoSlug = localStorage.getItem(LOGIN_ULTIMO_SLUG_KEY);
-  const ordenados = STAFF.slice().sort((a,b)=>{
-    if(a.slug===ultimoSlug) return -1;
-    if(b.slug===ultimoSlug) return 1;
-    return 0;
-  });
-
-  let match = null;
-  for(const staff of ordenados){
-    if(await staffPinMatches(staff.slug, pass)){
-      match = staff;
-      break;
-    }
-  }
-
-  if(!match){
-    clearPinBoxes();
-    pinBoxes()[0].focus();
-    loginError('PIN incorrecto. Verifica e intenta nuevamente.');
+  // Se pide SOLO el documento propio (staff_roles/{email}) -- no toda la
+  // colección -- para que esto funcione para cualquier rol bajo reglas
+  // estrictas (listar la nómina completa queda reservado a admin).
+  let staffSnap;
+  try{
+    staffSnap = await firestoreDb.collection('staff_roles').doc(user.email).get();
+  }catch(err){
+    console.error('No se pudo verificar el acceso de esta cuenta.', err);
+    loginError('No se pudo verificar tu acceso. Revisa tu conexión e inténtalo de nuevo.');
+    await firebase.auth().signOut();
     return;
   }
-  localStorage.setItem(LOGIN_ULTIMO_SLUG_KEY, match.slug);
-  currentUser = { nombre: match.nombre, cargo: match.cargo, slug: match.slug };
+  const staff = staffSnap.exists ? staffSnap.data() : null;
+  if(!staff || staff.activo === false){
+    loginError('Esta cuenta no tiene acceso asignado en el Libro Digital. Avisa a un Inspector General.');
+    await firebase.auth().signOut();
+    return;
+  }
+  currentUser = { nombre: staff.nombre, cargo: staff.cargo, slug: staff.slug, email: user.email, rol: staff.rol };
+  window.currentUser = currentUser;
+  if(window.actualizarAccesoRetiroAccidente) window.actualizarAccesoRetiroAccidente();
+  await cargarDatosIniciales();
   enterApp();
 });
 
@@ -3908,13 +3815,13 @@ function enterApp(){
   document.getElementById('app-shell').classList.add('active');
   document.getElementById('account-who').textContent = currentUser.nombre;
   document.getElementById('account-role').textContent = currentUser.cargo;
-  clearPinBoxes();
+  document.getElementById('login-form').reset();
   document.getElementById('welcome-text-p').textContent =
     'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando.';
   applyRoleVisibility();
 
   // Saludo de voz al entrar, solo para el acceso de Dirección (pedido explícito).
-  if(currentUser && esCargo(currentUser.cargo, 'Director') && 'speechSynthesis' in window){
+  if(currentUser && currentUser.rol === 'lector' && 'speechSynthesis' in window){
     try{
       const saludo = new SpeechSynthesisUtterance('Hola ' + currentUser.nombre.split(' ')[0]);
       saludo.lang = 'es-CL';
@@ -3937,9 +3844,17 @@ function irAVista(view){
 function applyRoleVisibility(){
   const hojaBtn = document.getElementById('nav-hoja');
   if(!hojaBtn) return;
-  const isIG = currentUser && esCargo(currentUser.cargo, 'Inspector General');
-  const isDirector = currentUser && esCargo(currentUser.cargo, 'Director');
+  const isIG = currentUser && currentUser.rol === 'admin';
+  const isDirector = currentUser && currentUser.rol === 'lector';
   hojaBtn.style.display = isIG ? 'flex' : 'none';
+  const newStaffBtn = document.getElementById('btn-new-staff');
+  if(newStaffBtn) newStaffBtn.style.display = isIG ? 'inline-flex' : 'none';
+  const caAdminBtn = document.getElementById('control-asis-admin-btn');
+  if(caAdminBtn) caAdminBtn.style.display = isIG ? 'inline-flex' : 'none';
+  // Botones "Eliminar" de atrasos/suspensiones/anotaciones: solo admin los ve.
+  // La protección real está en la regla de Firestore (delete: if isAdmin());
+  // esto es solo para no mostrar un botón que de todas formas va a fallar.
+  document.body.classList.toggle('es-admin', !!isIG);
 
   // Acceso de Dirección: ve solamente su "Resumen general" — nada de matrícula,
   // libro digital (anotaciones), ni el resto de la gestión operativa. Pedido
@@ -3976,6 +3891,15 @@ function applyRoleVisibility(){
     const puedeVerControlAtrasos = currentUser && CONTROL_ATRASOS_SLUGS.includes(currentUser.slug);
     controlBtn.style.display = (puedeVerControlAtrasos && !isDirector) ? 'flex' : 'none';
   }
+
+  // Retiro de estudiantes / Accidente Escolar: mismo directorio que usa el
+  // módulo aparte (ver RT_ACCESO_SLUGS en el script de ese módulo).
+  const RETIRO_ACCIDENTE_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler'];
+  const puedeRetiroAccidente = currentUser && RETIRO_ACCIDENTE_SLUGS.includes(currentUser.slug) && !isDirector;
+  ['retiro','accidente'].forEach(v=>{
+    const btn = document.querySelector(`nav.primary button[data-view="${v}"]`);
+    if(btn) btn.style.display = puedeRetiroAccidente ? 'flex' : 'none';
+  });
 }
 document.getElementById('director-control-atrasos-btn').addEventListener('click', ()=>{
   window.open('https://snlmjjs-tech.github.io/CONTROLATRASOS/', '_blank', 'noopener');
@@ -4023,74 +3947,9 @@ document.getElementById('nav-portalmatricula').addEventListener('click', ()=>{
   window.open('https://matriculas.incosafoficial.cl/', '_blank', 'noopener');
 });
 
-document.getElementById('btn-logout').addEventListener('click', ()=>{
-  currentUser = null;
-  gestionUnlocked = false;
-  updateGestionUI();
-  document.getElementById('app-shell').classList.remove('active');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-form').reset();
-  showLoginCard('card-login');
-});
-
-/* ----- Recuperación de contraseña ----- */
-document.getElementById('go-recover').addEventListener('click', ()=> showLoginCard('card-recover-select'));
-document.getElementById('back-to-login-1').addEventListener('click', ()=> showLoginCard('card-login'));
-document.getElementById('back-to-login-2').addEventListener('click', ()=> showLoginCard('card-login'));
-document.getElementById('back-to-login-3').addEventListener('click', ()=> showLoginCard('card-login'));
-
-document.getElementById('recover-continue').addEventListener('click', ()=>{
-  const slug = document.getElementById('recover-user').value;
-  const rec = AUTH[slug];
-  recoverSlug = slug;
-  if(rec && rec.question && rec.answerHash){
-    document.getElementById('recover-question-label').textContent = rec.question;
-    document.getElementById('recover-answer').value = '';
-    document.getElementById('recover-error').classList.remove('show');
-    showLoginCard('card-recover-answer');
-  } else {
-    showLoginCard('card-recover-none');
-  }
-});
-
-document.getElementById('recover-verify').addEventListener('click', async ()=>{
-  const rec = AUTH[recoverSlug];
-  const answer = document.getElementById('recover-answer').value;
-  const errEl = document.getElementById('recover-error');
-  const hash = await sha256(normalizeAnswer(answer));
-  if(hash === rec.answerHash){
-    errEl.classList.remove('show');
-    document.getElementById('reset-error').classList.remove('show');
-    document.getElementById('reset-pass1').value = '';
-    document.getElementById('reset-pass2').value = '';
-    showLoginCard('card-recover-reset');
-  } else {
-    errEl.textContent = 'Respuesta incorrecta. Intenta nuevamente.';
-    errEl.classList.add('show');
-  }
-});
-
-document.getElementById('reset-save').addEventListener('click', async ()=>{
-  const p1 = document.getElementById('reset-pass1').value;
-  const p2 = document.getElementById('reset-pass2').value;
-  const errEl = document.getElementById('reset-error');
-  if(!/^\d{4}$/.test(p1)){
-    errEl.textContent = 'El PIN debe ser exactamente 4 dígitos numéricos.';
-    errEl.classList.add('show');
-    return;
-  }
-  if(p1 !== p2){
-    errEl.textContent = 'Los PIN no coinciden.';
-    errEl.classList.add('show');
-    return;
-  }
-  await loadAuth();
-  AUTH[recoverSlug] = AUTH[recoverSlug] || {};
-  AUTH[recoverSlug].passwordHash = await sha256(p1);
-  AUTH[recoverSlug].updated = Date.now();
-  if(!(await saveAuth())) return;
-  showToast('PIN actualizado. Ya puedes iniciar sesión.');
-  showLoginCard('card-login');
+document.getElementById('btn-logout').addEventListener('click', async ()=>{
+  await firebase.auth().signOut();
+  // onAuthStateChanged se encarga de limpiar currentUser y mostrar el login.
 });
 
 /* ----- Cambiar contraseña (dentro de la app) ----- */
@@ -4107,54 +3966,42 @@ passOverlay.addEventListener('click', (e)=>{ if(e.target===passOverlay) passOver
 document.getElementById('pass-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const errEl = document.getElementById('pass-error');
+  errEl.classList.remove('show');
   const actual = document.getElementById('p-actual').value;
   const nueva = document.getElementById('p-nueva').value;
   const confirma = document.getElementById('p-confirma').value;
-  const pregunta = document.getElementById('p-pregunta').value;
-  const respuesta = document.getElementById('p-respuesta').value;
 
-  const rec = AUTH[currentUser.slug];
-  const actualOk = rec && rec.passwordHash
-    ? (await sha256(actual)) === rec.passwordHash
-    : actual === DEFAULT_PASSWORD;
-
-  if(!actualOk){
-    errEl.textContent = 'El PIN actual no es correcto.';
-    errEl.classList.add('show');
-    return;
-  }
-  if(!/^\d{4}$/.test(nueva)){
-    errEl.textContent = 'El nuevo PIN debe ser exactamente 4 dígitos numéricos.';
-    errEl.classList.add('show');
-    return;
-  }
   if(nueva !== confirma){
-    errEl.textContent = 'La confirmación no coincide con el nuevo PIN.';
+    errEl.textContent = 'La confirmación no coincide con la nueva contraseña.';
     errEl.classList.add('show');
     return;
   }
-  if(!respuesta.trim()){
-    errEl.textContent = 'Define una respuesta de recuperación para poder ayudarte si la olvidas.';
+  if(nueva.length < 10 || !/[a-zA-Z]/.test(nueva) || !/[0-9]/.test(nueva)){
+    errEl.textContent = 'La nueva contraseña debe tener al menos 10 caracteres, con letras y números.';
     errEl.classList.add('show');
     return;
   }
 
-  await loadAuth();
-  AUTH[currentUser.slug] = {
-    passwordHash: await sha256(nueva),
-    question: pregunta,
-    answerHash: await sha256(normalizeAnswer(respuesta)),
-    updated: Date.now()
-  };
-  if(!(await saveAuth())){
-    errEl.textContent = 'No se pudo guardar el PIN. Revisa tu conexión e inténtalo de nuevo.';
+  const user = firebase.auth().currentUser;
+  if(!user){
+    errEl.textContent = 'Tu sesión expiró. Vuelve a iniciar sesión e inténtalo de nuevo.';
+    errEl.classList.add('show');
+    return;
+  }
+  try{
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, actual);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(nueva);
+  }catch(err){
+    errEl.textContent = (err && err.code === 'auth/wrong-password')
+      ? 'La contraseña actual no es correcta.'
+      : 'No se pudo cambiar la contraseña. Revisa tu conexión e inténtalo de nuevo.';
     errEl.classList.add('show');
     return;
   }
   passOverlay.classList.remove('active');
-  showToast('PIN actualizado correctamente');
+  showToast('Contraseña actualizada correctamente');
 });
-
 /* ---------------- FECHA HOY ---------------- */
 document.getElementById('today-date').textContent =
   new Date().toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -4163,12 +4010,13 @@ document.getElementById('today-date').textContent =
 function renderStaff(){
   const container = document.getElementById('staff-container');
   container.innerHTML = "";
+  const esAdmin = currentUser && currentUser.rol === 'admin';
   cargoGroupsPresentes().forEach(cargo=>{
     const list = STAFF.filter(s=>s.cargo===cargo);
     if(!list.length) return;
     const block = document.createElement('div');
     block.className = 'cargo-block';
-    block.innerHTML = `<h3>${cargo} <span style="font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);font-weight:500;">(${list.length})</span></h3>`;
+    block.innerHTML = `<h3>${caEsc(cargo)} <span style="font-family:'Inter',sans-serif;font-size:12px;color:var(--ink-soft);font-weight:500;">(${list.length})</span></h3>`;
     const grid = document.createElement('div');
     grid.className = 'staff-grid';
     list.forEach(s=>{
@@ -4177,15 +4025,13 @@ function renderStaff(){
       card.innerHTML = `
         <div class="avatar">${initials(s.nombre)}</div>
         <div>
-          <div class="staff-name">${s.nombre}</div>
-          <div class="staff-role">${s.cargo}</div>
+          <div class="staff-name">${caEsc(s.nombre)}</div>
+          <div class="staff-role">${caEsc(s.cargo)} · ${caEsc(ROL_LABEL[s.rol] || s.rol || '—')}</div>
         </div>
-        ${gestionUnlocked ? `
+        ${esAdmin ? `
         <div class="staff-card-actions">
-          <button data-edit-staff="${s.slug}">Editar</button>
-          <button data-pin-staff="${s.slug}">Asignar PIN</button>
-          <button data-reset-staff="${s.slug}">Restablecer contraseña</button>
-          <button data-del-staff="${s.slug}" class="danger">Eliminar</button>
+          <button data-edit-staff="${caEsc(s.slug)}">Editar</button>
+          <button data-del-staff="${caEsc(s.slug)}" class="danger">Quitar acceso</button>
         </div>` : ''}`;
       grid.appendChild(card);
     });
@@ -4201,47 +4047,14 @@ function renderStaff(){
   container.querySelectorAll('[data-del-staff]').forEach(btn=>{
     btn.addEventListener('click', ()=>deleteStaffMember(btn.dataset.delStaff));
   });
-  container.querySelectorAll('[data-reset-staff]').forEach(btn=>{
-    btn.addEventListener('click', ()=>resetStaffPassword(btn.dataset.resetStaff));
-  });
-  container.querySelectorAll('[data-pin-staff]').forEach(btn=>{
-    btn.addEventListener('click', ()=>assignStaffPin(btn.dataset.pinStaff));
-  });
 
-  refreshStaffDependentSelects();
 }
+const ROL_LABEL = { admin:'Administrador', editor:'Editor', lector:'Solo lectura' };
 
-async function resetStaffPassword(slug){
-  const s = STAFF.find(x=>x.slug===slug);
-  if(!s) return;
-  if(!confirm(`¿Restablecer el PIN de "${s.nombre}"?\n\nQuedará sin PIN personal ni pregunta de recuperación configurados, y podrá volver a entrar con el PIN inicial "${DEFAULT_PASSWORD}". Luego puede definir su propio PIN desde «Mi cuenta».`)) return;
-  await loadAuth();
-  delete AUTH[slug];
-  if(!(await saveAuth())) return;
-  showToast(`PIN de ${s.nombre} restablecido a "${DEFAULT_PASSWORD}"`);
-}
-
-async function assignStaffPin(slug){
-  const s = STAFF.find(x=>x.slug===slug);
-  if(!s) return;
-  const pin = prompt(`PIN de 4 dígitos para "${s.nombre}":`);
-  if(pin === null) return;
-  if(!/^\d{4}$/.test(pin)){
-    alert('El PIN debe ser exactamente 4 dígitos numéricos (por ejemplo: 4821).');
-    return;
-  }
-  await loadAuth();
-  AUTH[slug] = {
-    passwordHash: await sha256(pin),
-    question: AUTH[slug]?.question || '',
-    answerHash: AUTH[slug]?.answerHash || '',
-    updated: Date.now()
-  };
-  if(!(await saveAuth())) return;
-  showToast(`PIN asignado a ${s.nombre}`);
-}
-
-/* ----- Agregar / editar funcionario ----- */
+/* ----- Agregar / editar funcionario -----
+   Esto solo guarda nombre/cargo/rol en staff_roles. La cuenta de acceso
+   (correo + contraseña real) se crea aparte, en Firebase Authentication
+   -- ver AUDITORIA-SEGURIDAD.md / guía de publicación. */
 const staffOverlay = document.getElementById('modal-staff-overlay');
 let staffEditTarget = null;
 
@@ -4254,34 +4067,19 @@ function openStaffModal(slug){
     document.getElementById('staff-modal-title').textContent = 'Editar funcionario';
     document.getElementById('st-nombre').value = s.nombre;
     document.getElementById('st-cargo').value = s.cargo;
+    document.getElementById('st-email').value = s.email;
+    document.getElementById('st-email').disabled = true;
+    document.getElementById('st-rol').value = s.rol || 'editor';
     document.getElementById('staff-edit-note').style.display = 'block';
   } else {
     document.getElementById('staff-modal-title').textContent = 'Agregar funcionario';
+    document.getElementById('st-email').disabled = false;
+    document.getElementById('st-rol').value = 'editor';
     document.getElementById('staff-edit-note').style.display = 'none';
   }
   staffOverlay.classList.add('active');
 }
 document.getElementById('btn-new-staff').addEventListener('click', ()=>openStaffModal(null));
-
-document.getElementById('btn-gestion-panel').addEventListener('click', async ()=>{
-  if(gestionUnlocked){
-    gestionUnlocked = false;
-    updateGestionUI();
-    renderStaff();
-    showToast('Panel de gestión bloqueado');
-    return;
-  }
-  const code = prompt('Código del panel de gestión:');
-  if(code === null) return;
-  if((await sha256(code)) !== GESTION_CODE_HASH){
-    alert('Código incorrecto.');
-    return;
-  }
-  gestionUnlocked = true;
-  updateGestionUI();
-  renderStaff();
-  showToast('Panel de gestión desbloqueado');
-});
 document.getElementById('modal-staff-close').addEventListener('click', ()=>staffOverlay.classList.remove('active'));
 document.getElementById('staff-modal-cancel').addEventListener('click', ()=>staffOverlay.classList.remove('active'));
 staffOverlay.addEventListener('click', (e)=>{ if(e.target===staffOverlay) staffOverlay.classList.remove('active'); });
@@ -4290,15 +4088,21 @@ document.getElementById('staff-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const nombre = document.getElementById('st-nombre').value.trim();
   const cargo = document.getElementById('st-cargo').value.trim();
-  if(!nombre || !cargo) return;
+  const email = document.getElementById('st-email').value.trim().toLowerCase();
+  const rol = document.getElementById('st-rol').value;
+  if(!nombre || !cargo || !email) return;
 
   let addedSlug = null;
   if(staffEditTarget){
     const s = STAFF.find(x=>x.slug===staffEditTarget);
-    if(s){ s.nombre = nombre; s.cargo = cargo; }
+    if(s){ s.nombre = nombre; s.cargo = cargo; s.rol = rol; }
   } else {
-    addedSlug = uniqueStaffSlug(nombre);
-    STAFF.push({ slug: addedSlug, nombre, cargo });
+    if(STAFF.some(x=>x.email===email)){
+      alert('Ya existe un funcionario con ese correo.');
+      return;
+    }
+    addedSlug = slugify(nombre);
+    STAFF.push({ slug: addedSlug, nombre, cargo, email, rol, activo: true });
   }
   STAFF.sort((a,b)=> CARGO_ORDER.indexOf(a.cargo)-CARGO_ORDER.indexOf(b.cargo) || a.nombre.localeCompare(b.nombre,'es'));
 
@@ -4314,15 +4118,17 @@ document.getElementById('staff-form').addEventListener('submit', async (e)=>{
 async function deleteStaffMember(slug){
   const s = STAFF.find(x=>x.slug===slug);
   if(!s) return;
-  if(!confirm(`¿Eliminar a "${s.nombre}" de la nómina de funcionarios?\n\nSu acceso a la plataforma quedará deshabilitado.`)) return;
-  const backup = STAFF;
-  STAFF = STAFF.filter(x=>x.slug!==slug);
-  if(!(await saveStaffRoster())){
-    STAFF = backup;
+  if(!confirm(`¿Quitarle el acceso a "${s.nombre}"?\n\nDeja de poder entrar al Libro Digital de inmediato. Esto NO borra su cuenta de Firebase Authentication (eso se hace aparte, en Firebase Console, si corresponde).`)) return;
+  try{
+    await firestoreDb.collection('staff_roles').doc(s.email).delete();
+  }catch(err){
+    console.error('Storage error:', err);
+    showToast('No se pudo quitar el acceso. Intenta nuevamente.');
     return;
   }
+  STAFF = STAFF.filter(x=>x.slug!==slug);
   renderStaff();
-  showToast('Funcionario eliminado de la nómina');
+  showToast('Acceso retirado');
 }
 
 /* ================= MATRÍCULA ================= */
@@ -4812,7 +4618,7 @@ function renderBajas(){
     <tr>
       <td>${b.folio || '—'}</td><td>${b.n}</td><td>${b.curso}</td><td>${b.n_matricula}</td>
       <td>${fmtDate(b.fecha_ingreso)}</td><td>${fmtDate(b.fecha_retiro)}</td><td>${b.nombre}</td>
-      <td>${b.run}</td><td>${b.edad}</td><td>${b.comuna}</td><td>${b.motivo}</td><td>${b.seguimiento}</td>
+      <td>${b.run}</td><td>${b.edad}</td><td>${b.comuna}</td><td>${caEsc(b.motivo)}</td><td>${caEsc(b.seguimiento)}</td>
       <td style="white-space:nowrap;">
         ${b.folio ? `<button class="task-del" data-redown-baja="${b.id}" style="margin-right:10px;color:var(--gold-bright);">Descargar PDF</button>` : ''}
         <button class="task-del" data-del-baja="${b.id}">Eliminar</button>
@@ -6224,26 +6030,16 @@ function renderControlAsistCursoDetalle(curso){
   });
 }
 
+// El acceso ya no depende de una clave maestra compartida: solo un usuario
+// con rol "admin" (Inspector General) ve el botón, y la propia regla de
+// Firestore vuelve a exigirlo del lado del servidor al borrar.
 let controlAsisAdminUnlocked = false;
-const CONTROL_ASIS_ADMIN_HASH = "a440271cecec7a0c14582539fbc0d3fbf544425fdac9ab943c05640d35304e08";
-document.getElementById('control-asis-admin-btn').addEventListener('click', async ()=>{
-  if(controlAsisAdminUnlocked){
-    controlAsisAdminUnlocked = false;
-    document.getElementById('control-asis-admin-btn').textContent = '🔒 Administrar';
-    if(controlAsistCursoSel) renderControlAsistCursoDetalle(controlAsistCursoSel);
-    showToast('Modo administrar bloqueado');
-    return;
-  }
-  const clave = prompt('Clave de administrador para poder borrar alumnos del listado:');
-  if(clave === null) return;
-  if((await sha256(clave)) !== CONTROL_ASIS_ADMIN_HASH){
-    alert('Clave incorrecta.');
-    return;
-  }
-  controlAsisAdminUnlocked = true;
-  document.getElementById('control-asis-admin-btn').textContent = '🔓 Administrar (activo)';
+document.getElementById('control-asis-admin-btn').addEventListener('click', ()=>{
+  if(!currentUser || currentUser.rol !== 'admin') return;
+  controlAsisAdminUnlocked = !controlAsisAdminUnlocked;
+  document.getElementById('control-asis-admin-btn').textContent = controlAsisAdminUnlocked ? '🔓 Administrar (activo)' : '🔒 Administrar';
   if(controlAsistCursoSel) renderControlAsistCursoDetalle(controlAsistCursoSel);
-  showToast('Modo administrar desbloqueado: ya puedes borrar alumnos del listado');
+  showToast(controlAsisAdminUnlocked ? 'Modo administrar activado: ya puedes borrar alumnos del listado' : 'Modo administrar desactivado');
 });
 
 document.getElementById('control-asis-volver-btn').addEventListener('click', renderControlAsistencia);
@@ -7445,7 +7241,7 @@ function buildCartaCitacionPDF(susp, student){
   y += 5;
   doc.setFontSize(8.5);
   doc.setTextColor(110,110,110);
-  const nombreIG = (currentUser && esCargo(currentUser.cargo, 'Inspector General')) ? currentUser.nombre : '';
+  const nombreIG = (currentUser && currentUser.rol === 'admin') ? currentUser.nombre : '';
   if(nombreIG) doc.text(nombreIG, 154, y, { align:'center' });
   doc.setTextColor(0,0,0);
 
@@ -7472,7 +7268,7 @@ function renderSuspensionTable(){
       <tbody>
         ${list.map(s=>`
           <tr>
-            <td>${fmtDate(s.fecha)}</td><td>${s.dias}</td><td>${fmtDate(addDaysStr(s.fecha, s.dias))}</td><td>${s.motivo}</td><td>${s.autor}</td>
+            <td>${fmtDate(s.fecha)}</td><td>${s.dias}</td><td>${fmtDate(addDaysStr(s.fecha, s.dias))}</td><td>${caEsc(s.motivo)}</td><td>${s.autor}</td>
             <td style="white-space:nowrap;">
               <button class="task-del" data-redown-carta="${s.id}" style="margin-right:10px;color:var(--gold-bright);">Descargar carta</button>
               <button class="task-del" data-del-susp="${s.id}">Eliminar</button>
@@ -7483,8 +7279,10 @@ function renderSuspensionTable(){
   wrap.querySelectorAll('[data-del-susp]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de suspensión?')) return;
+      const entry = suspensionesData.find(x=>x.id===btn.dataset.delSusp);
       if(!(await deleteSuspensionEntry(btn.dataset.delSusp))) return;
       suspensionesData = suspensionesData.filter(x=>x.id!==btn.dataset.delSusp);
+      await logAuditoria('borrar-suspension', entry);
       renderSuspensionTable();
       renderFichaAlertas();
       renderHoja();
@@ -7631,7 +7429,7 @@ function renderSuspensionesVigentes(){
   empty.style.display = 'none';
   tbody.innerHTML = list.map(s=>`
     <tr>
-      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${s.motivo}</td>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${caEsc(s.motivo)}</td>
       <td style="white-space:nowrap;">
         <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--gold-bright);">Descargar carta</button>
         <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
@@ -7654,7 +7452,7 @@ function renderSuspensionesFuturas(){
   empty.style.display = 'none';
   tbody.innerHTML = list.map(s=>`
     <tr>
-      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${s.motivo}</td>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${fmtDate(s.fecha_retorno)}</td><td>${caEsc(s.motivo)}</td>
       <td style="white-space:nowrap;">
         <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--gold-bright);">Descargar carta</button>
         <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
@@ -7783,7 +7581,7 @@ function renderSuspensionesHistorial(){
   empty.style.display = 'none';
   tbody.innerHTML = list.map(s=>`
     <tr>
-      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${s.dias}</td><td>${s.motivo}</td>
+      <td>${s.nombre}</td><td>${s.curso}</td><td>${fmtDate(s.fecha)}</td><td>${s.dias}</td><td>${caEsc(s.motivo)}</td>
       <td style="white-space:nowrap;">
         <button class="task-del" data-susp-carta="${s.id}" style="margin-right:10px;color:var(--gold-bright);">Descargar carta</button>
         <button class="task-del" data-susp-ficha="${s.studentId}">Ver ficha</button>
@@ -7846,7 +7644,7 @@ function renderSuspensionesPorSuspender(){
   empty.style.display = 'none';
   tbody.innerHTML = casos.map(c=>`
     <tr>
-      <td><a href="#" data-susp-caso-ficha="${c.studentId}">${c.nombre}</a></td><td>${c.curso}</td><td>${c.detalle}</td>
+      <td><a href="#" data-susp-caso-ficha="${c.studentId}">${c.nombre}</a></td><td>${c.curso}</td><td>${caEsc(c.detalle)}</td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-susp-caso-ficha]').forEach(a=>{
     a.addEventListener('click', (e)=>{ e.preventDefault(); openFicha(a.dataset.suspCasoFicha); });
@@ -8030,15 +7828,17 @@ function renderFichaTimeline(){
         ${e.folio ? `<button class="task-del" data-redown-acta="${e.id}" style="margin-left:10px;color:var(--gold-bright);">Descargar PDF</button>` : ''}
         <button class="task-del" data-del-entry="${e.id}" style="margin-left:10px;">Eliminar</button>
       </div>
-      <div class="timeline-desc">${e.descripcion}</div>
+      <div class="timeline-desc">${caEsc(e.descripcion)}</div>
       ${e.apoderado_nombre ? `<div class="timeline-author">Apoderado: ${e.apoderado_nombre}${e.apoderado_run ? ' · '+e.apoderado_run : ''}</div>` : ''}
       <div class="timeline-author">Registrado por ${e.autor}</div>
     </div>`).join('');
   container.querySelectorAll('[data-del-entry]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar esta anotación?')) return;
+      const entry = libroData.find(x=>x.id===btn.dataset.delEntry);
       if(!(await deleteLibroEntry(btn.dataset.delEntry))) return;
       libroData = libroData.filter(x=>x.id!==btn.dataset.delEntry);
+      await logAuditoria('borrar-anotacion', entry);
       renderFichaTimeline();
       renderFichaAlertas();
       renderLibro();
@@ -8264,7 +8064,7 @@ function renderHoja(){
         <td>${c.nombre}</td>
         <td>${c.curso}</td>
         <td><div class="hoja-badges">${badges}</div></td>
-        <td style="font-size:11.5px;color:var(--ink-soft);">${c.detalle}</td>
+        <td style="font-size:11.5px;color:var(--ink-soft);">${caEsc(c.detalle)}</td>
         <td style="white-space:nowrap;">
           <button class="task-del" data-ver-ficha="${c.studentId}" style="margin-right:10px;color:var(--gold-bright);">Ver ficha</button>
           ${gestionBtns}
@@ -8451,14 +8251,16 @@ function renderAtrasosHistorial(){
     <tr>
       <td>${fmtDate(a.fecha)}</td><td>${a.hora}</td><td>${a.nombre}</td><td>${a.curso}</td>
       <td>${a.justificado ? '<span class="badge activo">Sí</span>' : '<span class="badge retirado">No</span>'}</td>
-      <td>${a.observacion}</td>
+      <td>${caEsc(a.observacion)}</td>
       <td><button class="task-del" data-del-atraso="${a.id}">Eliminar</button></td>
     </tr>`).join('');
   tbody.querySelectorAll('[data-del-atraso]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!confirm('¿Eliminar este registro de atraso?')) return;
+      const entry = atrasosData.find(x=>x.id===btn.dataset.delAtraso);
       if(!(await deleteAtrasoEntry(btn.dataset.delAtraso))) return;
       atrasosData = atrasosData.filter(x=>x.id!==btn.dataset.delAtraso);
+      await logAuditoria('borrar-atraso', entry);
       renderAtrasos();
       showToast('Atraso eliminado');
     });
@@ -8762,7 +8564,7 @@ function buildActaBajaPDF(record){
   y += 5;
   doc.setFontSize(8.5);
   doc.setTextColor(110,110,110);
-  const nombreIG = (currentUser && esCargo(currentUser.cargo, 'Inspector General')) ? currentUser.nombre : '';
+  const nombreIG = (currentUser && currentUser.rol === 'admin') ? currentUser.nombre : '';
   if(nombreIG) doc.text(nombreIG, pageW-marginL-40, y, { align:'center' });
   doc.setTextColor(0,0,0);
 
@@ -9047,10 +8849,16 @@ function renderFichas(){
 }
 
 /* ---------------- INIT ---------------- */
-async function init(){
-  await loadStaffRoster();
-  renderStaff();
-  await loadAuth();
+// Antes esto corría entero ANTES del login (init() se llamaba suelta al
+// final del script), lo que obligaba a que las reglas de Firestore
+// quedaran abiertas para que la página pudiera cargar algo. Ahora se
+// dispara recién cuando Firebase Authentication confirma una sesión
+// válida (ver firebase.auth().onAuthStateChanged más arriba).
+async function cargarDatosIniciales(){
+  if(currentUser && currentUser.rol === 'admin'){
+    await loadStaffRoster();
+    renderStaff();
+  }
   await loadMatricula();
   await loadAsistencia();
   await loadControlAsistencia();
@@ -9070,7 +8878,6 @@ async function init(){
   renderHoja();
   renderDirectorResumen();
 }
-init();
 </script>
 <script type="module">
   // =====================================================================
@@ -9080,10 +8887,7 @@ init();
   // (mismas cuentas que en la intranet), independiente del login de
   // "Funcionario" del resto del libro digital.
   // =====================================================================
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import {
-    getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, setDoc,
     onSnapshot, query, orderBy, serverTimestamp, runTransaction
@@ -9092,35 +8896,19 @@ init();
 
   // Login (Firebase Authentication) sigue validándose contra las cuentas
   // de la intranet Incosaf — no se tocan ni se duplican esas cuentas.
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMg-fnOkEdg_whrsj3O-HfKrezTXfYbXg",
-    authDomain: "incosafintranet.firebaseapp.com",
-    projectId: "incosafintranet",
-    storageBucket: "incosafintranet.firebasestorage.app",
-    messagingSenderId: "466123047655",
-    appId: "1:466123047655:web:510e737d3cb0eabcf61842"
-  };
-  const app = initializeApp(firebaseConfig, 'retiro-auth');
-  const auth = getAuth(app);
+  // Antes este módulo iniciaba sesión aparte contra el proyecto Firebase de
+  // la intranet (incosafintranet), y escribía sus datos en el proyecto del
+  // Libro Digital (inspectoria-libro-digital) SIN sesión real ahí -- solo
+  // funcionaba porque las reglas de Firestore estaban abiertas. Ahora
+  // reutiliza la MISMA sesión ya iniciada en el login principal del Libro
+  // Digital (misma cuenta, mismo proyecto), así que las reglas de Firestore
+  // sí pueden exigir sesión + rol en este módulo también.
+  const db = getFirestore(getApp());
 
-  // Los DATOS (retiros, contadores, auditoría, etc.) ahora se guardan en la
-  // base de datos propia del Libro digital, separada de la de Incosaf, para
-  // no compartir cuota de lecturas/escrituras con la intranet.
-  const dbFirebaseConfig = {
-    apiKey: "AIzaSyAVIbizU3MJyk-99qFMXtGyoNHP6NAGEp0",
-    authDomain: "inspectoria-libro-digital.firebaseapp.com",
-    projectId: "inspectoria-libro-digital",
-    storageBucket: "inspectoria-libro-digital.firebasestorage.app",
-    messagingSenderId: "240318386352",
-    appId: "1:240318386352:web:5dc1d222124d7955c26b75"
-  };
-  const dbApp = initializeApp(dbFirebaseConfig, 'retiro-db');
-  const db = getFirestore(dbApp);
-
-  // Cuentas con acceso a Retiro de estudiantes en la intranet (mismo
-  // directorio: el código no contiene los PIN, solo el correo y el nombre;
-  // el PIN se prueba como contraseña contra cada correo hasta encontrar la
-  // cuenta a la que pertenece — igual que en la intranet).
+  // Quiénes pueden entrar a Retiro de estudiantes / Accidente Escolar,
+  // identificados por su "slug" (el mismo que usa el resto del Libro
+  // Digital) — ya no por un directorio de correos aparte.
+  const RT_ACCESO_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler'];
   const RT_USER_DIRECTORY = [
     { email: 'luis.cadiz@incosafintranet.cl',        nombre: 'Luis Ramón Cádiz Fuenzalida' },
     { email: 'claudio.valenzuela@incosafintranet.cl', nombre: 'Claudio Matías Valenzuela Fuentes' },
@@ -10155,80 +9943,31 @@ init();
     watchAsisRosterEventos();
   }
 
-  function rtMostrarError(mensaje){
-    rtGateError.textContent = mensaje;
-    rtGateError.classList.add('show');
-    rtPinInput.value = '';
-    rtPinInput.focus();
-  }
-
-  rtPinForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const pin = rtPinInput.value;
-    rtGateError.classList.remove('show');
-
-    const ultimoEmail = localStorage.getItem(RT_ULTIMO_EMAIL_KEY);
-    if(ultimoEmail){
-      const usuario = RT_USER_DIRECTORY.find(u=>u.email===ultimoEmail);
-      if(usuario){
-        try{
-          await signInWithEmailAndPassword(auth, usuario.email, pin);
-          return; // onAuthStateChanged desbloquea el módulo al confirmar la sesión.
-        }catch(err){
-          if(err && err.code==='auth/too-many-requests'){
-            rtMostrarError('Demasiados intentos fallidos. Espera unos minutos e inténtalo nuevamente.');
-            return;
-          }
-          /* prueba con el resto de las cuentas */
-        }
-      }
-    }
-
-    for(const usuario of RT_USER_DIRECTORY){
-      if(usuario.email===ultimoEmail) continue;
-      try{
-        await signInWithEmailAndPassword(auth, usuario.email, pin);
-        localStorage.setItem(RT_ULTIMO_EMAIL_KEY, usuario.email);
-        return;
-      }catch(err){
-        if(err && err.code==='auth/too-many-requests'){
-          rtMostrarError('Demasiados intentos fallidos en una de las cuentas. Espera unos minutos e inténtalo nuevamente.');
-          return;
-        }
-        /* prueba con la siguiente cuenta */
-      }
-    }
-    rtMostrarError('PIN incorrecto.');
-  });
-
-  rtLogoutBtn.addEventListener('click', ()=>{ signOut(auth); });
-
-  onAuthStateChanged(auth, async user=>{
-    // Solo cuentas del directorio de Retiro pueden desbloquear este módulo
-    // (otras cuentas válidas de la intranet, si alguna vez inician sesión
-    // aquí por error, no tienen nada que hacer en este módulo).
-    const usuario = user ? RT_USER_DIRECTORY.find(u=>u.email===user.email) : null;
-    if(user && usuario){
-      currentUserName = usuario.nombre;
+  rtLogoutBtn.addEventListener('click', ()=> firebase.auth().signOut());
+  function rtActualizarAcceso(){
+    const cu = window.currentUser;
+    const autorizado = cu && RT_ACCESO_SLUGS.includes(cu.slug);
+    if(autorizado){
+      currentUserName = cu.nombre;
       rtGate.style.display = 'none';
       rtApp.style.display = '';
-      rtSessionUser.textContent = currentUserName;
-      rtPinInput.value = '';
-      rtGateError.classList.remove('show');
-      await cargarAsisRosterBase();
-      rtStartWatchers();
+      if(rtSessionUser) rtSessionUser.textContent = currentUserName;
+      cargarAsisRosterBase().then(()=> rtStartWatchers());
     }else{
-      if(user && !usuario){
-        // Sesión de Firebase válida pero sin acceso a Retiro: se cierra
-        // para volver a mostrar el formulario de PIN.
-        signOut(auth);
-        return;
-      }
       currentUserName = null;
       rtApp.style.display = 'none';
       rtGate.style.display = '';
+      if(rtGateError){
+        rtGateError.textContent = cu ? 'Tu cuenta no tiene acceso a Retiro de estudiantes.' : '';
+        rtGateError.classList.toggle('show', !!cu);
+      }
     }
-  });
+  }
+  window.actualizarAccesoRetiroAccidente = function(){
+    rtActualizarAcceso();
+    if(typeof acActualizarAcceso === 'function') acActualizarAcceso();
+  };
+  rtActualizarAcceso();
   // =====================================================================
   // ACCIDENTE ESCOLAR (Seguro Escolar) — comparte el mismo PIN (misma
   // sesión de Firebase Authentication) que Retiro de estudiantes, y
@@ -10848,74 +10587,27 @@ init();
     if(!rtWatchersStarted) watchAsisRosterEventos();
   }
 
-  function acMostrarError(mensaje){
-    acGateError.textContent = mensaje;
-    acGateError.classList.add('show');
-    acPinInput.value = '';
-    acPinInput.focus();
-  }
-
-  acPinForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const pin = acPinInput.value;
-    acGateError.classList.remove('show');
-
-    const ultimoEmail = localStorage.getItem(RT_ULTIMO_EMAIL_KEY);
-    if(ultimoEmail){
-      const usuario = RT_USER_DIRECTORY.find(u=>u.email===ultimoEmail);
-      if(usuario){
-        try{
-          await signInWithEmailAndPassword(auth, usuario.email, pin);
-          return; // onAuthStateChanged desbloquea el módulo al confirmar la sesión.
-        }catch(err){
-          if(err && err.code==='auth/too-many-requests'){
-            acMostrarError('Demasiados intentos fallidos. Espera unos minutos e inténtalo nuevamente.');
-            return;
-          }
-          /* prueba con el resto de las cuentas */
-        }
-      }
-    }
-
-    for(const usuario of RT_USER_DIRECTORY){
-      if(usuario.email===ultimoEmail) continue;
-      try{
-        await signInWithEmailAndPassword(auth, usuario.email, pin);
-        localStorage.setItem(RT_ULTIMO_EMAIL_KEY, usuario.email);
-        return;
-      }catch(err){
-        if(err && err.code==='auth/too-many-requests'){
-          acMostrarError('Demasiados intentos fallidos en una de las cuentas. Espera unos minutos e inténtalo nuevamente.');
-          return;
-        }
-        /* prueba con la siguiente cuenta */
-      }
-    }
-    acMostrarError('PIN incorrecto.');
-  });
-
-  acLogoutBtn.addEventListener('click', ()=>{ signOut(auth); });
-
-  onAuthStateChanged(auth, async user=>{
-    // Mismo directorio de cuentas que Retiro de estudiantes.
-    const usuario = user ? RT_USER_DIRECTORY.find(u=>u.email===user.email) : null;
-    if(user && usuario){
-      currentUserName = usuario.nombre;
+  acLogoutBtn.addEventListener('click', ()=> firebase.auth().signOut());
+  function acActualizarAcceso(){
+    const cu = window.currentUser;
+    const autorizado = cu && RT_ACCESO_SLUGS.includes(cu.slug);
+    if(autorizado){
+      currentUserName = cu.nombre;
       acGate.style.display = 'none';
       acApp.style.display = '';
-      acSessionUser.textContent = currentUserName;
-      acPinInput.value = '';
-      acGateError.classList.remove('show');
-      await cargarAsisRosterBase();
-      acStartWatchers();
+      if(acSessionUser) acSessionUser.textContent = currentUserName;
+      cargarAsisRosterBase().then(()=> acStartWatchers());
     }else{
-      if(user && !usuario){
-        return; // el listener de Retiro ya se encarga de cerrar la sesión inválida.
-      }
+      currentUserName = null;
       acApp.style.display = 'none';
       acGate.style.display = '';
+      if(acGateError){
+        acGateError.textContent = cu ? 'Tu cuenta no tiene acceso a Accidente Escolar.' : '';
+        acGateError.classList.toggle('show', !!cu);
+      }
     }
-  });
+  }
+  acActualizarAcceso();
 </script>
 
 <script>
