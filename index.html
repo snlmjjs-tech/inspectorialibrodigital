@@ -8879,19 +8879,11 @@ async function cargarDatosIniciales(){
   renderDirectorResumen();
 }
 </script>
-<script type="module">
+<script>
   // =====================================================================
   // RETIRO DE ESTUDIANTES — módulo que comparte la base de datos (Firebase)
-  // con la intranet institucional (snlmjjs-tech/incosafinterno). Se ejecuta
-  // como su propio <script type="module"> y usa su propio login por PIN
-  // (mismas cuentas que en la intranet), independiente del login de
-  // "Funcionario" del resto del libro digital.
+  // con la intranet institucional (snlmjjs-tech/incosafinterno).
   // =====================================================================
-  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-  import {
-    getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, setDoc,
-    onSnapshot, query, orderBy, serverTimestamp, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   const { jsPDF } = window.jspdf;
 
   // Login (Firebase Authentication) sigue validándose contra las cuentas
@@ -8902,8 +8894,10 @@ async function cargarDatosIniciales(){
   // funcionaba porque las reglas de Firestore estaban abiertas. Ahora
   // reutiliza la MISMA sesión ya iniciada en el login principal del Libro
   // Digital (misma cuenta, mismo proyecto), así que las reglas de Firestore
-  // sí pueden exigir sesión + rol en este módulo también.
-  const db = getFirestore(getApp());
+  // sí pueden exigir sesión + rol en este módulo también. Usa el mismo SDK
+  // "compat" (firebase.*) que el resto de la app, en vez del SDK modular:
+  // mezclar ambos en el mismo documento causaba fallos silenciosos en Safari.
+  const db = firestoreDb;
 
   // Quiénes pueden entrar a Retiro de estudiantes / Accidente Escolar,
   // identificados por su "slug" (el mismo que usa el resto del Libro
@@ -8960,13 +8954,13 @@ async function cargarDatosIniciales(){
 
   async function logAudit(accion, rec){
     try{
-      await addDoc(collection(db,'auditoria'), {
+      await db.collection('auditoria').add({
         accion,
         alumno: rec.nombre || '—',
         curso: rec.curso || '—',
         anio: rec.anio || null,
         usuario: currentUserName || '—',
-        fecha: serverTimestamp()
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
     }catch(e){
       console.error('No se pudo registrar auditoría', e);
@@ -8995,8 +8989,8 @@ async function cargarDatosIniciales(){
 
   // ---------- Firestore: escuchas en tiempo real ----------
   function watchRetiros(){
-    const q = query(collection(db,'retiros'), orderBy('creadoEn','desc'));
-    onSnapshot(q, snap=>{
+    const q = db.collection('retiros').orderBy('creadoEn','desc');
+    q.onSnapshot(snap=>{
       retiros = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       renderRetiroHistorial();
       renderRetiroStats();
@@ -9011,10 +9005,10 @@ async function cargarDatosIniciales(){
   // evitar que dos personas registrando al mismo tiempo obtengan el
   // mismo número. Comparte el mismo contador que la intranet.
   async function nextFolioRetiro(anio){
-    const ref = doc(db, 'contadores', 'retiros_'+anio);
-    return await runTransaction(db, async (tx)=>{
+    const ref = db.collection('contadores').doc('retiros_'+anio);
+    return await db.runTransaction(async (tx)=>{
       const snap = await tx.get(ref);
-      const siguiente = (snap.exists() ? (snap.data().ultimo||0) : 0) + 1;
+      const siguiente = (snap.exists ? (snap.data().ultimo||0) : 0) + 1;
       tx.set(ref, { ultimo: siguiente }, { merge:true });
       return siguiente;
     });
@@ -9036,7 +9030,7 @@ async function cargarDatosIniciales(){
     return rec && typeof rec.valor === 'number' ? rec.valor : null;
   }
   function watchRetiroAsistencias(){
-    onSnapshot(query(collection(db,'retiroAsistencia')), snap=>{
+    db.collection('retiroAsistencia').onSnapshot(snap=>{
       retiroAsistencias = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       actualizarHistorialAlumno();
     }, err=>console.error(err));
@@ -9047,7 +9041,7 @@ async function cargarDatosIniciales(){
     return slugAlumno(nombre).replace(/_+/g,'-');
   }
   function watchRetiroConfig(){
-    onSnapshot(query(collection(db,'retiroConfig')), snap=>{
+    db.collection('retiroConfig').onSnapshot(snap=>{
       ['Claudio Valenzuela','Luis Cádiz Fuenzalida'].forEach(inspector=>{
         const cfgDoc = snap.docs.find(d=>d.id===slugInspector(inspector));
         retiroInspAccessKeys[inspector] = (cfgDoc && cfgDoc.data().accessKey) ? cfgDoc.data().accessKey : 'INCOSAF';
@@ -9055,8 +9049,8 @@ async function cargarDatosIniciales(){
     }, err=>console.error(err));
   }
   function watchRetiroInspLog(){
-    const q = query(collection(db,'retiroInspLog'), orderBy('creadoEn','desc'));
-    onSnapshot(q, snap=>{
+    const q = db.collection('retiroInspLog').orderBy('creadoEn','desc');
+    q.onSnapshot(snap=>{
       retiroInspLog = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       renderInspLog();
     }, err=>console.error(err));
@@ -9087,8 +9081,8 @@ async function cargarDatosIniciales(){
     return roster;
   }
   function watchAsisRosterEventos(){
-    const q = query(collection(db,'asistenciaRosterEventos'), orderBy('creadoEn','desc'));
-    onSnapshot(q, snap=>{
+    const q = db.collection('asistenciaRosterEventos').orderBy('creadoEn','desc');
+    q.onSnapshot(snap=>{
       asisRosterEventos = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       retiroDatalistBuild();
     }, err=>console.error(err));
@@ -9353,10 +9347,10 @@ async function cargarDatosIniciales(){
     valor = Math.round(valor*10)/10;
     const anio = rtAnioSelect.value;
     try{
-      await setDoc(doc(db,'retiroAsistencia', asistenciaId(nombre, anio)), {
+      await db.collection('retiroAsistencia').doc(asistenciaId(nombre, anio)).set({
         nombre, anio, valor,
         actualizadoPor: currentUserName || '—',
-        actualizadoEn: serverTimestamp()
+        actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
       });
       showToast('✓ Asistencia guardada.');
     }catch(err){
@@ -9474,15 +9468,15 @@ async function cargarDatosIniciales(){
     if(cambiosTexto.length===0){ showToast('No hay cambios para guardar.'); return; }
 
     try{
-      await updateDoc(doc(db,'retiros', rec.id), cambios);
-      await addDoc(collection(db,'retiroInspLog'), {
+      await db.collection('retiros').doc(rec.id).update(cambios);
+      await db.collection('retiroInspLog').add({
         folio: rec.folio,
         alumno: cambios.alumno,
         anio: rec.anio || rtAnioSelect.value,
         inspector,
         tipo: 'edicion',
         detalle: cambiosTexto.join(' · '),
-        creadoEn: serverTimestamp()
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
       });
       await logAudit('Editó retiro de estudiante (Inspectoría General, libro digital)', { nombre: cambios.alumno, curso: cambios.curso, anio: rec.anio });
       claveInput.value = '';
@@ -9508,15 +9502,15 @@ async function cargarDatosIniciales(){
     if(!window.confirm(`¿Eliminar definitivamente el retiro #${String(rec.folio||0).padStart(5,'0')} de ${rec.alumno||'—'}? Esta acción no se puede deshacer.`)) return;
 
     try{
-      await deleteDoc(doc(db,'retiros', rec.id));
-      await addDoc(collection(db,'retiroInspLog'), {
+      await db.collection('retiros').doc(rec.id).delete();
+      await db.collection('retiroInspLog').add({
         folio: rec.folio,
         alumno: rec.alumno,
         anio: rec.anio || rtAnioSelect.value,
         inspector,
         tipo: 'eliminacion',
         detalle: 'Eliminó el registro',
-        creadoEn: serverTimestamp()
+        creadoEn: firebase.firestore.FieldValue.serverTimestamp()
       });
       await logAudit('Eliminó retiro de estudiante (Inspectoría General, libro digital)', { nombre: rec.alumno, curso: rec.curso, anio: rec.anio });
       claveInput.value = '';
@@ -9540,7 +9534,7 @@ async function cargarDatosIniciales(){
       return;
     }
     try{
-      await setDoc(doc(db,'retiroConfig', slugInspector(inspector)), { accessKey: nuevaInput.value.trim() }, { merge:true });
+      await db.collection('retiroConfig').doc(slugInspector(inspector)).set({ accessKey: nuevaInput.value.trim() }, { merge:true });
       actualInput.value = '';
       nuevaInput.value = '';
       showToast('✓ Clave de acceso actualizada.');
@@ -9836,10 +9830,10 @@ async function cargarDatosIniciales(){
     try{
       const escrituras = [];
       asisPendingImport.altas.forEach(a=>{
-        escrituras.push(addDoc(collection(db,'asistenciaRosterEventos'), { type:'alta', curso:a.curso, nombre:a.nombre, usuario: currentUserName || '—', creadoEn: serverTimestamp() }));
+        escrituras.push(db.collection('asistenciaRosterEventos').add({ type:'alta', curso:a.curso, nombre:a.nombre, usuario: currentUserName || '—', creadoEn: firebase.firestore.FieldValue.serverTimestamp() }));
       });
       asisPendingImport.bajas.forEach(b=>{
-        escrituras.push(addDoc(collection(db,'asistenciaRosterEventos'), { type:'baja', curso:b.curso, nombre:b.nombre, motivo:'Retiro según planilla importada', usuario: currentUserName || '—', creadoEn: serverTimestamp() }));
+        escrituras.push(db.collection('asistenciaRosterEventos').add({ type:'baja', curso:b.curso, nombre:b.nombre, motivo:'Retiro según planilla importada', usuario: currentUserName || '—', creadoEn: firebase.firestore.FieldValue.serverTimestamp() }));
       });
       await Promise.all(escrituras);
       msg.style.color='var(--rt-ok)';
@@ -9873,12 +9867,12 @@ async function cargarDatosIniciales(){
       observaciones: document.getElementById('ret-obs').value.trim(),
       anio,
       creadoPor: currentUserName,
-      creadoEn: serverTimestamp()
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
     try{
       const folio = await nextFolioRetiro(anio);
       rec.folio = folio;
-      await addDoc(collection(db,'retiros'), rec);
+      await db.collection('retiros').add(rec);
       await logAudit('Registró retiro de estudiante (libro digital)', { nombre: rec.alumno, curso: rec.curso, anio });
       buildRetiroPDF(rec);
       document.getElementById('retiroForm').reset();
@@ -9991,8 +9985,8 @@ async function cargarDatosIniciales(){
 
   // ---------- Accidente escolar (Firestore, en tiempo real) ----------
   function watchAccidentes(){
-    const q = query(collection(db,'accidentesEscolares'), orderBy('creadoEn','desc'));
-    onSnapshot(q, snap=>{
+    const q = db.collection('accidentesEscolares').orderBy('creadoEn','desc');
+    q.onSnapshot(snap=>{
       accidentes = snap.docs.map(d=>({ id:d.id, ...d.data() }));
       renderAccidenteHistorial();
     }, err=>{
@@ -10008,8 +10002,8 @@ async function cargarDatosIniciales(){
   // cambia el N°7 por el N°3 porque se equivocó), el siguiente sugerido sea
   // el N°4 y no vuelva a saltar al N°8.
   function watchAccUltimoFolio(){
-    onSnapshot(doc(db,'contadores','accidentesUltimoFolio'), snap=>{
-      accUltimoFolio = (snap.exists() && typeof snap.data().ultimo==='number') ? snap.data().ultimo : -1;
+    db.collection('contadores').doc('accidentesUltimoFolio').onSnapshot(snap=>{
+      accUltimoFolio = (snap.exists && typeof snap.data().ultimo==='number') ? snap.data().ultimo : -1;
       accSugerirFolio();
     }, err=>console.error(err));
   }
@@ -10153,12 +10147,12 @@ async function cargarDatosIniciales(){
       fechaCierre: document.getElementById('acc-fecha-cierre').value,
       estadistico: document.getElementById('acc-estadistico').value.trim(),
       creadoPor: currentUserName,
-      creadoEn: serverTimestamp()
+      creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
     rec.folio = folio;
     try{
-      await addDoc(collection(db,'accidentesEscolares'), rec);
-      await setDoc(doc(db,'contadores','accidentesUltimoFolio'), { ultimo: folio }, { merge:true });
+      await db.collection('accidentesEscolares').add(rec);
+      await db.collection('contadores').doc('accidentesUltimoFolio').set({ ultimo: folio }, { merge:true });
       await logAudit('Registró declaración de accidente escolar', { nombre: nombreAlumno, curso: rec.curso, anio });
       buildAccidentePDF(rec);
       accLimpiarFormulario();
