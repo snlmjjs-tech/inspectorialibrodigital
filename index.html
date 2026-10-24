@@ -8887,11 +8887,11 @@ async function cargarDatosIniciales(){
   // (mismas cuentas que en la intranet), independiente del login de
   // "Funcionario" del resto del libro digital.
   // =====================================================================
-  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
     getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, setDoc,
     onSnapshot, query, orderBy, serverTimestamp, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   const { jsPDF } = window.jspdf;
 
   // Login (Firebase Authentication) sigue validándose contra las cuentas
