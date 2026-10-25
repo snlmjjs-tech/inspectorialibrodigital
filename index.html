@@ -482,6 +482,16 @@
   }
   .field textarea{resize:vertical;min-height:76px;}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:38px !important;}
+  .pw-toggle{
+    all:unset;cursor:pointer;
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    display:flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:5px;
+    color:var(--ink-soft);
+  }
+  .pw-toggle:hover{color:var(--ink);background:rgba(15,23,42,0.05);}
   .modal-actions{
     display:flex;
     justify-content:flex-end;
@@ -1870,12 +1880,17 @@
     <div class="login-error" id="login-error"></div>
     <form id="login-form">
       <div class="field">
-        <label for="login-user">Correo de tu cuenta</label>
-        <input type="email" id="login-user" required autocomplete="username" placeholder="tu-nombre@inspectoria-libro-digital.firebaseapp.com">
+        <label for="login-user">Correo o usuario de tu cuenta</label>
+        <input type="text" id="login-user" required autocomplete="username" placeholder="tu-nombre (o tu correo completo)" autocapitalize="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="field">
         <label for="login-password">Contraseña</label>
-        <input type="password" id="login-password" required autocomplete="current-password">
+        <div class="pw-wrap">
+          <input type="password" id="login-password" required autocomplete="current-password">
+          <button type="button" class="pw-toggle" data-pw-toggle="login-password" aria-label="Mostrar contraseña">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
       </div>
       <button type="submit" class="btn-primary full-btn">Ingresar</button>
     </form>
@@ -3211,16 +3226,31 @@
       <form id="pass-form">
         <div class="field">
           <label for="p-actual">Contraseña actual</label>
-          <input type="password" id="p-actual" required autocomplete="current-password">
+          <div class="pw-wrap">
+            <input type="password" id="p-actual" required autocomplete="current-password">
+            <button type="button" class="pw-toggle" data-pw-toggle="p-actual" aria-label="Mostrar contraseña">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
         </div>
         <div class="field-row">
           <div class="field">
             <label for="p-nueva">Nueva contraseña</label>
-            <input type="password" id="p-nueva" required minlength="10" autocomplete="new-password" placeholder="Mínimo 10 caracteres, con letras y números">
+            <div class="pw-wrap">
+              <input type="password" id="p-nueva" required minlength="10" autocomplete="new-password" placeholder="Mínimo 10 caracteres, con letras y números">
+              <button type="button" class="pw-toggle" data-pw-toggle="p-nueva" aria-label="Mostrar contraseña">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
           </div>
           <div class="field">
             <label for="p-confirma">Confirmar contraseña</label>
-            <input type="password" id="p-confirma" required minlength="10" autocomplete="new-password">
+            <div class="pw-wrap">
+              <input type="password" id="p-confirma" required minlength="10" autocomplete="new-password">
+              <button type="button" class="pw-toggle" data-pw-toggle="p-confirma" aria-label="Mostrar contraseña">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
           </div>
         </div>
         <div class="modal-actions">
@@ -3756,10 +3786,25 @@ function clearLoginError(){
 }
 
 // Login real con Firebase Authentication (correo + contraseña).
+document.querySelectorAll('[data-pw-toggle]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const input = document.getElementById(btn.dataset.pwToggle);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.setAttribute('aria-label', showing ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    btn.innerHTML = showing
+      ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0112 5c7 0 11 7 11 7a17.9 17.9 0 01-3.2 4M6.5 6.6C3.4 8.6 1 12 1 12s4 7 11 7a10.6 10.6 0 004.4-.9M9.9 9.9a3 3 0 004.2 4.2"/></svg>';
+  });
+});
+
 document.getElementById('login-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
   clearLoginError();
-  const email = document.getElementById('login-user').value.trim();
+  let email = document.getElementById('login-user').value.trim().toLowerCase();
+  if(email && !email.includes('@')){
+    email += '@inspectoria-libro-digital.firebaseapp.com';
+  }
   const pass = document.getElementById('login-password').value;
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
