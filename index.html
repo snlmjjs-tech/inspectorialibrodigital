@@ -3807,7 +3807,9 @@ document.getElementById('login-form').addEventListener('submit', async (e)=>{
   }
   const pass = document.getElementById('login-password').value;
   const submitBtn = e.target.querySelector('button[type="submit"]');
+  const textoOriginal = submitBtn.textContent;
   submitBtn.disabled = true;
+  submitBtn.textContent = '.....cargando.....';
   try{
     await firebase.auth().signInWithEmailAndPassword(email, pass);
     // enterApp() lo dispara onAuthStateChanged una vez confirmada la sesión.
@@ -3816,6 +3818,7 @@ document.getElementById('login-form').addEventListener('submit', async (e)=>{
     loginError('Correo o contraseña incorrectos.');
   }finally{
     submitBtn.disabled = false;
+    submitBtn.textContent = textoOriginal;
   }
 });
 
