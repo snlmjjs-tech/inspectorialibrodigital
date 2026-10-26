@@ -126,6 +126,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Folios correlativos (retiros_AÑO, accidentesUltimoFolio): cualquier
+    // editor o admin necesita leer y actualizar el contador al registrar un
+    // retiro o un accidente escolar.
+    match /contadores/{id} {
+      allow read: if isStaff();
+      allow write: if isEditor();
+    }
+
     // ---------- Auditoría: se puede AGREGAR, nunca editar ni borrar ----------
     // Cualquier cuenta activa deja su propio rastro; nadie (ni admin) puede
     // alterar un registro ya escrito, para que el historial sea confiable.
