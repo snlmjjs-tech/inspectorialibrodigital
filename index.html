@@ -3941,7 +3941,7 @@ function applyRoleVisibility(){
   // Control de Atrasos (herramienta aparte, en otro sitio) — acceso solo
   // para este grupo de funcionarios, a pedido explícito. Dirección ya tiene
   // su propio botón hacia la misma herramienta dentro de "Resumen general".
-  const CONTROL_ATRASOS_SLUGS = ['claudio-valenzuela-fuentes','luis-cadiz-fuenzalida','sandra-bravo-cornejo','alvaro-lisboa-roa','raul-lopez-ortega','cristian-barahona'];
+  const CONTROL_ATRASOS_SLUGS = ['claudio-valenzuela-fuentes','luis-cadiz-fuenzalida','sandra-bravo-cornejo','alvaro-lisboa-roa','raul-lopez-ortega','cristian-barahona','sebastian-nunez'];
   const controlBtn = document.getElementById('nav-controlatrasos');
   if(controlBtn){
     const puedeVerControlAtrasos = currentUser && CONTROL_ATRASOS_SLUGS.includes(currentUser.slug);
@@ -3950,7 +3950,7 @@ function applyRoleVisibility(){
 
   // Retiro de estudiantes / Accidente Escolar: mismo directorio que usa el
   // módulo aparte (ver RT_ACCESO_SLUGS en el script de ese módulo).
-  const RETIRO_ACCIDENTE_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler'];
+  const RETIRO_ACCIDENTE_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler','sebastian-nunez'];
   const puedeRetiroAccidente = currentUser && RETIRO_ACCIDENTE_SLUGS.includes(currentUser.slug) && !isDirector;
   ['retiro','accidente'].forEach(v=>{
     const btn = document.querySelector(`nav.primary button[data-view="${v}"]`);
@@ -8958,7 +8958,7 @@ async function cargarDatosIniciales(){
   // Quiénes pueden entrar a Retiro de estudiantes / Accidente Escolar,
   // identificados por su "slug" (el mismo que usa el resto del Libro
   // Digital) — ya no por un directorio de correos aparte.
-  const RT_ACCESO_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler'];
+  const RT_ACCESO_SLUGS = ['luis-cadiz-fuenzalida','claudio-valenzuela-fuentes','alvaro-lisboa-roa','sandra-bravo-cornejo','raul-lopez-ortega','nery-marin-ringler','sebastian-nunez'];
   const RT_USER_DIRECTORY = [
     { email: 'luis.cadiz@incosafintranet.cl',        nombre: 'Luis Ramón Cádiz Fuenzalida' },
     { email: 'claudio.valenzuela@incosafintranet.cl', nombre: 'Claudio Matías Valenzuela Fuentes' },
