@@ -92,7 +92,7 @@ service cloud.firestore {
       allow read: if isStaff();
       allow create, update: if isEditor()
         && request.resource.data.studentId is string
-        && request.resource.data.anio is number
+        && request.resource.data.anio is string
         && (!('observacion' in request.resource.data)
             || (request.resource.data.observacion is string
                 && request.resource.data.observacion.size() < 8000));
