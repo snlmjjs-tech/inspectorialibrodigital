@@ -691,7 +691,8 @@
      regla de Firestore; esto es solo para no mostrar un botón inútil. */
   body:not(.es-admin) [data-del-atraso],
   body:not(.es-admin) [data-del-susp],
-  body:not(.es-admin) [data-del-entry]{
+  body:not(.es-admin) [data-del-entry],
+  body:not(.es-admin) [data-acc-del]{
     display:none !important;
   }
   .task-del:hover{color:var(--danger);}
@@ -10249,17 +10250,37 @@ async function cargarDatosIniciales(){
           <td>${escapeHtml(nombre)}</td>
           <td>${escapeHtml(r.curso||'—')}</td>
           <td>${r.tipo==='Trayecto' ? 'De trayecto' : 'En la escuela'}</td>
-          <td><button type="button" class="rt-icon-btn" title="Descargar PDF" data-acc-pdf="${r.id}">📄</button></td>
+          <td>
+            <button type="button" class="rt-icon-btn" title="Descargar PDF" data-acc-pdf="${r.id}">📄</button>
+            <button type="button" class="rt-icon-btn task-del" title="Eliminar" data-acc-del="${r.id}">🗑️</button>
+          </td>
         </tr>
       `;
       }).join('');
     }
   }
-  document.getElementById('accHistBody').addEventListener('click', (e)=>{
-    const btn = e.target.closest('[data-acc-pdf]');
-    if(!btn) return;
-    const rec = accidentes.find(a=>a.id===btn.dataset.accPdf);
-    if(rec) buildAccidentePDF(rec);
+  document.getElementById('accHistBody').addEventListener('click', async (e)=>{
+    const pdfBtn = e.target.closest('[data-acc-pdf]');
+    if(pdfBtn){
+      const rec = accidentes.find(a=>a.id===pdfBtn.dataset.accPdf);
+      if(rec) buildAccidentePDF(rec);
+      return;
+    }
+    const delBtn = e.target.closest('[data-acc-del]');
+    if(delBtn){
+      const rec = accidentes.find(a=>a.id===delBtn.dataset.accDel);
+      if(!rec) return;
+      const nombre = [rec.apellidoPaterno, rec.apellidoMaterno, rec.nombres].filter(Boolean).join(' ') || rec.nombreAlumno || '—';
+      if(!window.confirm(`¿Eliminar definitivamente el registro de accidente escolar N° ${String(rec.folio||0).padStart(5,'0')} de ${nombre}? Esta acción no se puede deshacer.`)) return;
+      try{
+        await db.collection('accidentesEscolares').doc(rec.id).delete();
+        await logAudit('Eliminó registro de accidente escolar', { nombre, curso: rec.curso, anio: rec.anio || acAnioSelect.value });
+        showToast('✓ Registro de accidente eliminado.');
+      }catch(err){
+        console.error(err);
+        showToast('No se pudo eliminar el registro.');
+      }
+    }
   });
 
   document.querySelectorAll('#view-accidente .rt-subtab-btn').forEach(btn=>{
