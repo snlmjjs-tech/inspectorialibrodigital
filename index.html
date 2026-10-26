@@ -3807,20 +3807,27 @@ document.getElementById('login-form').addEventListener('submit', async (e)=>{
   }
   const pass = document.getElementById('login-password').value;
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  const textoOriginal = submitBtn.textContent;
   submitBtn.disabled = true;
   submitBtn.textContent = '.....cargando.....';
   try{
     await firebase.auth().signInWithEmailAndPassword(email, pass);
-    // enterApp() lo dispara onAuthStateChanged una vez confirmada la sesión.
+    // El botón queda en "cargando" — onAuthStateChanged sigue cargando los
+    // datos iniciales y recién ahí oculta esta pantalla (enterApp()), o la
+    // restaura si algo falla (resetLoginButton()).
   }catch(err){
     console.error('Error de login:', err);
     loginError('Correo o contraseña incorrectos.');
-  }finally{
-    submitBtn.disabled = false;
-    submitBtn.textContent = textoOriginal;
+    resetLoginButton();
   }
 });
+
+function resetLoginButton(){
+  const submitBtn = document.querySelector('#login-form button[type="submit"]');
+  if(submitBtn){
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Ingresar';
+  }
+}
 
 // Se dispara cada vez que cambia el estado de sesión de Firebase Auth
 // (login, logout, token expirado). Es la única fuente de verdad de quién
@@ -3832,6 +3839,7 @@ firebase.auth().onAuthStateChanged(async (user)=>{
     if(window.actualizarAccesoRetiroAccidente) window.actualizarAccesoRetiroAccidente();
     document.getElementById('login-screen').style.display = '';
     document.getElementById('app-shell').classList.remove('active');
+    resetLoginButton();
     return;
   }
   // Se pide SOLO el documento propio (staff_roles/{email}) -- no toda la
@@ -3843,12 +3851,14 @@ firebase.auth().onAuthStateChanged(async (user)=>{
   }catch(err){
     console.error('No se pudo verificar el acceso de esta cuenta.', err);
     loginError('No se pudo verificar tu acceso. Revisa tu conexión e inténtalo de nuevo.');
+    resetLoginButton();
     await firebase.auth().signOut();
     return;
   }
   const staff = staffSnap.exists ? staffSnap.data() : null;
   if(!staff || staff.activo === false){
     loginError('Esta cuenta no tiene acceso asignado en el Libro Digital. Avisa a un Inspector General.');
+    resetLoginButton();
     await firebase.auth().signOut();
     return;
   }
@@ -3872,6 +3882,7 @@ function enterApp(){
   document.getElementById('account-who').textContent = currentUser.nombre;
   document.getElementById('account-role').textContent = currentUser.cargo;
   document.getElementById('login-form').reset();
+  resetLoginButton();
   document.getElementById('welcome-text-p').textContent =
     'Bienvenido(a), ' + currentUser.nombre.split(' ')[0] + '. Este es el espacio único de control de la Inspectoría General del Instituto Comercial Alberto Valenzuela Llanos de San Fernando.';
   applyRoleVisibility();
