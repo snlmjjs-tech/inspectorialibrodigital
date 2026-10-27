@@ -5085,9 +5085,12 @@ function renderAsisTomar(){
     btn.addEventListener('click', ()=>agregarAtrasoAdicional(btn.dataset.student, fecha));
   });
 
-  guardarWrap.innerHTML = `<button class="btn-primary" id="asis-guardar-btn">Guardar asistencia (${students.length} alumnos)</button>`;
-  document.getElementById('asis-guardar-btn').addEventListener('click', async (ev)=>{
-    const btn = ev.currentTarget;
+  guardarWrap.innerHTML = `
+    <button class="btn-ghost" id="asis-completa-btn" type="button">Confirmar asistencia completa</button>
+    <button class="btn-primary" id="asis-guardar-btn">Guardar asistencia (${students.length} alumnos)</button>
+  `;
+
+  async function guardarAsistenciaActual(btn){
     const originalLabel = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Guardando...';
@@ -5111,6 +5114,24 @@ function renderAsisTomar(){
     renderAsisResumenAlumno();
     await syncAtrasosFromAsistencia(fecha, curso, students);
     await caSyncDesdeAsistencia(fecha, curso, students);
+  }
+
+  document.getElementById('asis-guardar-btn').addEventListener('click', (ev)=>guardarAsistenciaActual(ev.currentTarget));
+
+  // Marca a todo el curso como "Presente" de un solo clic y guarda de
+  // inmediato — pensado para los días en que efectivamente asistieron
+  // todos, sin tener que revisar fila por fila (que ya vienen en
+  // "Presente" por defecto, pero esto lo deja explícito y guardado).
+  document.getElementById('asis-completa-btn').addEventListener('click', async (ev)=>{
+    if(!window.confirm(`¿Confirmar que TODOS los alumnos de ${curso} asistieron hoy (${fmtDate(fecha)})?`)) return;
+    students.forEach(s=>{ asisTomarState[s.id] = 'presente'; });
+    container.querySelectorAll('tr[data-student]').forEach(tr=>{
+      const sid = tr.dataset.student;
+      tr.querySelectorAll('.status-btn').forEach(b=>b.classList.toggle('on', b.dataset.s === 'presente'));
+      const horaInput = tr.querySelector('.atraso-hora-input');
+      if(horaInput) horaInput.style.display = 'none';
+    });
+    await guardarAsistenciaActual(document.getElementById('asis-guardar-btn'));
   });
 }
 
