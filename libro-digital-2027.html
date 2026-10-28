@@ -349,9 +349,10 @@ function enPeriodo(e,p){
 async function guardar(fn,okMsg){
   try{await fn();if(okMsg)toast(okMsg);return true}
   catch(e){
+    console.error('Error al guardar en Libro Digital 2027:', e);
     if(e&&e.code==="invalid_argument"&&!S._probed){S._probed=true;S.canWrite=false;renderAll();toast("Tu acceso a esta hoja es de solo lectura.")}
     else if(e&&e.code==="quota_exceeded")toast("La base de datos está llena. Elimina registros antiguos para seguir.");
-    else toast("No se pudo guardar. Revisa la conexión e intenta de nuevo.");
+    else toast("No se pudo guardar ("+((e&&(e.code||e.message))||"error desconocido")+"). Revisa la conexión e intenta de nuevo.");
     return false;
   }
 }
