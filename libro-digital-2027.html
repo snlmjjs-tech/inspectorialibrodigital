@@ -1448,8 +1448,42 @@ esperarApp().then(parent=>{
     can:async()=>S.canWrite,
     profiles:async ids=>Object.fromEntries(ids.map(id=>[id,{name:(parent.hv2027NombrePorEmail?parent.hv2027NombrePorEmail(id):id)}]))
   };
-  db=parent.firestoreDb;
-  if(!db){S.db=false;setStatus("bad","Base de datos no disponible");renderAll();return}
+  // El iframe y la página principal comparten origen, pero son dos
+  // "mundos" de JavaScript distintos: un objeto {..} armado aquí no es
+  // del mismo molde que el que espera el Firestore de la página
+  // principal, y lo rechaza con "invalid-argument" aunque el contenido
+  // sea correcto. Esta envoltura reconstruye cada dato a guardar con los
+  // moldes (Object/Array/JSON) de la página principal justo antes de
+  // guardarlo -- el resto del archivo no necesita saber que esto existe.
+  const realDb = parent.firestoreDb;
+  if(!realDb){S.db=false;setStatus("bad","Base de datos no disponible");renderAll();return}
+  function reRealize(data){ return parent.JSON.parse(parent.JSON.stringify(data)); }
+  function wrapDocRef(rawRef){
+    return {
+      id: rawRef.id, __raw: rawRef,
+      get: ()=>rawRef.get(),
+      delete: ()=>rawRef.delete(),
+      onSnapshot: (cb,errCb)=>rawRef.onSnapshot(cb,errCb),
+      set: (data,opts)=> opts!==undefined ? rawRef.set(reRealize(data),opts) : rawRef.set(reRealize(data)),
+      update: (data)=> rawRef.update(reRealize(data))
+    };
+  }
+  function wrapCollOrQuery(rawCq){
+    return {
+      doc: (id)=> wrapDocRef(id!==undefined ? rawCq.doc(id) : rawCq.doc()),
+      where: (f,op,v)=> wrapCollOrQuery(rawCq.where(f,op,v)),
+      get: ()=> rawCq.get(),
+      onSnapshot: (cb,errCb)=> rawCq.onSnapshot(cb,errCb)
+    };
+  }
+  db = {
+    collection: name => wrapCollOrQuery(realDb.collection(name)),
+    doc: path => wrapDocRef(realDb.doc(path)),
+    runTransaction: fn => realDb.runTransaction(rawTx => fn({
+      get: ref => rawTx.get(ref.__raw || ref),
+      set: (ref,data) => rawTx.set(ref.__raw || ref, reRealize(data))
+    }))
+  };
   S.db=true;setStatus("ok","Sesión de "+(authUser.nombre||"")+" · registros compartidos en línea");
   let primera=true;
   db.collection("cursos").onSnapshot(s=>{
