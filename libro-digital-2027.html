@@ -264,6 +264,7 @@ table.nom{width:100%;border-collapse:collapse;min-width:640px}
    "Sin conexión", sin exponer ni romper nada.
    Las contraseñas de borrado de la versión original (ver CLAVE_HASH) quedan
    reemplazadas por el mismo sistema de roles real de la app principal. */
+document.documentElement.setAttribute("data-theme","light");
 function esperarApp(){
   return new Promise(resolve=>{
     const listo = ()=> window.parent && window.parent !== window
@@ -417,7 +418,7 @@ function selectAlumno(id){
 function renderAll(){renderFiltros();renderMain()}
 function renderMain(){
   const m=$("main");
-  if(S.db===false){m.replaceChildren(h("div",{class:"card empty"},h("img",{src:LOGO,alt:""}),h("strong",{text:"Sin conexión a la base de datos"}),"Abre esta página desde claude.ai para ver y guardar registros."));return}
+  if(S.db===false){m.replaceChildren(h("div",{class:"card empty"},h("img",{src:LOGO,alt:""}),h("strong",{text:"Sin conexión a la base de datos"}),"Recarga la página principal (Ctrl+Shift+R) y vuelve a entrar a esta pestaña desde el menú del Libro Digital."));return}
   if(S.informe==="susp"){renderInforme();return}
   if(S.informe==="retiros"){renderRetiros();return}
   if(!S.cursos.length){m.replaceChildren(h("div",{class:"card empty"},h("img",{src:LOGO,alt:""}),h("strong",{text:S.db?"Aún no hay cursos":"Cargando…"}),
