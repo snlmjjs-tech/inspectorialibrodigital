@@ -126,9 +126,40 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Folios correlativos (retiros_AÑO, accidentesUltimoFolio): cualquier
-    // editor o admin necesita leer y actualizar el contador al registrar un
-    // retiro o un accidente escolar.
+    // ---------- Libro Digital 2027 (Hoja de Vida Estudiantil) ----------
+    // Vive en su propia nómina (cursos/alumnos), separada de "store" y de
+    // atrasos-registros/libro-anotaciones de arriba -- misma lógica de
+    // roles, distinto conjunto de datos.
+    match /cursos/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+    match /alumnos/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+    match /eventos/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+    match /fotos/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+    match /firmas/{id} {
+      allow read: if isStaff();
+      allow create, update: if isEditor();
+      allow delete: if isAdmin();
+    }
+
+    // Folios correlativos (retiros_AÑO, accidentesUltimoFolio, folio-AÑO de
+    // Libro Digital 2027): cualquier editor o admin necesita leer y
+    // actualizar el contador al registrar un retiro, accidente escolar o
+    // evento de la hoja de vida.
     match /contadores/{id} {
       allow read: if isStaff();
       allow write: if isEditor();

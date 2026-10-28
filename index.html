@@ -6,7 +6,7 @@
 <title>Inspectoría General — I. Comercial Alberto Valenzuela Llanos</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0B1240">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://*.firebaseio.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://*.firebaseio.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 <!--
   Nota honesta sobre esta CSP: 'unsafe-inline' en script-src sigue siendo
   necesario porque toda la lógica de la página está en <script> inline (no
@@ -1928,6 +1928,10 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v17H6.5A1.5 1.5 0 015 18.5v-14z"/><path d="M5 18.5A1.5 1.5 0 016.5 17H19"/><path d="M9 8h6M9 11h4"/></svg>
       Libro digital
     </button>
+    <button data-view="hv2027">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v17H6.5A1.5 1.5 0 015 18.5v-14z"/><path d="M5 18.5A1.5 1.5 0 016.5 17H19"/><path d="M9 8h6M9 11h4"/></svg>
+      Libro digital 2027
+    </button>
     <button data-view="hoja" id="nav-hoja" style="display:none;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 3h6l1 3H8l1-3z"/><rect x="5" y="6" width="14" height="15" rx="1"/><path d="M8.5 12h7M8.5 15.5h5"/></svg>
       Hoja de trabajo
@@ -2470,6 +2474,12 @@
         <div class="empty-state" id="susp-motivos-empty" style="display:none;">Aún no hay suspensiones registradas este año.</div>
       </div>
     </div>
+  </section>
+
+  <!-- ================= LIBRO DIGITAL 2027 (ficha/hoja de vida, iframe mismo origen) ================= -->
+  <section id="view-hv2027" class="view">
+    <iframe id="hv2027-frame" src="libro-digital-2027.html" title="Libro Digital 2027"
+      style="width:100%;height:85vh;min-height:520px;border:0;display:block;border-radius:10px;"></iframe>
   </section>
 
   <!-- ================= HOJA DE TRABAJO (INSPECTOR GENERAL) ================= -->
@@ -3631,6 +3641,10 @@ try{
 }catch(err){
   console.error('No se pudo inicializar Firebase.', err);
 }
+// Expuesto para que el iframe de "Libro Digital 2027" (libro-digital-2027.html,
+// mismo origen) pueda reusar esta misma sesión/instancia en vez de iniciar la
+// suya propia -- ver window.parent.firestoreDb / window.parent.hv2027NombrePorEmail.
+window.firestoreDb = firestoreDb;
 function storageDocId(key){
   return String(key).toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
 }
@@ -3683,6 +3697,12 @@ function slugify(name){
 //   editor -> crea/edita, nunca borra.
 //   lector -> solo lectura (Dirección).
 let STAFF = [];
+// Usado por el iframe de "Libro Digital 2027" para mostrar el nombre de quien
+// registró cada antecedente en vez de su correo interno.
+window.hv2027NombrePorEmail = function(email){
+  const s = STAFF.find(x => x.email === email);
+  return (s && s.nombre) || email || 'Usuario';
+};
 const CARGO_ORDER = ["Inspector General","Asistente Administrativo","Asistente de la Educación","Director","Portería"];
 
 async function loadStaffRoster(){
@@ -3927,7 +3947,7 @@ function applyRoleVisibility(){
   // Acceso de Dirección: ve solamente su "Resumen general" — nada de matrícula,
   // libro digital (anotaciones), ni el resto de la gestión operativa. Pedido
   // explícito: que el director vea únicamente un informe general.
-  const VISTAS_OPERATIVAS = ['home','matricula','asistencia','libro','staff','retiro','accidente'];
+  const VISTAS_OPERATIVAS = ['home','matricula','asistencia','libro','hv2027','staff','retiro','accidente'];
   VISTAS_OPERATIVAS.forEach(v=>{
     const btn = document.querySelector(`nav.primary button[data-view="${v}"]`);
     if(btn) btn.style.display = isDirector ? 'none' : 'flex';
