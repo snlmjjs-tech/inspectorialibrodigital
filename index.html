@@ -8964,21 +8964,22 @@ function renderFichas(){
 // dispara recién cuando Firebase Authentication confirma una sesión
 // válida (ver firebase.auth().onAuthStateChanged más arriba).
 async function cargarDatosIniciales(){
+  // Las 12 cargas de abajo son independientes entre sí (cada una lee su
+  // propia colección/documento y llena su propia variable) -- se piden
+  // todas en paralelo en vez de una por una, porque esperar cada ida y
+  // vuelta a Firestore por turno era lo que hacía el login lento (~20s).
+  const cargas = [
+    loadMatricula(), loadAsistencia(), loadControlAsistencia(), loadLibro(),
+    loadAtrasos(), loadFeriadosExtra(), loadFichas(), loadSuspensiones(),
+    loadGestiones(), loadAtencionCounter(), loadBajaCounter()
+  ];
   if(currentUser && currentUser.rol === 'admin'){
-    await loadStaffRoster();
+    cargas.push(loadStaffRoster());
+  }
+  await Promise.all(cargas);
+  if(currentUser && currentUser.rol === 'admin'){
     renderStaff();
   }
-  await loadMatricula();
-  await loadAsistencia();
-  await loadControlAsistencia();
-  await loadLibro();
-  await loadAtrasos();
-  await loadFeriadosExtra();
-  await loadFichas();
-  await loadSuspensiones();
-  await loadGestiones();
-  await loadAtencionCounter();
-  await loadBajaCounter();
   renderMatricula();
   populateCourseSelectors();
   renderAsistenciaAll();
